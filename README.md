@@ -18,8 +18,7 @@ As things happen around you, including your actions, they will appear in the **L
 ## Progress tracking:  
 <ul>
   <details>
-  <summary>SOL SYSTEM</summary>
-    <li>[ ] Creation of the first system (the SOL system)
+  <summary>[ ] SOL SYSTEM</summary>
     <ul>
       <li>[ ] Earth <ul>
         <li>[ ] Earth Orbit</li>
@@ -101,7 +100,13 @@ As things happen around you, including your actions, they will appear in the **L
         </ul>
       </li>  
     </ul>
-  </li>
+  </details>
+
+  <details>
+    <summary>[ ] ALPHA SYSTEM</summary>
+    <ul>
+      <li>[ ] Three stars</li>
+    </ul>
   </details>
   
   <li>[ ] Login System / token generation</li>
