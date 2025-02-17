@@ -31,7 +31,9 @@ As things happen around you, including your actions, they will appear in the **L
         <br>
       </li>
       <li>[ ] Sun Orbital</li>
+        <br>
       <li>[ ] SOL -> ALPHA warp Gate orbital</li>
+        <br>
       <li>[ ] Venus <ul>
         <li>[ ] Venus Orbit</li>
         <li>[ ] Venus Ground Station Zero</li>
@@ -88,7 +90,7 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Uranus Orbit</li>
         <li>[ ] Uranus Orbital Station</li>
         <li>[ ] Uranus Atmosphere station</li>
-        <ul>
+        </ul>
       </li>
         <br>
       <li>[ ] Kyper Regions <ul>
