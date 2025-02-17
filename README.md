@@ -7,7 +7,7 @@ A space game--in a website.
 Login.<br>
 When you first start the game, you will have a basic ship with basic components.<br>
 There is no real task to the game, and it a sandbox where many things are possible.<br>
-
+<br>
 The Panels: The **Log** pane, The **Selection** pane, and the **Actions** Pane.<br>
 Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the **Actions** pane on the right.  <br>
 As things happen around you, including your actions, they will appear in the **Log** pane.<br>
