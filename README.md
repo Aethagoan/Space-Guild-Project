@@ -108,7 +108,7 @@ As things happen around you, including your actions, they will appear in the **L
   </details>
 
   <details>
-    <sumarry>The Nebula</sumarry>
+    <summary>The Nebula</summary>
     <ul>
       <li>[ ] Gate/Teleporter/Warp orbit</li>
       <li>[ ] Storm Region</li>
@@ -119,7 +119,7 @@ As things happen around you, including your actions, they will appear in the **L
   </details>
 
   <details>
-    <sumarry>Black Hole</sumarry>
+    <summary>Black Hole</summary>
     <ul>
       <li>[ ] Gate/Teleporter/Warp orbit</li>
       <li>[ ] Black Hole Orbit</li>
