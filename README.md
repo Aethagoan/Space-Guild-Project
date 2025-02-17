@@ -106,7 +106,6 @@ As things happen around you, including your actions, they will appear in the **L
       </li>  
     </ul>
   </details>
-
   <details>
     <summary>The Nebula</summary>
     <ul>
@@ -117,7 +116,6 @@ As things happen around you, including your actions, they will appear in the **L
       <li>[ ] Nebula Station 1</li>
     </ul>
   </details>
-
   <details>
     <summary>Black Hole</summary>
     <ul>
@@ -125,7 +123,6 @@ As things happen around you, including your actions, they will appear in the **L
       <li>[ ] Black Hole Orbit</li>
     </ul>
   </details>
-  <br>
   <details>
     <summary>Back End</summary>
     <ul>
@@ -141,8 +138,7 @@ As things happen around you, including your actions, they will appear in the **L
       <li>[ ] Anomalies (random events at travel)</li>
   </ul>
   </details>
-  <br>
-  <details>
+  <br>  <details>
     <summary>Front End</summary>
     <ul>
       <li>[ ] Landing Page</li>
