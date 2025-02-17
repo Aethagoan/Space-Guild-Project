@@ -1,4 +1,4 @@
-<h3>WELCOME TO SPACE GUILD</h3>  
+<h1>WELCOME TO SPACE GUILD</h1>  
 A space game--in a website.  
 <hr>
 <br>
@@ -23,7 +23,7 @@ As things happen around you, including your actions, they will appear in the **L
 <h2>Progress tracking:</h2>  
 <ul>
   <details>
-  <summary><h1>SOL SYSTEM</h1></summary>
+  <summary><h3>SOL SYSTEM</h3></summary>
     <ul>
       <li>[ ] POLITICS AND FACTION BUILDING</li>
       <li>[ ] Earth <ul>
@@ -108,7 +108,7 @@ As things happen around you, including your actions, they will appear in the **L
     </ul>
   </details>
   <details>
-    <summary>Seven more star systems</summary>
+    <summary><h3>Seven more star systems</h3></summary>
     <ul>
       <li>[ ] Outer System 1<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
@@ -155,7 +155,7 @@ As things happen around you, including your actions, they will appear in the **L
     </ul>
   </details>
   <details>
-    <summary>The Nebula</summary>
+    <summary><h3>The Nebula</h3></summary>
     <ul>
       <li>[ ] Gate/Teleporter/Warp orbit</li>
       <li>[ ] Storm Region</li>
@@ -165,14 +165,14 @@ As things happen around you, including your actions, they will appear in the **L
     </ul>
   </details>
   <details>
-    <summary>Black Hole</summary>
+    <summary><h3>Black Hole</h3></summary>
     <ul>
       <li>[ ] Gate/Teleporter/Warp orbit</li>
       <li>[ ] Black Hole Orbit</li>
     </ul>
   </details>
   <details>
-    <summary>Back End</summary>
+    <summary><h3>Back End</h3></summary>
     <ul>
       <li>[ ] Ship statistics based on components? </li>
       <li>[ ] Ship components</li>
@@ -187,7 +187,7 @@ As things happen around you, including your actions, they will appear in the **L
   </ul>
   </details>
   <details>
-    <summary>Front End</summary>
+    <summary><h3>Front End</h3></summary>
     <ul>
       <li>[ ] Landing Page</li>
       <li>[ ] Login Page</li>
