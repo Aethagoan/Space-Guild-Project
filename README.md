@@ -106,21 +106,50 @@ As things happen around you, including your actions, they will appear in the **L
   </details>
 
   <details>
-    <summary>ALPHA SYSTEM</summary>
+    <sumarry>The Nebula</sumarry>
     <ul>
-      <li>[ ] Three stars <ul>
-          <li>[ ] Proxima<ul>
-            <li>[ ] prox b the planet :D</li>
-          </ul>
-          </li>
-          <li>[ ] Toliman</li>
-          <li>[ ] Rigil</li>
-        </ul>
-      </li>
+      <li>[ ] Gate/Teleporter/Warp orbit</li>
+      <li>[ ] Storm Region</li>
+      <li>[ ] Asteroid Fields</li>
+      <li>[ ] Nebula Station 1</li>
+      <li>[ ] Nebula Station 1</li>
+    </ul>
+  </details>
+
+  <details>
+    <sumarry>Black Hole</sumarry>
+    <ul>
+      <li>[ ] Gate/Teleporter/Warp orbit</li>
+      <li>[ ] Black Hole Orbit</li>
     </ul>
   </details>
   
-  <li>[ ] Login System / token generation</li>
-  <li></li>
+  <li>[ ] Anomalies (random events at travel)</li>
+
+  <details>
+    <summary>Back End</summary>
+    <li>[ ] Ship statistics based on components? </li>
+    <li>[ ] Ship components</li>
+    <li>[ ] Login System / token generation</li>
+    <li>[ ] Logging <ul>
+        <li>[ ] in region 'subscriber' pattern</li>
+        <li>[ ] per ship log - messages and purely front-end added ship notifications (travel, damage, scanned, etc).</li>
+      </ul>
+    </li>
+    <li>[ ] Station Shipyards/Vendor</li>
+    
+  </details>
+
+  <details>
+    <summary>Front End</summary>
+    <ul>
+      <li>[ ] Landing Page</li>
+      <li>[ ] Login Page</li>
+      <li>[ ] Game Page</li>
+    </ul>
+    
+  </details>
+  
+  
 </ul>
 
