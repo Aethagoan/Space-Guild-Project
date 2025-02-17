@@ -4,13 +4,13 @@ A space game--in a website.
 <br>
 <h2>HOW IT WORKS</h2>
 <br>
-Login.  
-When you first start the game, you will have a basic ship with basic components.  
-There is no real task to the game, and it a sandbox where many things are possible.  
+Login.<br>
+When you first start the game, you will have a basic ship with basic components.<br>
+There is no real task to the game, and it a sandbox where many things are possible.<br>
 
-The Panels: The **Log** pane, The **Selection** pane, and the **Actions** Pane.  
-Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the **Actions** pane on the right.  
-As things happen around you, including your actions, they will appear in the **Log** pane.
+The Panels: The **Log** pane, The **Selection** pane, and the **Actions** Pane.<br>
+Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the **Actions** pane on the right.  <br>
+As things happen around you, including your actions, they will appear in the **Log** pane.<br>
 
 <hr>
 <br>
