@@ -18,8 +18,8 @@ As things happen around you, including your actions, they will appear in the **L
 ## Progress tracking:  
 <ul>
   <details>
-  <summary>
-    <li>[ ] Creation of the first system (the SOL system)</summary>
+  <summary>SOL SYSTEM</summary>
+    <li>[ ] Creation of the first system (the SOL system)
     <ul>
       <li>[ ] Earth <ul>
         <li>[ ] Earth Orbit</li>
@@ -28,6 +28,7 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Moon Orbit</li>
         <li>[ ] Moon Ground Station</li>
       </ul>
+        <br>
       </li>
       <li>[ ] Sun Orbital</li>
       <li>[ ] SOL -> ALPHA warp Gate orbital</li>
@@ -36,7 +37,7 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Venus Ground Station Zero</li>
         <li>[ ] Venus Orbital Station Zero</li>
       </ul>
-        
+        <br>
       </li>
       <li>[ ] Mars <ul>
         <li>[ ] Mars Orbit</li>
@@ -46,13 +47,13 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Mars Moon 2 Ground Station</li>
        </ul>
       </li>
-      
+        <br>
       <li>[ ] Mercury <ul>
         <li>[ ] Mercury Orbit</li>
         <li>[ ] Mercury Ground Station</li>
        </ul>
       </li>
-
+        <br>
       <li>[ ] Asteroid Belt <ul>
         <li>[ ] Belt Region 1 orbit <ul> 
           <li>[ ] Belt 1 Station</li>
@@ -67,14 +68,14 @@ As things happen around you, including your actions, they will appear in the **L
         </li>
        </ul>
       </li>
-
+        <br>
       <li>[ ] Jupiter <ul>
         <li>[ ] Jupiter Orbit</li>
         <li>[ ] Jupiter Atmosphere Station 'Thunder Station'</li>
         <li>[ ] IO station</li>
        </ul>
       </li>   
-
+        <br>
       <li>[ ] Saturn <ul>
         <li>[ ] Saturn Orbit</li>
         <li>[ ] Saturn Atmosphere Station 'Cloud Station'</li>
@@ -82,22 +83,21 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Ring station 2</li>
        </ul>
       </li>
-
+        <br>
       <li>[ ] Uranus <ul>
         <li>[ ] Uranus Orbit</li>
         <li>[ ] Uranus Orbital Station</li>
         <li>[ ] Uranus Atmosphere station</li>
         <ul>
       </li>
-
+        <br>
       <li>[ ] Kyper Regions <ul>
         <li>[ ] Kyper Region 1 Orbit + Station</li>
         <li>[ ] Kyper Region 2 Orbit + Station</li>
         <li>[ ] Kyper Region 3 Orbit + Station</li>
         <li>[ ] Kyper Region 4 Orbit + Station</li>
         </ul>
-      </li>
-      
+      </li>  
     </ul>
   </li>
   </details>
