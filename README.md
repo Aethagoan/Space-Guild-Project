@@ -18,10 +18,10 @@ As things happen around you, including your actions, they will appear in the **L
 *WIP*
 <br>
 <hr>
-## Progress tracking:  
+<h2>Progress tracking:</h2>  
 <ul>
   <details>
-  <summary>[ ] SOL SYSTEM</summary>
+  <summary>SOL SYSTEM</summary>
     <ul>
       <li>[ ] Earth <ul>
         <li>[ ] Earth Orbit</li>
@@ -106,9 +106,17 @@ As things happen around you, including your actions, they will appear in the **L
   </details>
 
   <details>
-    <summary>[ ] ALPHA SYSTEM</summary>
+    <summary>ALPHA SYSTEM</summary>
     <ul>
-      <li>[ ] Three stars</li>
+      <li>[ ] Three stars <ul>
+          <li>[ ] Proxima<ul>
+            <li>[ ] prox b the planet :D</li>
+          </ul>
+          </li>
+          <li>[ ] Toliman</li>
+          <li>[ ] Rigil</li>
+        </ul>
+      </li>
     </ul>
   </details>
   
