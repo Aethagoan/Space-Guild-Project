@@ -8,14 +8,14 @@ Login.<br>
 When you first start the game, you will have a basic ship with basic components.<br>
 There is no real task to the game, and it a sandbox where many things are possible.<br>
 <br>
-The Panels: The <bold>Log</bold> pane, The <bold>Selection</bold> pane, and the <bold>Actions</bold> Pane.<br>
-Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the <bold>Actions</bold> pane on the right.  <br>
-As things happen around you, including your actions, they will appear in the <bold>Log</bold> pane.<br>
+The Panels: The <b>Log</b> pane, The <b>Selection</b> pane, and the <b>Actions</b> Pane.<br>
+Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the <b>Actions</b> pane on the right.  <br>
+As things happen around you, including your actions, they will appear in the <b>Log</b> pane.<br>
 
 <hr>
 <br>
 <h2>HOW IT'S MADE</h2>  
-*WIP*
+<i>WIP</i>
 <br>
 <br>
 <hr>
