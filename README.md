@@ -125,9 +125,8 @@ As things happen around you, including your actions, they will appear in the **L
       <li>[ ] Black Hole Orbit</li>
     </ul>
   </details>
-  
-  <li>[ ] Anomalies (random events at travel)</li>
-
+  <br>
+<br>
   <details>
     <summary>Back End</summary>
     <li>[ ] Ship statistics based on components? </li>
@@ -139,9 +138,10 @@ As things happen around you, including your actions, they will appear in the **L
       </ul>
     </li>
     <li>[ ] Station Shipyards/Vendor</li>
-    
+  <li>[ ] Anomalies (random events at travel)</li>
+  </ul>
   </details>
-
+  <br>
   <details>
     <summary>Front End</summary>
     <ul>
