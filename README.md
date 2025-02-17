@@ -113,7 +113,7 @@ As things happen around you, including your actions, they will appear in the **L
       <li>[ ] Storm Region</li>
       <li>[ ] Asteroid Fields</li>
       <li>[ ] Nebula Station 1</li>
-      <li>[ ] Nebula Station 1</li>
+      <li>[ ] Nebula Station 2</li>
     </ul>
   </details>
   <details>
