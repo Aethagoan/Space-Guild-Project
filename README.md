@@ -17,6 +17,7 @@ As things happen around you, including your actions, they will appear in the **L
 <h2>HOW IT'S MADE</h2>  
 *WIP*
 <br>
+<br>
 <hr>
 <h2>Progress tracking:</h2>  
 <ul>
