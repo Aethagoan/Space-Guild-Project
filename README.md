@@ -25,6 +25,7 @@ As things happen around you, including your actions, they will appear in the **L
   <details>
   <summary>SOL SYSTEM</summary>
     <ul>
+      <li>[ ] POLITICS AND FACTION BUILDING</li>
       <li>[ ] Earth <ul>
         <li>[ ] Earth Orbit</li>
         <li>[ ] Earth Ground Station Zero</li>
@@ -104,6 +105,53 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Kyper Region 4 Orbit + Station</li>
         </ul>
       </li>  
+    </ul>
+  </details>
+  <details>
+    <summary>Seven more star systems</summary>
+    <ul>
+      <li>[ ] Outer System 1<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
+      <li>[ ] Outer System 2<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
+      <li>[ ] Outer System 3<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
+      <li>[ ] Outer System 4<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
+      <li>[ ] Outer System 5<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
+      <li>[ ] Outer System 6<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
+      <li>[ ] Outer System 7<ul>
+        <li>[ ] POLITICS AND FACTION BUILDING</li>
+        <li>[ ] gates?</li>
+        <li>[ ] planets</li>
+        <li>[ ] stations</li>
+      </ul></li>
     </ul>
   </details>
   <details>
