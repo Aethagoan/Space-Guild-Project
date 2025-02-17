@@ -1,4 +1,4 @@
-### WELCOME TO SPACE GUILD  
+<h3>WELCOME TO SPACE GUILD</h3>  
 A space game--in a website.  
 <hr>
 <br>
@@ -23,7 +23,7 @@ As things happen around you, including your actions, they will appear in the **L
 <h2>Progress tracking:</h2>  
 <ul>
   <details>
-  <summary>SOL SYSTEM</summary>
+  <summary><h1>SOL SYSTEM</h1></summary>
     <ul>
       <li>[ ] POLITICS AND FACTION BUILDING</li>
       <li>[ ] Earth <ul>
