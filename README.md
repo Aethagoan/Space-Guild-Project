@@ -138,7 +138,7 @@ As things happen around you, including your actions, they will appear in the **L
       <li>[ ] Anomalies (random events at travel)</li>
   </ul>
   </details>
-  <br>  <details>
+  <details>
     <summary>Front End</summary>
     <ul>
       <li>[ ] Landing Page</li>
