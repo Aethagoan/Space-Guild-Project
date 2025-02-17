@@ -1,7 +1,8 @@
 ### WELCOME TO SPACE GUILD  
 A space game--in a website.  
 <hr>
-## HOW IT WORKS  
+<br>
+## HOW IT WORKS<br>
 Login.  
 When you first start the game, you will have a basic ship with basic components.  
 There is no real task to the game, and it a sandbox where many things are possible.  
@@ -17,9 +18,9 @@ As things happen around you, including your actions, they will appear in the **L
 ## Progress tracking:  
 <ul>
   <details>
-  <summary><li>[ ] Creation of the first system (the SOL system)<summary>
+  <summary>
+    <li>[ ] Creation of the first system (the SOL system)</summary>
     <ul>
-      
       <li>[ ] Earth <ul>
         <li>[ ] Earth Orbit</li>
         <li>[ ] Earth Ground Station Zero</li>
@@ -27,7 +28,6 @@ As things happen around you, including your actions, they will appear in the **L
         <li>[ ] Moon Orbit</li>
         <li>[ ] Moon Ground Station</li>
       </ul>
-        
       </li>
       <li>[ ] Sun Orbital</li>
       <li>[ ] SOL -> ALPHA warp Gate orbital</li>
