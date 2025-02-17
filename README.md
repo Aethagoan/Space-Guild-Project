@@ -19,6 +19,7 @@ As things happen around you, including your actions, they will appear in the **L
 <br>
 <br>
 <hr>
+<br>
 <h2>Progress tracking:</h2>  
 <ul>
   <details>
