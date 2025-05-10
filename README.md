@@ -2,7 +2,7 @@
 A space game--in a website.  
 <hr>
 <br>
-<h2>HOW IT WORKS</h2>
+<h2>HOW TO PLAY</h2>
 <br>
 Login.<br>
 When you first start the game, you will have a basic ship with basic components.<br>
@@ -14,12 +14,13 @@ As things happen around you, including your actions, they will appear in the <b>
 
 <hr>
 <br>
-<h2>HOW IT'S MADE</h2>  
-<i>WIP</i>
+<h2>HOW IT WORKS</h2>
+<i>Every 5 seconds, a tick happens. On a tick, everything in the world updates at once. All actions resolve. </i>
 <br>
 <br>
 <hr>
 <br>
+
 <h2>Progress tracking:</h2>  
 <ul>
 <details>
