@@ -56,5 +56,8 @@
         <h3>Sensors</h3>
         <p>How far out can you scan, and in how much detail? What dangers lie beyond? Low health.</p>
     </li>
-
+    <li>
+        <h3>StealthCloack</h3>
+        <p>Activateable for a time, making you invisible but unable to do other things except move.</p>
+    </li>
 </ul>
