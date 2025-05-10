@@ -22,6 +22,29 @@ As things happen around you, including your actions, they will appear in the <b>
 <br>
 <h2>Progress tracking:</h2>  
 <ul>
+<details>
+    <summary><h3>Back End</h3></summary>
+    <ul>
+      <li>[ ] Ship statistics based on components? </li>
+      <li>[ ] Ship components</li>
+      <li>[ ] Login System / token generation</li>
+      <li>[ ] Logging <ul>
+        <li>[ ] in region 'subscriber' pattern</li>
+        <li>[ ] per ship log - messages and purely front-end added ship notifications (travel, damage, scanned, etc).</li>
+        </ul>
+      </li>
+      <li>[ ] Station Shipyards/Vendor</li>
+      <li>[ ] Anomalies (random events at travel)</li>
+  </ul>
+  </details>
+  <details>
+    <summary><h3>Front End</h3></summary>
+    <ul>
+      <li>[ ] Landing Page</li>
+      <li>[ ] Login Page</li>
+      <li>[ ] Game Page</li>
+    </ul>
+  </details>
   <details>
   <summary><h3>SOL SYSTEM</h3></summary>
     <ul>
@@ -171,30 +194,6 @@ As things happen around you, including your actions, they will appear in the <b>
       <li>[ ] Black Hole Orbit</li>
     </ul>
   </details>
-  <details>
-    <summary><h3>Back End</h3></summary>
-    <ul>
-      <li>[ ] Ship statistics based on components? </li>
-      <li>[ ] Ship components</li>
-      <li>[ ] Login System / token generation</li>
-      <li>[ ] Logging <ul>
-        <li>[ ] in region 'subscriber' pattern</li>
-        <li>[ ] per ship log - messages and purely front-end added ship notifications (travel, damage, scanned, etc).</li>
-        </ul>
-      </li>
-      <li>[ ] Station Shipyards/Vendor</li>
-      <li>[ ] Anomalies (random events at travel)</li>
-  </ul>
-  </details>
-  <details>
-    <summary><h3>Front End</h3></summary>
-    <ul>
-      <li>[ ] Landing Page</li>
-      <li>[ ] Login Page</li>
-      <li>[ ] Game Page</li>
-    </ul>
-  </details>
   <br>
-  
 </ul>
 
