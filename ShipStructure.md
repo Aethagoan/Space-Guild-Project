@@ -31,8 +31,8 @@
         <p>(10x) Endbosses.</p>
     </li>
 </ul>
-<h3>Repair mechanics<h3>
-<p>Components have health! Plus they degrade over uses. Components don't break, you don't lose them at zero health, but they cease to function. Modifiers will never go back to the max, but can be repaired to a point. (there should be a limit at the next teir down once they've downgraded that much, always repairable to there.)</p>
+<h3>Repair mechanics</h3>
+<p>Components have health! Plus they degrade with damage. Components don't break, you don't lose them at zero health, but they cease to function. Modifiers will never go back to the max, but can be repaired to a point. (there should be a limit at the next teir down once they've downgraded that much, always repairable to there.)</p>
 
 <h1>Ship Component Details</h1>
 <ul>
@@ -41,28 +41,20 @@
         <p>High Health, Tier decides how many zones you can travel per tick.</p>
     </li>
     <li>
-        <h3></h3>
-        <p></p>
+        <h3>Weapons</h3>
+        <p>Medium health, Tier multiplies damage.</p>
     </li>
     <li>
-        <h3></h3>
-        <p></p>
+        <h3>Shields</h3>
+        <p>Block out damage to components! Has an shield pool, and then once that pool is gone, everything begins taking damage, but if shields are up, they take all of the damage to the shield pool. Better than having components damaged. . . Low health after shields which have a big pool.</p>
     </li>
     <li>
-        <h3></h3>
-        <p></p>
+        <h3>Cargo</h3>
+        <p>How much stuff can you carry? all things you can pick up have a size which counts against a total for cargo. (Advanced: If this breaks, all of the things you are carrying spill out)</p>
     </li>
     <li>
-        <h3></h3>
-        <p></p>
+        <h3>Sensors</h3>
+        <p>How far out can you scan, and in how much detail? What dangers lie beyond? Low health.</p>
     </li>
-    <li>
-        <h3></h3>
-        <p></p>
-    </li>
-    <li>
-        <h3></h3>
-        <p></p>
-    </li>
-    
+
 </ul>
