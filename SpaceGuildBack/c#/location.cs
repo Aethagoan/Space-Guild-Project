@@ -1,19 +1,20 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Components.Routing;
 
 namespace SpaceGuildBack;
 
-public abstract class LocationBase
+public abstract class Location : canMove
 {
-    public List<LocationBase> Links { get; set; } = new List<LocationBase>();
+    public List<Location> Links { get; set; } = new List<Location>();
     public List<string> PlayerTokens { get; set; } = new List<string>();
 
-    public void AddLink(LocationBase location)
+    public void AddLink(Location location)
     {
         Links.Add(location);
     }
 
-    public void RemoveLink(LocationBase location)
+    public void RemoveLink(Location location)
     {
         Links.Remove(location);
     }
@@ -23,7 +24,7 @@ public abstract class LocationBase
         PlayerTokens.Add(token);
     }
 
-    public void SendToken(string token, LocationBase destination)
+    public void Move(string token, Location destination)
     {
         if (Links.Contains(destination) && PlayerTokens.Contains(token))
         {
@@ -35,25 +36,15 @@ public abstract class LocationBase
 }
 
 
-
-public abstract class OrbitLocation : LocationBase
+public class Orbit : Location
 {
-
+    
 }
 
-public abstract class StationLocation : LocationBase
+public class Station : Location
 {
-
-    public virtual void RepairShip()
-    {
-        // Implementation of ship repair
-    }
+    
 }
 
-public abstract class WarpLocation : LocationBase 
-{
-
-
-}
 
 

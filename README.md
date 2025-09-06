@@ -130,17 +130,18 @@ As things happen around you, including your actions, they will appear in the <b>
         <li>[ ] Kyper Region 3 Orbit + Station</li>
         <li>[ ] Kyper Region 4 Orbit + Station</li>
         </ul>
-      </li>  
+      </li>
+      <li>[ ] built in code?</li> 
     </ul>
   </details>
 
   <details>
     <summary><h3>Seven more star systems</h3></summary>
     <ul>
-      <li>[ ] Outer System 1<ul>
+      <li>[ ] Outer System 1 - <ul>
       <details>
         Science and research. <br> 
-        ## System composition in order inmost to outmost:  <br>
+        **System composition in order inmost to outmost:**  <br>
         Binary star system.  <br>
         Close Gas Giant.  <br>
         Asteroid belt.  <br>
@@ -148,9 +149,9 @@ As things happen around you, including your actions, they will appear in the <b>
         Asteroid belt.  <br>
         Shattered planet w/ Oribital station and two Dangerous Ground Resource Gather sites.  <br>
         Synthetic planet w/ 2 Orbital stations and a Ground station.  <br>
-        ## Politics  <br>
+        **Politics**  <br>
         A system of researchers using high-risk, high-reward scavengers to gather research materials from the shattered planets. All under the command of a few powerful barons trying to increase their wealth with SCIENCE!<br>
-        ## Warp Gate Connections:  <br>
+        **Warp Gate Connections:**<br>
         Synthetic planet orbital gates -> Nebula Gates  <br>
         Binary Star gates -> SOL  <br>
         Binary Star gates -> Black Hole  <br>
@@ -162,41 +163,47 @@ As things happen around you, including your actions, they will appear in the <b>
         <li>[ ] built in code?</li> 
         </ul>
       </li>
-      <li>[ ] Outer System 2<ul>
+      <li>[ ] Outer System 2 - Empire<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 3<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 4<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 5<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 6<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
-      <li>[ ] Outer System 7<ul>
+      <li>[ ] Outer System 7 - Zealots <ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
     </ul>
   </details>
@@ -208,6 +215,7 @@ As things happen around you, including your actions, they will appear in the <b>
       <li>[ ] Asteroid Fields</li>
       <li>[ ] Nebula Station 1</li>
       <li>[ ] Nebula Station 2</li>
+      <li>[ ] built in code?</li> 
     </ul>
   </details>
   <details>
@@ -215,6 +223,7 @@ As things happen around you, including your actions, they will appear in the <b>
     <ul>
       <li>[ ] Gate/Teleporter/Warp orbit</li>
       <li>[ ] Black Hole Orbit</li>
+      <li>[ ] built in code?</li> 
     </ul>
   </details>
   <br>
