@@ -19,7 +19,7 @@
   </ItemGroup>
  
   <ItemGroup>
-    <ProjectReference Include="..\SpaceGuild\Space Guild.csproj" />
+    <ProjectReference Include="..\SpaceGuildBack\SpaceGuildBack.csproj" />
   </ItemGroup>
 
 </Project>

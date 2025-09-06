@@ -8,12 +8,16 @@
 }
 
 body {
-    background-color: #121212;
+  background-color: #121212;
+  color: whitesmoke;
 }
 
 .container {
   background-color: #131313; /* Dark background */
   border-radius: 10px; /* Rounded corners */
-  padding: 20px;
+  border-style: solid;
+  border-width: .175rem;
+  border-color:var(--border-color-green);
+  padding: 2rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
