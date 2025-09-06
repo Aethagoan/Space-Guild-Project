@@ -8,8 +8,5 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="MySql.Data" Version="9.3.0" />
-  </ItemGroup>
 
 </Project>
