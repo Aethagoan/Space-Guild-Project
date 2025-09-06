@@ -139,21 +139,21 @@ As things happen around you, including your actions, they will appear in the <b>
     <ul>
       <li>[ ] Outer System 1<ul>
       <details>
-        Science and research.  
-        ## System composition in order inmost to outmost:  
-        Binary star system.  
-        Close Gas Giant.  
-        Asteroid belt.  
-        Shattered planet w/ Orbital station and Deadly Ground Resource Gather site.  
-        Asteroid belt.  
-        Shattered planet w/ Oribital station and two Dangerous Ground Resource Gather sites.  
-        Synthetic planet w/ 2 Orbital stations and a Ground station.  
-        ## Politics  
-        A system of researchers using high-risk, high-reward scavengers to gather research materials from the shattered planets. All under the command of a few powerful barons trying to increase their wealth with SCIENCE!
-        ## Warp Gate Connections:  
-        Synthetic planet orbital gates -> Nebula Gates  
-        Binary Star gates -> SOL  
-        Binary Star gates -> Black Hole  
+        Science and research. <br> 
+        ## System composition in order inmost to outmost:  <br>
+        Binary star system.  <br>
+        Close Gas Giant.  <br>
+        Asteroid belt.  <br>
+        Shattered planet w/ Orbital station and Deadly Ground Resource Gather site.  <br>
+        Asteroid belt.  <br>
+        Shattered planet w/ Oribital station and two Dangerous Ground Resource Gather sites.  <br>
+        Synthetic planet w/ 2 Orbital stations and a Ground station.  <br>
+        ## Politics  <br>
+        A system of researchers using high-risk, high-reward scavengers to gather research materials from the shattered planets. All under the command of a few powerful barons trying to increase their wealth with SCIENCE!<br>
+        ## Warp Gate Connections:  <br>
+        Synthetic planet orbital gates -> Nebula Gates  <br>
+        Binary Star gates -> SOL  <br>
+        Binary Star gates -> Black Hole  <br>
       </details>
         <li>[X] POLITICS AND FACTION BUILDING</li>
         <li>[X] gates?</li>
