@@ -27,7 +27,7 @@ As things happen around you, including your actions, they will appear in the <b>
     <summary><h3>Back End</h3></summary>
     <ul>
       <li>[ ] Ship statistics based on components? </li>
-      <li>[ ] Ship components</li>
+      <li>[X] Ship components</li>
       <li>[ ] Login System / token generation</li>
       <li>[ ] Logging <ul>
         <li>[ ] in region 'subscriber' pattern</li>
@@ -35,9 +35,10 @@ As things happen around you, including your actions, they will appear in the <b>
         </ul>
       </li>
       <li>[ ] Station Shipyards/Vendor</li>
-      <li>[ ] Anomalies (random events at travel)</li>
+      <li>[ ] Anomalies (random events <s>at travel</s>)</li>
   </ul>
   </details>
+
   <details>
     <summary><h3>Front End</h3></summary>
     <ul>
@@ -46,6 +47,7 @@ As things happen around you, including your actions, they will appear in the <b>
       <li>[ ] Game Page</li>
     </ul>
   </details>
+
   <details>
   <summary><h3>SOL SYSTEM</h3></summary>
     <ul>
@@ -131,15 +133,35 @@ As things happen around you, including your actions, they will appear in the <b>
       </li>  
     </ul>
   </details>
+
   <details>
     <summary><h3>Seven more star systems</h3></summary>
     <ul>
       <li>[ ] Outer System 1<ul>
-        <li>[ ] POLITICS AND FACTION BUILDING</li>
-        <li>[ ] gates?</li>
-        <li>[ ] planets</li>
-        <li>[ ] stations</li>
-      </ul></li>
+      <details>
+        Science and research.  
+        ## System composition in order inmost to outmost:  
+        Binary star system.  
+        Close Gas Giant.  
+        Asteroid belt.  
+        Shattered planet w/ Orbital station and Deadly Ground Resource Gather site.  
+        Asteroid belt.  
+        Shattered planet w/ Oribital station and two Dangerous Ground Resource Gather sites.  
+        Synthetic planet w/ 2 Orbital stations and a Ground station.  
+        ## Politics  
+        A system of researchers using high-risk, high-reward scavengers to gather research materials from the shattered planets. All under the command of a few powerful barons trying to increase their wealth with SCIENCE!
+        ## Warp Gate Connections:  
+        Synthetic planet orbital gates -> Nebula Gates  
+        Binary Star gates -> SOL  
+        Binary Star gates -> Black Hole  
+      </details>
+        <li>[X] POLITICS AND FACTION BUILDING</li>
+        <li>[X] gates?</li>
+        <li>[X] planets</li>
+        <li>[X] stations</li>
+        <li>[ ] built in code?</li> 
+        </ul>
+      </li>
       <li>[ ] Outer System 2<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
