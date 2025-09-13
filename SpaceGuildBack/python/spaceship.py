@@ -1,11 +1,11 @@
-from classes import *
+import spaceshipComponent
 
 class Ship:
     def __init__(self):
-        self.health = 0
-        self.engine = Engine()
-        self.weapon = Weapon()
-        self.shield = Shield()
-        self.cargo = Cargo()
-        self.sensor = Sensor()
-        self.stealth_cloak = StealthCloak()
+        self.health = 100
+        self.engine = spaceshipComponent.Engine()
+        self.weapon = spaceshipComponent.Weapon()
+        self.shield = spaceshipComponent.Shield()
+        self.cargo = spaceshipComponent.Cargo()
+        self.sensor = spaceshipComponent.Sensor()
+        self.stealth_cloak = spaceshipComponent.StealthCloak()
