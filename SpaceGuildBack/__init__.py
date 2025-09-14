@@ -1,1 +1,1 @@
-__all__ = ["location","spaceship","spaceshipComponent"]
+__all__ = ["spaceship","spaceshipComponent"]

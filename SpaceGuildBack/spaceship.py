@@ -1,11 +1,13 @@
-import spaceshipComponent
+from spaceshipComponent import *
 
-class Ship:
-    def __init__(self):
-        self.health = 100
-        self.engine = spaceshipComponent.Engine()
-        self.weapon = spaceshipComponent.Weapon()
-        self.shield = spaceshipComponent.Shield()
-        self.cargo = spaceshipComponent.Cargo()
-        self.sensor = spaceshipComponent.Sensor()
-        self.stealth_cloak = spaceshipComponent.StealthCloak()
+def Ship(location:str):
+    return {
+        'hp': 100,
+        'location': location,
+        'engine': Engine('basic engine',0),
+        'weapon': Weapon('basic gun',0),
+        'shield': Shield('basic shield',0),
+        'cargo': Cargo('basic cargo',0),
+        'sensor': Sensor('basic sensor',0),
+        'stealth_cloak': None
+    }
