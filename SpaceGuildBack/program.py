@@ -1,63 +1,36 @@
-from spaceship import Ship
+"""
+LLM-Dev v1: program module after refactor
+- Orchestrates imports from actions and location modules.
+- Leaves example usage commented out for now.
+"""
 
-# Startup
+from spaceship import Ship  # existing import kept if used elsewhere
 
-# 
-
-def Location(name):
-    return {
-        'name': name,
-        'links': set()
-    }
-    
-earth = Location('earth')
-mars = Location('mars')
-
-earth['links'].add('mars')
-mars['links'].add('earth')
-
-locationhandler = {
-    'earth': earth,
-    'mars': mars
-}
+# Import the refactored modules (prefer relative; fallback to absolute for direct runs)
+try:
+	from .location import locationhandler, Location  # type: ignore
+	from .actions import attack, move, doaction, actionhandler, tokenhandler  # type: ignore
+except ImportError:  # pragma: no cover
+	from location import locationhandler, Location  # type: ignore
+	from actions import attack, move, doaction, actionhandler, tokenhandler  # type: ignore
 
 
-
-def attack(attacker, target):
-    atk = tokenhandler[attacker]
-    tar = tokenhandler[target]
-    if atk['location'] == tar['location']:
-        tar['hp'] -= atk['weapon']['multiplier']
-
-def move(mover, newlocation):
-    mov = tokenhandler[mover]
-    loc = locationhandler[newlocation]
-    if loc['name'] in (locationhandler[mov['location']]['links']):
-      mov['location'] = loc['name']
-
-def doaction(actor, action, thing):
-  actionhandler[action](actor, thing)
-
-actionhandler = {
-  'attack': attack,
-  'move': move
-}
-
-
-
-
-myship = Ship('earth')
-othership = Ship('mars')
-
-
-tokenhandler = {
-    'myship': myship,
-    'othership': othership
-}
-  
-print(myship['location'])
-doaction('myship', 'move', 'mars')
-print(myship['location'])
-print(othership['hp'])
-doaction('myship', 'attack', 'othership')
-print(othership['hp'])
+# Example usage (kept commented)
+# myship = Ship('earth')
+# othership = Ship('mars')
+# tokenhandler['myship'] = {
+#     'location': 'earth',
+#     'hp': 100,
+#     'weapon': {'multiplier': 10},
+# }
+# tokenhandler['othership'] = {
+#     'location': 'mars',
+#     'hp': 100,
+#     'weapon': {'multiplier': 8},
+# }
+# print(tokenhandler['myship']['location'])
+# doaction('myship', 'move', 'mars')
+# print(tokenhandler['myship']['location'])
+# print(othership['hp'])
+# doaction('myship', 'attack', 'othership')
+# print(othership['hp'])
