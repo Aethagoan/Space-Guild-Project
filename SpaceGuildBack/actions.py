@@ -22,7 +22,7 @@ except ImportError:  # pragma: no cover
 #   'weapon': { 'multiplier': int | float }
 # }
 # LLM-Dev v1: Keeping schema as dict for compatibility; consider Pydantic/dataclasses later.
-tokenhandler: Dict[str, dict] = {}
+tokenhandler = {}
 
 
 def attack(attacker: str, target: str) -> None:
