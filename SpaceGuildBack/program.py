@@ -4,15 +4,13 @@ LLM-Dev v1: program module after refactor
 - Leaves example usage commented out for now.
 """
 
-from spaceship import Ship  # existing import kept if used elsewhere
+import spaceship
+import location
+import spaceshipComponent
+import actions
 
-# Import the refactored modules (prefer relative; fallback to absolute for direct runs)
-try:
-	from .location import locationhandler, Location  # type: ignore
-	from .actions import attack, move, doaction, actionhandler, tokenhandler  # type: ignore
-except ImportError:  # pragma: no cover
-	from location import locationhandler, Location  # type: ignore
-	from actions import attack, move, doaction, actionhandler, tokenhandler  # type: ignore
+
+
 
 
 # Example usage (kept commented)

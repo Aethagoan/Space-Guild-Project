@@ -1,7 +1,15 @@
 import redis
+import subprocess
 import json
 
+# START THE DOCKER CONTAINER
+# docker run -d --name redis -p 6379:6379
 
+# does the container exist?
+
+
+
+subprocess.run("docker run -d --name redis -p 6379:6379".split(" "))
 
 class redishandler():
     # Connect to Redis
@@ -20,5 +28,9 @@ class redishandler():
         self.r.get(name)
 
 
-r = redishandler
+rh = redishandler()
+
+rh.r.set('foo', 'bar')
+# True
+rh.r.get('foo')
 

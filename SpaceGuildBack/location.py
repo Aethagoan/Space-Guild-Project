@@ -20,10 +20,8 @@ def Location(name: str):
     
     return {
         'name': name,
-        'links': set(),  # type: Set[str]
+        'links': set()
     }
-
-
 
 # a dict that is supposed to have 'string': Location dict
 locationhandler = { }
@@ -35,14 +33,11 @@ def addnewlocation(name:str):
 def linklocations(name:str,name2:str):
     locationhandler[name]['links'].add(name2)
     locationhandler[name2]['links'].add(name)
-    
-
-addnewlocation('earth')
-addnewlocation('mars')
-linklocations('earth','mars')
 
 
 __all__ = [
     'Location',
     'locationhandler',
+    'addnewlocation',
+    'linklocations'
 ]
