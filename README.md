@@ -1,25 +1,17 @@
 <h1>WELCOME TO SPACE GUILD</h1>  
-A space game--in a website.  
+A space game--in a website.
 <hr>
-<br>
-<h2>HOW TO PLAY</h2>
-<br>
-Login.<br>
-When you first start the game, you will have a basic ship with basic components.<br>
-There is no real task to the game, and it a sandbox where many things are possible.<br>
-<br>
-The Panels: The <b>Log</b> pane, The <b>Selection</b> pane, and the <b>Actions</b> Pane.<br>
-Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the <b>Actions</b> pane on the right.  <br>
-As things happen around you, including your actions, they will appear in the <b>Log</b> pane.<br>
+<h2>System Design Decisions</h2><br>
+- Python over C#
+<tab>C# is great. I love C#. But if you want to build complex handlers, such as something that can take in a string and give back a variety of differing object types? Talk about a nightmare. Python makes this really easy and makes my flow much more maintainable in this project. The tradeoff is how to manage packages ands separate code into different files, which is easier in C#.
 
-<hr>
-<br>
-<h2>HOW IT WORKS</h2>
-<i>Every 5 seconds, a tick happens. On a tick, everything in the world updates at once. All actions resolve. </i>
-<br>
-<br>
-<hr>
-<br>
+- Dictionaries over Class Inheritance
+<tab>At first, I thought that classes were the way to go. I wanted to define lots of classes that had complex inheritance and things, but when I realized that I could use sets and dictionaries for all* of my functionality in this project - Structures that are tried and tested and FAST - I never looked back.
+
+- Redis over SQL
+<tab>The main problem I researched was read-write speed for this project, because I wanted the ability for hundreds or even thousands of players to be able to login. You can't write that quickly to a regular database. 1000 requests every 5 seconds? Redis was the clear choice.
+
+- 
 
 <h2>Progress tracking:</h2>  
 <ul>
