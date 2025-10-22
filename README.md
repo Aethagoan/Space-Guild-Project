@@ -13,6 +13,8 @@ A space game--in a website.
 
 - 
 
+- Front end will be composed of text based interface, looking like a command terminal.
+
 <h2>Progress tracking:</h2>  
 <ul>
 <details>
