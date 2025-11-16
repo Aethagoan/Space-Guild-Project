@@ -12,6 +12,7 @@ from location import locationhandler
 # Public registry of tokens by token id/name
 tokenhandler = {}
 
+# Actions
 def attack(attacker: str, target: str) -> None:
 	atk = tokenhandler[attacker]
 	tar = tokenhandler[target]
@@ -24,13 +25,17 @@ def move(mover: str, newlocation: str) -> None:
 	if loc['name'] in (locationhandler[mov['location']]['links']):
 		mov['location'] = loc['name']
 
+def collect(collector: str, target:str) -> None:
+	col = tokenhandler[collector]
+	tar = tokenhandler[target]
+	if col['location'] == tar['location']:
+		if can_fit_item(col['cargo'], tar['weight']):
+			add_item(col['cargo'])
 
 
 
 
-
-
-
+# Action Delegator
 def doaction(actor: str, action: str, thing: str) -> None:
 	try:
 		actionhandler[action](actor, thing)
@@ -40,11 +45,15 @@ def doaction(actor: str, action: str, thing: str) -> None:
 actionhandler = {
 	'attack': attack,
 	'move': move,
+	'collect': collect
 }
+
+
 
 __all__ = [
 	'attack',
 	'move',
+	'collect',
 	'doaction',
 	'actionhandler',
 	'tokenhandler',
