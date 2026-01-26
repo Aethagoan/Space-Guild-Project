@@ -1,27 +1,47 @@
 <h1>WELCOME TO SPACE GUILD</h1>  
-A space game--in a website.  
+A space game--in a website.
 <hr>
-<br>
-<h2>HOW IT WORKS</h2>
-<br>
-Login.<br>
-When you first start the game, you will have a basic ship with basic components.<br>
-There is no real task to the game, and it a sandbox where many things are possible.<br>
-<br>
-The Panels: The <b>Log</b> pane, The <b>Selection</b> pane, and the <b>Actions</b> Pane.<br>
-Most elements will be clickable. When you click on something, it's details and things you can do will pop up in the <b>Actions</b> pane on the right.  <br>
-As things happen around you, including your actions, they will appear in the <b>Log</b> pane.<br>
+<h2>System Design Decisions</h2><br>
+- Python over C#
+<tab>C# is great. I love C#. But if you want to build complex handlers, such as something that can take in a string and give back a variety of differing object types? Talk about a nightmare. Python makes this really easy and makes my flow much more maintainable in this project. The tradeoff is how to manage packages ands separate code into different files, which is easier in C#.
 
-<hr>
-<br>
-<h2>HOW IT'S MADE</h2>  
-<i>WIP</i>
-<br>
-<br>
-<hr>
-<br>
+- Dictionaries over Class Inheritance
+<tab>At first, I thought that classes were the way to go. I wanted to define lots of classes that had complex inheritance and things, but when I realized that I could use sets and dictionaries for all* of my functionality in this project - Structures that are tried and tested and FAST - I never looked back.
+
+- Redis over SQL
+<tab>The main problem I researched was read-write speed for this project, because I wanted the ability for hundreds or even thousands of players to be able to login. You can't write that quickly to a regular database. 1000 requests every 5 seconds? Redis was the clear choice.
+
+- 
+
+- Front end will be composed of text based interface, looking like a command terminal.
+
 <h2>Progress tracking:</h2>  
 <ul>
+<details>
+    <summary><h3>Back End</h3></summary>
+    <ul>
+      <li>[ ] Ship statistics based on components? </li>
+      <li>[X] Ship components</li>
+      <li>[ ] Login System / token generation</li>
+      <li>[ ] Logging <ul>
+        <li>[ ] in region 'subscriber' pattern</li>
+        <li>[ ] per ship log - messages and purely front-end added ship notifications (travel, damage, scanned, etc).</li>
+        </ul>
+      </li>
+      <li>[ ] Station Shipyards/Vendor</li>
+      <li>[ ] Anomalies (random events <s>at travel</s>)</li>
+  </ul>
+  </details>
+
+  <details>
+    <summary><h3>Front End</h3></summary>
+    <ul>
+      <li>[ ] Landing Page</li>
+      <li>[ ] Login Page</li>
+      <li>[ ] Game Page</li>
+    </ul>
+  </details>
+
   <details>
   <summary><h3>SOL SYSTEM</h3></summary>
     <ul>
@@ -104,53 +124,80 @@ As things happen around you, including your actions, they will appear in the <b>
         <li>[ ] Kyper Region 3 Orbit + Station</li>
         <li>[ ] Kyper Region 4 Orbit + Station</li>
         </ul>
-      </li>  
+      </li>
+      <li>[ ] built in code?</li> 
     </ul>
   </details>
+
   <details>
     <summary><h3>Seven more star systems</h3></summary>
     <ul>
-      <li>[ ] Outer System 1<ul>
+      <li>[ ] Outer System 1 - <ul>
+      <details>
+        Science and research. <br> 
+        **System composition in order inmost to outmost:**  <br>
+        Binary star system.  <br>
+        Close Gas Giant.  <br>
+        Asteroid belt.  <br>
+        Shattered planet w/ Orbital station and Deadly Ground Resource Gather site.  <br>
+        Asteroid belt.  <br>
+        Shattered planet w/ Oribital station and two Dangerous Ground Resource Gather sites.  <br>
+        Synthetic planet w/ 2 Orbital stations and a Ground station.  <br>
+        **Politics**  <br>
+        A system of researchers using high-risk, high-reward scavengers to gather research materials from the shattered planets. All under the command of a few powerful barons trying to increase their wealth with SCIENCE!<br>
+        **Warp Gate Connections:**<br>
+        Synthetic planet orbital gates -> Nebula Gates  <br>
+        Binary Star gates -> SOL  <br>
+        Binary Star gates -> Black Hole  <br>
+      </details>
+        <li>[X] POLITICS AND FACTION BUILDING</li>
+        <li>[X] gates?</li>
+        <li>[X] planets</li>
+        <li>[X] stations</li>
+        <li>[ ] built in code?</li> 
+        </ul>
+      </li>
+      <li>[ ] Outer System 2 - Empire<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
-      </ul></li>
-      <li>[ ] Outer System 2<ul>
-        <li>[ ] POLITICS AND FACTION BUILDING</li>
-        <li>[ ] gates?</li>
-        <li>[ ] planets</li>
-        <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 3<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 4<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 5<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
       <li>[ ] Outer System 6<ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
-      <li>[ ] Outer System 7<ul>
+      <li>[ ] Outer System 7 - Zealots <ul>
         <li>[ ] POLITICS AND FACTION BUILDING</li>
         <li>[ ] gates?</li>
         <li>[ ] planets</li>
         <li>[ ] stations</li>
+        <li>[ ] built in code?</li> 
       </ul></li>
     </ul>
   </details>
@@ -162,6 +209,7 @@ As things happen around you, including your actions, they will appear in the <b>
       <li>[ ] Asteroid Fields</li>
       <li>[ ] Nebula Station 1</li>
       <li>[ ] Nebula Station 2</li>
+      <li>[ ] built in code?</li> 
     </ul>
   </details>
   <details>
@@ -169,32 +217,9 @@ As things happen around you, including your actions, they will appear in the <b>
     <ul>
       <li>[ ] Gate/Teleporter/Warp orbit</li>
       <li>[ ] Black Hole Orbit</li>
-    </ul>
-  </details>
-  <details>
-    <summary><h3>Back End</h3></summary>
-    <ul>
-      <li>[ ] Ship statistics based on components? </li>
-      <li>[ ] Ship components</li>
-      <li>[ ] Login System / token generation</li>
-      <li>[ ] Logging <ul>
-        <li>[ ] in region 'subscriber' pattern</li>
-        <li>[ ] per ship log - messages and purely front-end added ship notifications (travel, damage, scanned, etc).</li>
-        </ul>
-      </li>
-      <li>[ ] Station Shipyards/Vendor</li>
-      <li>[ ] Anomalies (random events at travel)</li>
-  </ul>
-  </details>
-  <details>
-    <summary><h3>Front End</h3></summary>
-    <ul>
-      <li>[ ] Landing Page</li>
-      <li>[ ] Login Page</li>
-      <li>[ ] Game Page</li>
+      <li>[ ] built in code?</li> 
     </ul>
   </details>
   <br>
-  
 </ul>
 

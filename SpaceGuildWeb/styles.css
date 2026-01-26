@@ -1,0 +1,23 @@
+:root {
+  --border-color-green: rgb(0, 95, 0);
+  --border-color-red: rgb(182, 0, 0);
+  --border-color-orange: rgb(202, 131, 0);
+  --border-color-yellow: rgb(233, 198, 0);
+  --border-color-purple: rgb(148, 0, 148);
+  --border-color-gray: rgb(66, 66, 66);
+}
+
+body {
+  background-color: #121212;
+  color: whitesmoke;
+}
+
+.container {
+  background-color: #131313; /* Dark background */
+  border-radius: 10px; /* Rounded corners */
+  border-style: solid;
+  border-width: .175rem;
+  border-color:var(--border-color-green);
+  padding: 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
