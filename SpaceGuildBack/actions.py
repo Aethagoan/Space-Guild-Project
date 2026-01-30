@@ -1,46 +1,61 @@
 """
-LLM-Dev v1: Actions module
 - Contains action implementations (attack, move, etc.) and the action handler mapping.
 - Maintains a shared `tokenhandler` registry that systems (API, NPC runners) can reference.
 - Depends on `locationhandler` from the `location` module.
 """
 
+
 from typing import Callable, Dict
+
 from location import locationhandler
 
+from redishandler import getdictfromredis,savedicttoredis
 
-# Public registry of tokens by token id/name
-tokenhandler = {}
 
 # Actions
+
 def attack(attacker: str, target: str) -> None:
-	atk = tokenhandler[attacker]
-	tar = tokenhandler[target]
+	atk = getdictfromredis[attacker]
+	tar = getdictfromredis[target]
+
 	if atk['location'] == tar['location']:
-		tar['hp'] -= atk['weapon']['multiplier']
+		tar['ship']['hp'] -= atk['ship']['weapon']['multiplier']
+		savedicttoredis(target,tar)
+
 
 def move(mover: str, newlocation: str) -> None:
-	mov = tokenhandler[mover]
+
+	mov = getdictfromredis[mover]
 	loc = locationhandler[newlocation]
+
 	if loc['name'] in (locationhandler[mov['location']]['links']):
 		mov['location'] = loc['name']
+		savedicttoredis(mover,mov)
+
 
 def collect(collector: str, target:str) -> None:
-	col = tokenhandler[collector]
-	tar = tokenhandler[target]
-	if col['location'] == tar['location']:
-		if can_fit_item(col['cargo'], tar['weight']):
-			add_item(col['cargo'])
+	col = getdictfromredis[collector]
+	tar = getdictfromredis[target]
 
+	if col['location'] == tar['location']:
+
+		if can_fit_item(col['cargo'], tar['weight']):
+
+			add_item(col['cargo'])
+			savedicttoredis(collector,col)
 
 
 
 # Action Delegator
-def doaction(actor: str, action: str, thing: str) -> None:
+
+def doaction(actor: str, action: str, target: str) -> None:
+
 	try:
-		actionhandler[action](actor, thing)
+		actionhandler[action](actor, target)
+
 	except:
 		pass
+
 
 actionhandler = {
 	'attack': attack,
@@ -49,12 +64,8 @@ actionhandler = {
 }
 
 
-
 __all__ = [
-	'attack',
-	'move',
-	'collect',
 	'doaction',
 	'actionhandler',
-	'tokenhandler',
 ]
+

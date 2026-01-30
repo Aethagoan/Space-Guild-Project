@@ -1,5 +1,4 @@
 """
-LLM-Dev v1: program module after refactor
 - Orchestrates imports from actions and location modules.
 - Leaves example usage commented out for now.
 """

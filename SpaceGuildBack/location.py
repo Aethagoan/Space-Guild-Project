@@ -15,12 +15,12 @@ def Location(name: str):
     - name: str
     - links: set[str] of adjacent location names
 
-    LLM-Dev v1: Keeping as dict for compatibility with existing code.
     """
     
     return {
         'name': name,
-        'links': set()
+        'links': set(),
+        'log': [],
     }
 
 # a dict that is supposed to have 'string': Location dict

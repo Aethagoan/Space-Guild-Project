@@ -2,6 +2,9 @@ import redis
 import subprocess
 import json
 
+# redis should be the token storage master.
+# name = username?, contents = dict (or contents) is the rest.
+
 class redishandler():
     def __init__(self):
         try:
@@ -21,3 +24,5 @@ class redishandler():
             return self.r.get(name)
         except Exception as e:
             print(f"Failed to retrieve dictionary from Redis: {e}")
+
+

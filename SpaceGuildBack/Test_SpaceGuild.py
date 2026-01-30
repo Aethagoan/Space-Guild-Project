@@ -46,3 +46,6 @@ def test_locations_link_correctly():
 
 	loc.locationhandler.clear()
 	pass
+
+def test_make_player():
+	

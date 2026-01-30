@@ -1,7 +1,9 @@
 ORION FACTION
-    There's a reason everyone gets their start in Orion. It just so turns out that space travel is hard! And getting started is even harder. 
+    There's a reason everyone gets their start in Orion. It just so turns out that space travel is hard! And getting started is even harder. The technology required as a base for space travel just isn't something someone can assemble or gather by themselves. But nonetheless, space needs to be explored! Space needs to be something materially gatherable for the sapient forces of this world. And in a greedy world, where nobody found it their responsibility, someone had to step up. Thus the Orion Faction - They'll get you started. Such a responsibility comes at a high cost. Loyalty. Those who believe in their mission - which is to explore, defend, make use of, and persist space and sapience - do so with vigor by oath. In Orion Space, crime is not tolerated, and is dealt with in a handly manner by quick-response enforcers who respond to distress calls and handle the situation accordingly.
 
+    Several star systems, fairly typical, single star, few rocky planets, few gas planets.
 
+    The Orion faction works closely with the Manufacturing faction, who is in a lot of places.
 
 
  
