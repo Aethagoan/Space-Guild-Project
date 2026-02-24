@@ -2,15 +2,19 @@
 import location as loc
 import spaceshipComponent as spc
 import spaceship as sp
-
+from item import Item
+from player import Player
 
 # test function must begin with test_ !!!
 # this file name must start with Test_ !!!
+# debug by 
 
 def test_add_item():
 	cargo = spc.Cargo('basic cargo', 0)
 	
-	result = spc.add_item(cargo, "Item1", 10)
+	testitem = Item('basic item','nowhere',1,50)
+
+	result = spc.add_item(cargo, testitem)
 	
 	assert result
 	assert len(cargo['items']) == 1
@@ -48,4 +52,5 @@ def test_locations_link_correctly():
 	pass
 
 def test_make_player():
-	
+	p1 = Player()
+	assert p1 != None

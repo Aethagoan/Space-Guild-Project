@@ -8,8 +8,8 @@ A space game--in a website.
 - Dictionaries over Class Inheritance
 <tab>At first, I thought that classes were the way to go. I wanted to define lots of classes that had complex inheritance and things, but when I realized that I could use sets and dictionaries for all* of my functionality in this project - Structures that are tried and tested and FAST - I never looked back.
 
-- Redis over SQL
-<tab>The main problem I researched was read-write speed for this project, because I wanted the ability for hundreds or even thousands of players to be able to login. You can't write that quickly to a regular database. 1000 requests every 5 seconds? Redis was the clear choice.
+- Postgresql
+<tab> Unlogged tables for speed, with the power of relational.
 
 - 
 

@@ -1,7 +1,12 @@
-import spaceship
+# Aidan Orion 23 Feb 2026
+# Player Dictionary Creator.
 
-def Player():
+
+from spaceship import Ship
+
+def Player(name:str,ship_id:int):
     return {
-        'ship': Ship(),
-        'location': str
+        'name': name,
+        'ship_id': ship_id,
+        'faction_id':int,
     }

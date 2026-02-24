@@ -1,0 +1,6 @@
+{
+    "editor.suggestOnTriggerCharacters": false,
+    "editor.quickSuggestions": {
+        "other": "off"
+    }
+}
