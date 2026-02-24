@@ -1,6 +1,6 @@
 # Aidan Orion 23 Feb 2026
 
-# stats, carrying capacity, stuff like that should be kept track of in another dictionary for quick lookupm (all based on tier and multiplier.)
+# stats, carrying capacity, stuff like that should be kept track of in another dictionary for quick lookup (all based on tier and multiplier.)
 
 def Ship(location: str = None):
     return {
@@ -19,5 +19,3 @@ def Ship(location: str = None):
     }
 
 
-# 'pool': 200 * (1 + shieldtier),
-# capacity: 100 * (1 + cargotier),

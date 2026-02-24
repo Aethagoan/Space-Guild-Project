@@ -361,6 +361,21 @@ class DataHandler:
         with self._acquire_locks(f"ship:{ship_id}"):
             self.Ships[ship_id]['hp'] = max(0, hp)
     
+    def set_ship_shield_pool(self, ship_id: int, shield_pool: float):
+        """Set a ship's shield pool directly (thread-safe).
+        
+        Args:
+            ship_id: Ship ID
+            shield_pool: New shield pool value
+            
+        Raises:
+            KeyError: If ship doesn't exist
+        """
+        _ = self.Ships[ship_id]
+        
+        with self._acquire_locks(f"ship:{ship_id}"):
+            self.Ships[ship_id]['shield_pool'] = max(0.0, shield_pool)
+    
     def update_ship_component(self, ship_id: int, component_type: str, item_id: int):
         """Update a ship's component (engine, weapon, shield, etc.) (thread-safe).
         
@@ -503,6 +518,30 @@ class DataHandler:
             # Clamp to min/max multiplier bounds
             min_mult = self.Items[item_id].get('min_multiplier', 1)
             max_mult = self.Items[item_id].get('max_multiplier', 10)
+            self.Items[item_id]['multiplier'] = max(min_mult, min(max_mult, new_multiplier))
+    
+    def repair_item_component(self, item_id: int, new_health: float, new_multiplier: float):
+        """Repair a component item by setting both health and multiplier atomically (thread-safe).
+        
+        This is used by repair operations that need to update both values in a single transaction.
+        
+        Args:
+            item_id: Item ID to repair
+            new_health: New health value
+            new_multiplier: New multiplier value (will be clamped to min/max bounds)
+            
+        Raises:
+            KeyError: If item doesn't exist
+        """
+        _ = self.Items[item_id]
+        
+        with self._acquire_locks(f"item:{item_id}"):
+            # Update health
+            self.Items[item_id]['health'] = max(0.0, new_health)
+            
+            # Update multiplier (clamped to bounds)
+            min_mult = self.Items[item_id].get('min_multiplier', 1.0)
+            max_mult = self.Items[item_id].get('max_multiplier', 10.0)
             self.Items[item_id]['multiplier'] = max(min_mult, min(max_mult, new_multiplier))
     
     def damage_item(self, item_id: int, damage: float) -> Dict[str, Any]:

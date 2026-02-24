@@ -286,9 +286,8 @@ def repair_ship_hp(ship_id: int) -> float:
     # Calculate restoration amount
     hp_restored = max_hp - current_hp
     
-    # Apply repair thread-safely
-    with dh._acquire_locks(f"ship:{ship_id}"):
-        dh.Ships[ship_id]['hp'] = max_hp
+    # Apply repair using DataHandler's method
+    dh.set_ship_hp(ship_id, int(max_hp))
     
     return hp_restored
 
@@ -319,9 +318,8 @@ def refill_shield_pool(ship_id: int) -> float:
     # Calculate restoration amount
     shields_restored = max_shield - current_shield
     
-    # Apply refill thread-safely
-    with dh._acquire_locks(f"ship:{ship_id}"):
-        dh.Ships[ship_id]['shield_pool'] = max_shield
+    # Apply refill using DataHandler's method
+    dh.set_ship_shield_pool(ship_id, max_shield)
     
     return shields_restored
 
@@ -468,10 +466,8 @@ def repair_component(item_id: int) -> Dict[str, float]:
     # Calculate health restored
     health_restored = max_health - current_health
     
-    # Apply repairs thread-safely
-    with dh._acquire_locks(f"item:{item_id}"):
-        dh.Items[item_id]['health'] = max_health
-        dh.Items[item_id]['multiplier'] = new_multiplier
+    # Apply repairs using DataHandler's method
+    dh.repair_item_component(item_id, max_health, new_multiplier)
     
     return {
         'health_restored': health_restored,
@@ -507,7 +503,7 @@ def can_equip_item(ship_id: int, item_id: int) -> bool:
         ship_tier = ship.get('tier', 0)
         item_tier = item.get('tier', 0)
         
-        return item_tier <= ship_tier
+        return item_tier <= ship_tier + 2
     except KeyError:
         return False
 
