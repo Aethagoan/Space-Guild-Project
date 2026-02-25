@@ -130,5 +130,40 @@ def health_check():
     return jsonify({'status': 'healthy'}), 200
 
 
+@app.route('/ship/log', methods=['GET'])
+def get_ship_log_endpoint():
+    """Get ephemeral log entries for a player's ship.
+    
+    Query parameters:
+        player_id: int - Player ID
+    
+    Returns:
+        {
+            "entries": [
+                {"type": str, "content": str},
+                ...
+            ]
+        } or {"error": "message"}
+    """
+    try:
+        player_id = request.args.get('player_id', type=int)
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required parameter: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Get ship logs
+        entries = data_handler.get_ship_log(ship_id)
+        
+        return jsonify({'entries': entries}), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True)

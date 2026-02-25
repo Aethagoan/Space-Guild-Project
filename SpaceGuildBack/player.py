@@ -2,7 +2,7 @@
 # Player Dictionary Creator.
 
 
-from spaceship import Ship
+from ship import Ship
 
 def Player(name:str,ship_id:int):
     return {

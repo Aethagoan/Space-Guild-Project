@@ -37,7 +37,7 @@
 <h1>Ship Component Details</h1>
 <ul>
     <li>
-        <h3>Driver/Warp Drive/Propulsion</h3>
+        <h3>Driver/Warp Drive/Propulsion (Engine)</h3>
         <p>High Health, Tier decides how many zones you can travel per tick.</p>
     </li>
     <li>

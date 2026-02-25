@@ -17,15 +17,17 @@ import json
 import os
 
 # -
-from Location import Location
-from Player import Player
-from spaceship import Ship
+from location import Location
+from player import Player
+from ship import Ship
 from item import Item
 from faction import Faction
 
 
 class DataHandler:
-    """Thread-safe data handler for all game entities using JSON storage."""
+    """Thread-safe data handler for all game entities using JSON storage.
+    
+    """
     
     def __init__(self, data_dir: str = "data"):
         """Initialize the data handler with empty collections and a lock cache.
@@ -49,9 +51,15 @@ class DataHandler:
         self.Items: Dict[int, dict] = {}
         self.Players: Dict[int, dict] = {}
         self.Factions: Dict[int, dict] = {}
+        
+        # Ship logs (ephemeral, not persisted) - lazily initialized
+        self.ShipLogs: Dict[int, dict] = {}
+        self.MAX_LOG_ENTRIES = 50
     
     def clear_locks(self):
-        """Clear the lock cache. Should be called each game tick."""
+        """Clear the lock cache. Should be called each game tick.
+    
+        """
         self._locks = defaultdict(Lock)
     
     @contextmanager
@@ -62,17 +70,19 @@ class DataHandler:
             *keys: Entity keys to lock (will be sorted before acquisition)
         """
         # Sort keys to ensure consistent lock ordering and prevent deadlocks
+        # Using (type, str) tuple ensures different types don't conflict
         sorted_keys = sorted(keys, key=lambda k: (type(k).__name__, str(k)))
         locks = [self._locks[key] for key in sorted_keys]
         
-        # Acquire all locks
+        # Acquire all locks in sorted order
         for lock in locks:
             lock.acquire()
         
         try:
             yield
         finally:
-            # Release all locks in reverse order
+            # Release all locks in reverse order (minor optimization: 
+            # last-acquired lock released first, potentially unblocking waiters faster)
             for lock in reversed(locks):
                 lock.release()
     
@@ -129,7 +139,7 @@ class DataHandler:
         _ = self.Locations[name2]
 
         # Acquire locks in sorted order to prevent deadlock
-        with self._acquire_locks(f"location:{name1}"):
+        with self._acquire_locks(f"location:{name1}:links"):
             self.Locations[name1]['links'].append(name2)
     
     def double_link_locations(self, name1: str, name2: str):
@@ -147,7 +157,7 @@ class DataHandler:
         _ = self.Locations[name2]
         
         # Acquire locks in sorted order to prevent deadlock
-        with self._acquire_locks(f"location:{name1}", f"location:{name2}"):
+        with self._acquire_locks(f"location:{name1}:links", f"location:{name2}:links"):
             self.Locations[name1]['links'].append(name2)
             self.Locations[name2]['links'].append(name1)
     
@@ -167,7 +177,7 @@ class DataHandler:
         _ = self.Locations[location_name]
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"location:{location_name}", f"ship:{ship_id}"):
+        with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
             if ship_id not in self.Locations[location_name]['ship_ids']:
                 self.Locations[location_name]['ship_ids'].append(ship_id)
             
@@ -189,7 +199,7 @@ class DataHandler:
         """
         _ = self.Locations[location_name]
         
-        with self._acquire_locks(f"location:{location_name}", f"ship:{ship_id}"):
+        with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
             if ship_id in self.Locations[location_name]['ship_ids']:
                 self.Locations[location_name]['ship_ids'].remove(ship_id)
                 # Clear ship's location field
@@ -201,7 +211,7 @@ class DataHandler:
         """Move a ship from one location to another (thread-safe with multiple locks).
         
         This syncs both the ship's location field and both locations' ship_ids lists.
-        
+
         Args:
             ship_id: ID of ship to move
             from_location: Current location name
@@ -211,14 +221,18 @@ class DataHandler:
             KeyError: If locations or ship don't exist
             ValueError: If ship is not at from_location
         """
-        # Verify all entities exist
+        # Verify all entities exist (fail fast before acquiring locks)
         ship = self.Ships[ship_id]
         _ = self.Locations[from_location]
         _ = self.Locations[to_location]
         
-        # Acquire locks in sorted order (all three: both locations and ship)
-        with self._acquire_locks(f"location:{from_location}", f"location:{to_location}", f"ship:{ship_id}"):
+        # Acquire locks in sorted order (prevents deadlock if external systems also lock these)
+        # - location:{from}:ships - Protects source location's ship list
+        # - location:{to}:ships - Protects destination location's ship list  
+        # - ship:{id}:location - Protects ship's location field
+        with self._acquire_locks(f"location:{from_location}:ships", f"location:{to_location}:ships", f"ship:{ship_id}:location"):
             # Double-check ship is at from_location (both sources of truth)
+            # This catches race conditions where ship was moved by another system
             if ship['location'] != from_location:
                 raise ValueError(f"Ship {ship_id} location mismatch: ship says '{ship['location']}', expected '{from_location}'")
             
@@ -226,6 +240,7 @@ class DataHandler:
                 raise ValueError(f"Ship {ship_id} not in location '{from_location}' ship_ids list")
             
             # Update both sources of truth atomically
+            # CRITICAL: These three operations must be atomic to maintain consistency
             self.Locations[from_location]['ship_ids'].remove(ship_id)
             self.Locations[to_location]['ship_ids'].append(ship_id)
             self.Ships[ship_id]['location'] = to_location
@@ -243,7 +258,7 @@ class DataHandler:
         _ = self.Locations[location_name]
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"location:{location_name}"):
+        with self._acquire_locks(f"location:{location_name}:items"):
             self.Locations[location_name]['items'].append(item_id)
     
     def remove_item_from_location(self, location_name: str, item_id: int):
@@ -259,7 +274,7 @@ class DataHandler:
         """
         _ = self.Locations[location_name]
         
-        with self._acquire_locks(f"location:{location_name}"):
+        with self._acquire_locks(f"location:{location_name}:items"):
             if item_id in self.Locations[location_name]['items']:
                 self.Locations[location_name]['items'].remove(item_id)
             else:
@@ -291,8 +306,8 @@ class DataHandler:
         # Verify location exists
         _ = self.Locations[location_name]
         
-        # Acquire locks for both ship and location
-        with self._acquire_locks(f"location:{location_name}", f"ship:{ship_id}"):
+        # Acquire locks for both ship's location and location's ship list
+        with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
             ship = ship_data if ship_data is not None else Ship(location=location_name)
             ship['location'] = location_name  # Ensure location is set
             self.Ships[ship_id] = ship
@@ -343,7 +358,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['hp'] = max(0, self.Ships[ship_id]['hp'] + delta)
     
     def set_ship_hp(self, ship_id: int, hp: int):
@@ -358,7 +373,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['hp'] = max(0, hp)
     
     def set_ship_shield_pool(self, ship_id: int, shield_pool: float):
@@ -373,7 +388,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:shield"):
             self.Ships[ship_id]['shield_pool'] = max(0.0, shield_pool)
     
     def update_ship_component(self, ship_id: int, component_type: str, item_id: int):
@@ -395,7 +410,7 @@ class DataHandler:
         _ = self.Ships[ship_id]
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:component:{component_type}"):
             self.Ships[ship_id][component_type] = item_id
     
     def add_item_to_ship_cargo(self, ship_id: int, item_id: int):
@@ -411,7 +426,7 @@ class DataHandler:
         _ = self.Ships[ship_id]
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:cargo"):
             self.Ships[ship_id]['items'].append(item_id)
     
     def remove_item_from_ship_cargo(self, ship_id: int, item_id: int):
@@ -427,7 +442,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:cargo"):
             if item_id in self.Ships[ship_id]['items']:
                 self.Ships[ship_id]['items'].remove(item_id)
             else:
@@ -604,7 +619,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:hp"):
             current_hp = self.Ships[ship_id].get('hp', 0.0)
             
             # Apply damage
@@ -638,7 +653,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        with self._acquire_locks(f"ship:{ship_id}:shield"):
             current_shield = self.Ships[ship_id].get('shield_pool', 0.0)
             
             # Calculate how much damage the shield can absorb
@@ -823,8 +838,8 @@ class DataHandler:
         _ = self.Locations[location_name]
         _ = self.Ships[ship_id]
         
-        # Acquire locks in sorted order (location before ship to prevent deadlock)
-        with self._acquire_locks(f"location:{location_name}", f"ship:{ship_id}"):
+        # Acquire locks in sorted order (location items before ship cargo to prevent deadlock)
+        with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
             # Verify item is at the location
             if item_id not in self.Locations[location_name]['items']:
                 raise ValueError(f"Item {item_id} not found at location '{location_name}'")
@@ -875,7 +890,8 @@ class DataHandler:
         
         slot_name = type_to_slot[item_type]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        # Acquire both cargo and specific component slot locks (sorted to prevent deadlock)
+        with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
             # Verify item is in ship's cargo
             if item_id not in self.Ships[ship_id]['items']:
                 raise ValueError(f"Item {item_id} not in ship {ship_id}'s cargo")
@@ -910,7 +926,8 @@ class DataHandler:
         
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}"):
+        # Acquire both cargo and specific component slot locks (sorted to prevent deadlock)
+        with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
             item_id = self.Ships[ship_id].get(slot_name)
             
             if item_id is None or not isinstance(item_id, int):
@@ -1052,3 +1069,73 @@ class DataHandler:
         self.load_items()
         self.load_players()
         self.load_factions()
+    
+    # ============================================================================
+    # SHIP LOG METHODS (Ephemeral - not persisted)
+    # ============================================================================
+    
+    def _init_ship_log(self, ship_id: int):
+        """Lazily initialize a ship log structure.
+        
+        Args:
+            ship_id: The ship to initialize logs for
+        """
+        if ship_id not in self.ShipLogs:
+            self.ShipLogs[ship_id] = {
+                'entries': [None] * self.MAX_LOG_ENTRIES,
+                'count': 0,
+                'write_index': self.MAX_LOG_ENTRIES - 1  # Start at end, write backwards
+            }
+    
+    def add_ship_log(self, ship_id: int, message_type: str, content: str):
+        """Add a log entry to a ship's ephemeral log.
+        Writes backwards so newest messages are at lower indices.
+        
+        Args:
+            ship_id: The ship receiving the log entry
+            message_type: Type of message ('combat', 'sensor', 'message', 'environment', etc.)
+            content: The message content
+        """
+        with self._acquire_locks(f"shiplog:{ship_id}"):
+            self._init_ship_log(ship_id)
+            log = self.ShipLogs[ship_id]
+            
+            # Write to current position
+            log['entries'][log['write_index']] = {
+                'type': message_type,
+                'content': content
+            }
+            
+            # Move write pointer backwards (wraps to end when reaching 0)
+            log['write_index'] = (log['write_index'] - 1) % self.MAX_LOG_ENTRIES
+            
+            if log['count'] < self.MAX_LOG_ENTRIES:
+                log['count'] += 1
+    
+    def get_ship_log(self, ship_id: int) -> List[dict]:
+        """Get all log entries for a ship in chronological order (oldest first, newest last).
+        
+        Args:
+            ship_id: The ship to retrieve logs for
+            
+        Returns:
+            List of log entries in chronological order (oldest->newest)
+        """
+        with self._acquire_locks(f"shiplog:{ship_id}"):
+            if ship_id not in self.ShipLogs:
+                return []
+            
+            log = self.ShipLogs[ship_id]
+            
+            if log['count'] < self.MAX_LOG_ENTRIES:
+                # Buffer not full yet - messages are in last 'count' slots
+                # Return the last count entries
+                return log['entries'][-log['count']:]
+            else:
+                # Buffer wrapped - slice and concatenate
+                # write_index points to next write position
+                # Oldest message starts at write_index+1
+                oldest_idx = (log['write_index'] + 1) % self.MAX_LOG_ENTRIES
+                oldest = log['entries'][oldest_idx:]
+                newest = log['entries'][:oldest_idx]
+                return oldest + newest

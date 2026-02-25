@@ -24,40 +24,18 @@
 ### Critical Path Items
 
 #### 1. Station System Implementation
-- [ ] Create Station entity type in `data.py`
-  - Station inventory (items/components for sale)
-  - Docking bay capacity
-  - Faction ownership
+- [ ] Create Station entity
+  - Station quests (items/components/tiers to quest for)
+  - Faction ownership (NPC factions only?)
   - Station type (shipyard, vendor, research, etc.)
-- [ ] Station CRUD operations with proper locking
-- [ ] Dock/undock ship actions
-- [ ] Station vendor API endpoints
-  - `GET /station/<id>/inventory` - View available items
-  - `POST /station/<id>/buy` - Purchase items/components
-  - `POST /station/<id>/sell` - Sell items/components
 - [ ] Shipyard functionality
-  - Component installation/removal
-  - Ship purchase system
-  - Ship tier validation
+  - Component Repair
 
-#### 2. SOL System Content Generation
+#### 2. Game World Graph Formed
 - [ ] Create location graph structure for SOL system
-  - Earth orbit, Moon orbit, stations
-  - Venus orbit + stations
-  - Mars orbit + stations + moons
-  - Mercury orbit + station
-  - Asteroid Belt regions (3 zones)
-  - Jupiter orbit + atmosphere station + IO
-  - Saturn orbit + atmosphere + ring stations
-  - Uranus orbit + stations
-  - Kuiper regions (4 zones)
-  - Sun orbital
-  - SOL->ALPHA warp gate
-- [ ] Define faction ownership per location
-- [ ] Create starter stations with inventory
-  - Earth Orbital Station Zero (starter hub)
-  - Basic vendor inventory templates
-  - Shipyard component availability by tier
+- [ ] Create Many other systems.
+- [ ] Create the graph structure for those systems
+- [ ] Create the graph structure between the systems
 - [ ] Location metadata (danger level, resources, description)
 
 #### 3. Logging & Event System

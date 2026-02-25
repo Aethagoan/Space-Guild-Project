@@ -6,7 +6,7 @@
 
 ---
 
-## SPRINT 0: Critical Blockers (Fix to Run Code)
+## SPRINT 0: Critical Blockers (Fix to Run Code) [ ]
 **Goal:** Make the codebase executable  
 **Estimated Effort:** 4-6 hours
 
@@ -37,10 +37,10 @@
   - Line 11: Change `'faction_id': int` to `'faction_id': None`
   - **Blocks:** Player creation
 
-- [ ] **DEP-001:** Create `requirements.txt`
-  - Add Flask
-  - Add any other dependencies (pytest, etc.)
-  - **Blocks:** Installation and deployment
+- [ ] **FIX-006:** Figure out what's going on with action handler in `actions.py`
+  - why is it there if nothing is using it? This, early on was a cool solution, but not it's gone unused... why?
+  - it could make the API less complicated.
+  - either get rid of it or commit.
 
 - [ ] **RUN-001:** Add program entry point
   - Add `if __name__ == '__main__'` block to `program.py`
@@ -49,9 +49,15 @@
   - Start tick loop
   - **Blocks:** Running the game
 
+- [ ] **SHIP-001:** Implement basic ship creation
+  - Uses existing factory to get the basic structure, then loads tier zero components. 
+  - Initialize ship with starter stats (tier 0)
+  - Add ship to DataHandler
+  - **Blocks:** Player spawning and gameplay
+
 ---
 
-## SPRINT 1: Minimal Viable Backend (Week 1-2)
+## SPRINT 1: Minimal Viable Backend (Week 1-2) [ ]
 **Goal:** Get a runnable backend with basic state access  
 **Estimated Effort:** 20-30 hours
 
@@ -66,7 +72,7 @@
   - **Estimate:** 3h
 
 - [ ] **TICK-002:** Add tick broadcast mechanism
-  - Store tick results per player/location
+  - Store tick results per location
   - Allow clients to poll for tick updates
   - Clear old tick data
   - **Epic:** Core Game Loop
@@ -88,20 +94,22 @@
 - [ ] **API-003:** Add GET `/player/<id>` endpoint
   - Return player info and associated ship data
   - **Epic:** State Access API
-  - **Estimate:** 1h
+  - **Estimate:** 1H
 
-- [ ] **API-004:** Add GET `/game/tick` endpoint
-  - Return current tick number and timestamp
+- [ ] **API-004:** Add GET `/item/<id>` endpoint
+  - info about an item based on sensors?
+  - in general and for now just returns the item details.
+
+- [ ] **API-004:** Add GET `/game/tick` endpoint (ping-pong)
+  - waits for next tick to complete, and then returns location data.
   - **Epic:** State Access API
   - **Estimate:** 1h
 
 #### Minimal World Content
 - [ ] **WORLD-001:** Create starter location graph
-  - Earth Orbit (starter hub)
-  - Earth Orbital Station Zero location
-  - Moon Orbit
+  - Create the first system in 
   - Link them together
-  - Add to `program.py` initialization
+  - write a setup script that is called if nothing gets loaded from the json files.
   - **Epic:** SOL System Content
   - **Estimate:** 3h
 
@@ -154,11 +162,6 @@
 ### P0 - Critical for Gameplay Loop
 
 #### Currency System
-- [ ] **ECON-001:** Add credits field to Player entity
-  - Update `player.py` factory
-  - Add to DataHandler CRUD operations
-  - **Epic:** Economy System
-  - **Estimate:** 2h
 
 - [ ] **ECON-002:** Implement transaction system
   - Debit/credit player accounts
@@ -168,12 +171,6 @@
   - **Epic:** Economy System
   - **Estimate:** 5h
 
-- [ ] **ECON-003:** Define item/component pricing
-  - Price formulas based on tier and type
-  - Base prices for all 6 component types
-  - Rarity modifiers
-  - **Epic:** Economy System
-  - **Estimate:** 3h
 
 #### Station Entity
 - [ ] **STATION-001:** Create Station entity in `data.py`
