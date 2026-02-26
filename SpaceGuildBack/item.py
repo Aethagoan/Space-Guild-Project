@@ -2,6 +2,7 @@
 
 # Item Dictionary Creator.
 
+import datetime
 
 def get_max_multiplier(tier: int):
     maxmultipliers = [1, 2, 3, 4, 6, 8, 10]
@@ -30,8 +31,10 @@ def Item(ID:int,name:str,tier:int,health:int,weight:float,mult:float,item_type:s
         'multiplier': mult,
         'min_multiplier': get_min_multiplier(tier),
         'max_multiplier': get_max_multiplier(tier),
+        'created_at': datetime.datetime.now().timestamp(), # no need to convert back, this should be a float and just comparable by itself.
     }
 
+    
 # Dropped Generated Items Are Likely to have a random mult, items players buy/quest for are likely to start at the max mult.
 
 def Engine(ID_:int,name_:str,tier_:int,mult_:float):

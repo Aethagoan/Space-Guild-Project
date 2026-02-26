@@ -8,5 +8,5 @@ def Player(name:str,ship_id:int):
     return {
         'name': name,
         'ship_id': ship_id,
-        'faction_id':int,
+        'faction_id':None,
     }

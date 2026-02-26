@@ -4,8 +4,8 @@
 
 def Faction():
     return {
-        'name':str,
+        'name':"",
         'player_ids': [],
-        'color':str, # hex code
+        'color':"", # hex code
         
     }

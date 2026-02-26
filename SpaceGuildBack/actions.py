@@ -581,22 +581,6 @@ def _group_actions_by_location() -> Dict[str, Dict[str, List[ActionNode]]]:
 def _process_location_actions(location_name: str, actions: Dict[str, List[ActionNode]]) -> Dict[str, int]:
     """Process all actions for a specific location.
     
-    This function is called concurrently for each location with queued actions.
-    The fine-grained locking system ensures thread safety.
-    
-    CONCURRENCY NOTES (for audit):
-    -------------------------------
-    - Each location's actions run in parallel (ThreadPoolExecutor)
-    - Fine-grained locks prevent conflicts:
-      * Earth ships attacking: lock ship:X:hp, ship:Y:hp (Earth-specific)
-      * Mars ships attacking: lock ship:Z:hp, ship:W:hp (Mars-specific)
-      * No conflict because different ship IDs = different locks
-    
-    - Movement has partial concurrency:
-      * Ships leaving Earth concurrently with ships leaving Mars (different source locks)
-      * But ships arriving at same destination serialize (shared destination lock)
-      * This is correct: location.ship_ids must be consistent
-    
     Args:
         location_name: Name of location being processed
         actions: Dict of action_type -> list of ActionNodes
@@ -644,32 +628,7 @@ def _process_location_actions(location_name: str, actions: Dict[str, List[Action
 
 def process_tick() -> Dict[str, int]:
     """Process all queued actions with per-location concurrency.
-    
-    CONCURRENCY ARCHITECTURE (for audit):
-    --------------------------------------
-    Each location's actions are processed in parallel using ThreadPoolExecutor.
-    This provides massive throughput improvements:
-    
-    OLD: Sequential processing
-      - Earth: 100 actions (100ms)
-      - Mars: 100 actions (100ms)  
-      - Jupiter: 100 actions (100ms)
-      - Total: 300ms
-    
-    NEW: Concurrent per-location processing
-      - Earth: 100 actions (100ms) ┐
-      - Mars: 100 actions (100ms)  ├─ Parallel
-      - Jupiter: 100 actions (100ms)┘
-      - Total: 100ms (3x speedup)
-    
-    With 10 active locations: 10x potential speedup
-    With 100 active locations: 100x potential speedup
-    
-    Thread safety:
-    - Fine-grained locks prevent conflicts between locations
-    - Ships at different locations use different lock keys
-    - Movement locks both source and destination (handles cross-location correctly)
-    
+
     Returns:
         Dict with counts of successful actions (aggregated across all locations): {
             'attack_ship': n,
@@ -730,38 +689,7 @@ def process_tick() -> Dict[str, int]:
     return total_stats
 
 
-# ============================================================================
-# ACTION DELEGATOR (legacy support)
-# ============================================================================
-
-def doaction(ship_id: int, action: str, target, target_data: Optional[str] = None, action_hash: Optional[str] = None) -> bool:
-    """Queue an action to be executed on next tick (legacy interface).
-    
-    Args:
-        ship_id: Ship performing the action
-        action: Action type ('attack_ship', 'attack_ship_component', 'attack_item', 'move', or 'collect')
-        target: Target for the action
-        target_data: Additional data (e.g., component slot for attack_ship_component)
-        action_hash: Hash from client to detect duplicate actions
-        
-    Returns:
-        True if action was queued successfully
-    """
-    return queue_action(ship_id, action, target, target_data, action_hash)
-
-
-actionhandler = {
-    'attack_ship': lambda ship_id, target, action_hash=None: queue_action(ship_id, 'attack_ship', target, None, action_hash),
-    'attack_ship_component': lambda ship_id, target, component_slot, action_hash=None: queue_action(ship_id, 'attack_ship_component', target, component_slot, action_hash),
-    'attack_item': lambda ship_id, target, action_hash=None: queue_action(ship_id, 'attack_item', target, None, action_hash),
-    'move': lambda ship_id, target, action_hash=None: queue_action(ship_id, 'move', target, None, action_hash),
-    'collect': lambda ship_id, target, action_hash=None: queue_action(ship_id, 'collect', target, None, action_hash),
-}
-
-
 __all__ = [
-    'doaction',
-    'actionhandler',
     'queue_action',
     'process_tick',
     'clear_queues',

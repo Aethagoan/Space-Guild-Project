@@ -1,0 +1,102 @@
+{
+  "earthorbit_shipwright": {
+    "location": "Earth_Orbit",
+    "vendor_type": "shipwright",
+    "name": "Marcus Steel",
+    "dialogue": [
+      "Welcome to Steel's Shipyard. Best ships in Sol system.",
+      "Need an upgrade? I've got engines that'll make Mars look close.",
+      "Every component I sell comes with a lifetime guarantee. Well, YOUR lifetime anyway."
+    ]
+  },
+  "earthorbit_trader": {
+    "location": "Earth_Orbit",
+    "vendor_type": "trader",
+    "name": "Sarah Kim",
+    "dialogue": [
+      "Fresh off Earth - rare goods and supplies.",
+      "Looking to sell? I buy at fair prices. Unlike those Vega crooks.",
+      "Rumor has it the Frontier has some wild salvage opportunities..."
+    ]
+  },
+  "earthorbit_repairshop": {
+    "location": "Earth_Orbit",
+    "vendor_type": "repair_shop",
+    "name": "Engineer Dale",
+    "dialogue": [
+      "Repair shop open for business.",
+      "Components looking rough? I can fix that. For a price.",
+      "Pro tip: Don't let your shields drop to zero. Bad for business. Yours, not mine."
+    ]
+  },
+  "vegahub_trader": {
+    "location": "Vega_Trading_Hub",
+    "vendor_type": "trader",
+    "name": "Xalen the Broker",
+    "dialogue": [
+      "Xalen knows all, sees all, sells all.",
+      "You want it? I have it. You need it? I know someone.",
+      "Credits talk, spacer. What are you buying?"
+    ]
+  },
+  "vegahub_blackmarket": {
+    "location": "Vega_Trading_Hub",
+    "vendor_type": "black_market",
+    "name": "Unknown Contact",
+    "dialogue": [
+      "No names. No questions.",
+      "I've got items that fell off the back of a cargo hauler. Interested?",
+      "Sector police don't patrol here. Make it quick."
+    ]
+  },
+  "vegashipyard_shipwright": {
+    "location": "Vega_Shipyard",
+    "vendor_type": "shipwright",
+    "name": "Chief Engineer Torres",
+    "dialogue": [
+      "Vega Shipyards - we build what others can't.",
+      "Custom ship builds, tier upgrades, you name it.",
+      "If you've got the credits, we've got the tech."
+    ]
+  },
+  "vegashipyard_componentdealer": {
+    "location": "Vega_Shipyard",
+    "vendor_type": "component_dealer",
+    "name": "Parts Specialist",
+    "dialogue": [
+      "Highest quality components in the sector.",
+      "Military-grade shields, experimental weapons, custom engines.",
+      "These aren't your standard Earth Orbit parts, friend."
+    ]
+  },
+  "frontierdelta_trader": {
+    "location": "Frontier_Station_Delta",
+    "vendor_type": "trader",
+    "name": "Rusty",
+    "dialogue": [
+      "Out here, we trade in survival. And salvage.",
+      "You look new. Word of advice: don't trust anyone. Especially me.",
+      "Need supplies? I've got rations, fuel, and ammunition. In that order of importance."
+    ]
+  },
+  "frontierdelta_repairshop": {
+    "location": "Frontier_Station_Delta",
+    "vendor_type": "repair_shop",
+    "name": "Doc Welder",
+    "dialogue": [
+      "Station's repair tech. I keep ships flying. Barely.",
+      "Out here, repairs are expensive. But getting stranded is worse.",
+      "I've seen things you wouldn't believe. Most of them damaged beyond repair."
+    ]
+  },
+  "piratehaven_blackmarket": {
+    "location": "Pirate_Haven",
+    "vendor_type": "black_market",
+    "name": "The Fence",
+    "dialogue": [
+      "Stolen goods, military surplus, experimental tech. I don't ask where you got it.",
+      "Cash only. No records. No witnesses.",
+      "You didn't hear this from me, but there's a derelict carrier near the Graveyard..."
+    ]
+  }
+}

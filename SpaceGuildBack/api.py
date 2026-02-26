@@ -1,14 +1,30 @@
 # SpaceGuildBack/api.py
 # Aidan Orion 24 Feb 2026
 # Flask API for Space Guild game
+# This runs as a SEPARATE PROCESS from the game loop (program.py)
 
 from flask import Flask, request, jsonify
 from typing import Optional, Dict, Any
+import os
 import actions
 import components
 from program import data_handler
 
 app = Flask(__name__)
+
+
+def check_world_initialized(data_dir: str = "game_data") -> bool:
+    """Check if the world has been initialized.
+    
+    Args:
+        data_dir: Directory where game data should be stored
+        
+    Returns:
+        True if world data exists, False otherwise
+    """
+    locations_file = os.path.join(data_dir, "locations.json")
+    return os.path.exists(locations_file)
+
 
 # TODO: Implement proper authentication system
 # For now, we'll use player_id directly (in production, use JWT tokens or similar)
@@ -140,10 +156,18 @@ def get_ship_log_endpoint():
     Returns:
         {
             "entries": [
-                {"type": str, "content": str},
+                {
+                    "type": str,  # Message type (combat, action, ship_message, computer, environment)
+                    "content": str,  # The log message
+                    "source": str (optional)  # Source identifier (e.g., "ship:123", "location:Sol", "item:456")
+                },
                 ...
             ]
         } or {"error": "message"}
+        
+    Note: The "source" field allows the frontend to route clicks to the appropriate detail view.
+          Format is "entity_type:entity_id" where entity_type is ship/location/item/faction/player.
+          The frontend is responsible for calling the appropriate endpoint based on entity_type.
     """
     try:
         player_id = request.args.get('player_id', type=int)
@@ -166,4 +190,32 @@ def get_ship_log_endpoint():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Check if world is initialized before starting API
+    if not check_world_initialized():
+        print("=" * 70)
+        print("[X] ERROR: World not initialized!")
+        print("=" * 70)
+        print("\nPlease run 'python setup.py' first to create the game world.")
+        print("Then start the game loop with 'python program.py'")
+        print("Finally, start the API server with 'python api.py'\n")
+        exit(1)
+    
+    print("=" * 70)
+    print("SPACE GUILD - API SERVER")
+    print("=" * 70)
+    print("\n[*] Loading world data...")
+    
+    try:
+        data_handler.load_all()
+        print("  [+] World loaded successfully\n")
+    except Exception as e:
+        print(f"  [X] Failed to load world: {e}\n")
+        exit(1)
+    
+    print("[*] Starting Flask API server...")
+    print("=" * 70)
+    print("\n[!] NOTE: This API runs separately from the game loop (program.py)")
+    print("Make sure program.py is running in another terminal!\n")
+    
+    # Run Flask server
+    app.run(debug=True, host='0.0.0.0', port=5000)

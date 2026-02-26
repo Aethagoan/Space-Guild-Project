@@ -1,0 +1,216 @@
+{
+  "Earth_Orbit": {
+    "name": "Earth_Orbit",
+    "links": [
+      "Mars_Colony",
+      "Sol_JumpGate"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Mars_Colony": {
+    "name": "Mars_Colony",
+    "links": [
+      "Earth_Orbit",
+      "Jupiter_Station"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Jupiter_Station": {
+    "name": "Jupiter_Station",
+    "links": [
+      "Mars_Colony",
+      "Sol_JumpGate"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Sol_JumpGate": {
+    "name": "Sol_JumpGate",
+    "links": [
+      "Jupiter_Station",
+      "Earth_Orbit",
+      "Proxima_Centauri_Station"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Proxima_Centauri_Station": {
+    "name": "Proxima_Centauri_Station",
+    "links": [
+      "Sol_JumpGate",
+      "Centauri_Prime",
+      "Alpha_JumpGate_1",
+      "Alpha_JumpGate_2",
+      "Sirius_JumpGate",
+      "Vega_JumpGate_Alpha"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Centauri_Prime": {
+    "name": "Centauri_Prime",
+    "links": [
+      "Proxima_Centauri_Station"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Alpha_JumpGate_1": {
+    "name": "Alpha_JumpGate_1",
+    "links": [
+      "Proxima_Centauri_Station",
+      "Sirius_A_Station"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Alpha_JumpGate_2": {
+    "name": "Alpha_JumpGate_2",
+    "links": [
+      "Proxima_Centauri_Station",
+      "Vega_Trading_Hub"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Sirius_A_Station": {
+    "name": "Sirius_A_Station",
+    "links": [
+      "Alpha_JumpGate_1",
+      "Sirius_Mining_Belt"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Sirius_Mining_Belt": {
+    "name": "Sirius_Mining_Belt",
+    "links": [
+      "Sirius_A_Station",
+      "Sirius_JumpGate"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Sirius_JumpGate": {
+    "name": "Sirius_JumpGate",
+    "links": [
+      "Sirius_Mining_Belt",
+      "Proxima_Centauri_Station"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Vega_Trading_Hub": {
+    "name": "Vega_Trading_Hub",
+    "links": [
+      "Alpha_JumpGate_2",
+      "Vega_Shipyard",
+      "Vega_JumpGate_Alpha"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Vega_Shipyard": {
+    "name": "Vega_Shipyard",
+    "links": [
+      "Vega_Trading_Hub",
+      "Vega_Outpost_7"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Vega_Outpost_7": {
+    "name": "Vega_Outpost_7",
+    "links": [
+      "Vega_Shipyard",
+      "Vega_JumpGate_Frontier"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Vega_JumpGate_Alpha": {
+    "name": "Vega_JumpGate_Alpha",
+    "links": [
+      "Vega_Trading_Hub",
+      "Proxima_Centauri_Station"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Vega_JumpGate_Frontier": {
+    "name": "Vega_JumpGate_Frontier",
+    "links": [
+      "Vega_Outpost_7",
+      "Frontier_Station_Delta"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Frontier_Station_Delta": {
+    "name": "Frontier_Station_Delta",
+    "links": [
+      "Vega_JumpGate_Frontier",
+      "Dead_Space_Graveyard",
+      "Pirate_Haven"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Dead_Space_Graveyard": {
+    "name": "Dead_Space_Graveyard",
+    "links": [
+      "Frontier_Station_Delta",
+      "Abandoned_Research_Facility"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Pirate_Haven": {
+    "name": "Pirate_Haven",
+    "links": [
+      "Frontier_Station_Delta",
+      "Unknown_Anomaly"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Abandoned_Research_Facility": {
+    "name": "Abandoned_Research_Facility",
+    "links": [
+      "Dead_Space_Graveyard"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  },
+  "Unknown_Anomaly": {
+    "name": "Unknown_Anomaly",
+    "links": [
+      "Pirate_Haven"
+    ],
+    "logs": [],
+    "ship_ids": [],
+    "items": []
+  }
+}

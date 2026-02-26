@@ -8,6 +8,7 @@ import json
 def Location(name: str):
     return {
         'name': name,
+        'description':"",
         'links': [],
         'logs': [],
         'ship_ids': [],

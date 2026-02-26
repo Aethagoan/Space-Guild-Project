@@ -24,6 +24,21 @@ from item import Item
 from faction import Faction
 
 
+# Ship log message types
+class MessageType:
+    """Predefined message types for ship logs with associated colors."""
+    COMBAT = "combat"  # Red - combat-related messages
+    ACTION = "action"  # Blue - player/ship actions
+    SHIP_MESSAGE = "ship_message"  # Faction color - communication from another ship
+    COMPUTER = "computer"  # Green - ship computer messages
+    ENVIRONMENT = "environment"  # Yellow - environmental messages
+    
+    @classmethod
+    def all_types(cls) -> List[str]:
+        """Get all valid message types."""
+        return [cls.COMBAT, cls.ACTION, cls.SHIP_MESSAGE, cls.COMPUTER, cls.ENVIRONMENT]
+
+
 class DataHandler:
     """Thread-safe data handler for all game entities using JSON storage.
     
@@ -1087,24 +1102,36 @@ class DataHandler:
                 'write_index': self.MAX_LOG_ENTRIES - 1  # Start at end, write backwards
             }
     
-    def add_ship_log(self, ship_id: int, message_type: str, content: str):
+    def add_ship_log(self, ship_id: int, message_type: str, content: str, source: Optional[str] = None):
         """Add a log entry to a ship's ephemeral log.
         Writes backwards so newest messages are at lower indices.
         
         Args:
             ship_id: The ship receiving the log entry
-            message_type: Type of message ('combat', 'sensor', 'message', 'environment', etc.)
+            message_type: Type of message (use MessageType constants: 'combat', 'action', 'ship_message', 'computer', 'environment')
             content: The message content
+            source: Optional source identifier in format 'type:id' (e.g., 'ship:123', 'location:Sol', 'item:456')
+                   If provided, the frontend can request details about this entity
         """
+        # Validate message type
+        if message_type not in MessageType.all_types():
+            raise ValueError(f"Invalid message_type '{message_type}'. Must be one of {MessageType.all_types()}")
+        
         with self._acquire_locks(f"shiplog:{ship_id}"):
             self._init_ship_log(ship_id)
             log = self.ShipLogs[ship_id]
             
             # Write to current position
-            log['entries'][log['write_index']] = {
+            entry = {
                 'type': message_type,
                 'content': content
             }
+            
+            # Add source if provided
+            if source is not None:
+                entry['source'] = source
+            
+            log['entries'][log['write_index']] = entry
             
             # Move write pointer backwards (wraps to end when reaching 0)
             log['write_index'] = (log['write_index'] - 1) % self.MAX_LOG_ENTRIES
@@ -1119,7 +1146,12 @@ class DataHandler:
             ship_id: The ship to retrieve logs for
             
         Returns:
-            List of log entries in chronological order (oldest->newest)
+            List of log entries in chronological order (oldest->newest).
+            Each entry contains:
+                - type: Message type (combat, action, ship_message, computer, environment)
+                - content: The log message text
+                - source (optional): Source identifier in format "entity_type:entity_id"
+                                    (e.g., "ship:123", "location:Sol", "item:456")
         """
         with self._acquire_locks(f"shiplog:{ship_id}"):
             if ship_id not in self.ShipLogs:
