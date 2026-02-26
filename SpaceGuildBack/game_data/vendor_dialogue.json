@@ -1,102 +1,521 @@
 {
-  "earthorbit_shipwright": {
-    "location": "Earth_Orbit",
-    "vendor_type": "shipwright",
-    "name": "Marcus Steel",
-    "dialogue": [
-      "Welcome to Steel's Shipyard. Best ships in Sol system.",
-      "Need an upgrade? I've got engines that'll make Mars look close.",
-      "Every component I sell comes with a lifetime guarantee. Well, YOUR lifetime anyway."
-    ]
+  "Earth_Orbital_Station_Zero": {
+    "earthorbit_zero_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Welcome to Orbital Zero's premier shipyard.",
+      "options": []
+    },
+    "earthorbit_zero_trader": {
+      "vendor_type": "trader",
+      "entry_dialogue": "Fresh goods from Earth. What are you looking for?",
+      "options": []
+    },
+    "earthorbit_zero_repairshop": {
+      "vendor_type": "repair_shop",
+      "entry_dialogue": "Repair bay open. Let me take a look at your ship.",
+      "options": []
+    }
   },
-  "earthorbit_trader": {
-    "location": "Earth_Orbit",
-    "vendor_type": "trader",
-    "name": "Sarah Kim",
-    "dialogue": [
-      "Fresh off Earth - rare goods and supplies.",
-      "Looking to sell? I buy at fair prices. Unlike those Vega crooks.",
-      "Rumor has it the Frontier has some wild salvage opportunities..."
-    ]
+  "Moon_Ground_Station": {
+    "moon_historian": {
+      "vendor_type": "historian",
+      "entry_dialogue": "Welcome to humanity's first extraterrestrial colony.",
+      "options": []
+    },
+    "moon_artifactdealer": {
+      "vendor_type": "artifact_dealer",
+      "entry_dialogue": "I deal in historical artifacts from the early space age.",
+      "options": []
+    },
+    "moon_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Moon Shipyard. We've been building ships since the 2040s.",
+      "options": []
+    }
   },
-  "earthorbit_repairshop": {
-    "location": "Earth_Orbit",
-    "vendor_type": "repair_shop",
-    "name": "Engineer Dale",
-    "dialogue": [
-      "Repair shop open for business.",
-      "Components looking rough? I can fix that. For a price.",
-      "Pro tip: Don't let your shields drop to zero. Bad for business. Yours, not mine."
-    ]
+  "Earth_Ground_Station_Zero": {
+    "earthground_zero_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "ORION headquarters shipyard. Top-tier vessels only.",
+      "options": []
+    },
+    "earthground_zero_trader": {
+      "vendor_type": "trader",
+      "entry_dialogue": "Official ORION trade depot. State your business.",
+      "options": []
+    }
   },
-  "vegahub_trader": {
-    "location": "Vega_Trading_Hub",
-    "vendor_type": "trader",
-    "name": "Xalen the Broker",
-    "dialogue": [
-      "Xalen knows all, sees all, sells all.",
-      "You want it? I have it. You need it? I know someone.",
-      "Credits talk, spacer. What are you buying?"
-    ]
+  "SOL_Warp_Gates": {
+    "solgate_customs": {
+      "vendor_type": "customs",
+      "entry_dialogue": "Customs inspection required for all interstellar travel.",
+      "options": []
+    },
+    "solgate_navigation": {
+      "vendor_type": "navigation",
+      "entry_dialogue": "Warp gate navigation services. Destination?",
+      "options": []
+    }
   },
-  "vegahub_blackmarket": {
-    "location": "Vega_Trading_Hub",
-    "vendor_type": "black_market",
-    "name": "Unknown Contact",
-    "dialogue": [
-      "No names. No questions.",
-      "I've got items that fell off the back of a cargo hauler. Interested?",
-      "Sector police don't patrol here. Make it quick."
-    ]
+  "Mercury_Ground_Station": {
+    "mercury_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Heat-resistant components are our specialty.",
+      "options": []
+    },
+    "mercury_hunters": {
+      "vendor_type": "bounty_office",
+      "entry_dialogue": "Looking for work? We've got bounties that pay well.",
+      "options": []
+    }
   },
-  "vegashipyard_shipwright": {
-    "location": "Vega_Shipyard",
-    "vendor_type": "shipwright",
-    "name": "Chief Engineer Torres",
-    "dialogue": [
-      "Vega Shipyards - we build what others can't.",
-      "Custom ship builds, tier upgrades, you name it.",
-      "If you've got the credits, we've got the tech."
-    ]
+  "Venus_Ground_Station": {
+    "venusground_blackmarket": {
+      "vendor_type": "black_market",
+      "entry_dialogue": "No questions asked. Cash only.",
+      "options": []
+    }
   },
-  "vegashipyard_componentdealer": {
-    "location": "Vega_Shipyard",
-    "vendor_type": "component_dealer",
-    "name": "Parts Specialist",
-    "dialogue": [
-      "Highest quality components in the sector.",
-      "Military-grade shields, experimental weapons, custom engines.",
-      "These aren't your standard Earth Orbit parts, friend."
-    ]
+  "Venus_Orbital_Station": {
+    "venusorbital_trader": {
+      "vendor_type": "trader",
+      "entry_dialogue": "Trading post open for business.",
+      "options": []
+    },
+    "venusorbital_componentdealer": {
+      "vendor_type": "component_dealer",
+      "entry_dialogue": "I've got components you won't find anywhere else.",
+      "options": []
+    }
   },
-  "frontierdelta_trader": {
-    "location": "Frontier_Station_Delta",
-    "vendor_type": "trader",
-    "name": "Rusty",
-    "dialogue": [
-      "Out here, we trade in survival. And salvage.",
-      "You look new. Word of advice: don't trust anyone. Especially me.",
-      "Need supplies? I've got rations, fuel, and ammunition. In that order of importance."
-    ]
+  "Mars_Ground_Station": {
+    "marsground_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Mars Colony Shipyard. Building the future.",
+      "options": []
+    },
+    "marsground_colonysupplies": {
+      "vendor_type": "trader",
+      "entry_dialogue": "Colonial supplies and equipment.",
+      "options": []
+    }
   },
-  "frontierdelta_repairshop": {
-    "location": "Frontier_Station_Delta",
-    "vendor_type": "repair_shop",
-    "name": "Doc Welder",
-    "dialogue": [
-      "Station's repair tech. I keep ships flying. Barely.",
-      "Out here, repairs are expensive. But getting stranded is worse.",
-      "I've seen things you wouldn't believe. Most of them damaged beyond repair."
-    ]
+  "Mars_Orbital_Station": {
+    "marsorbital_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Advanced shipyard facilities at your service.",
+      "options": []
+    },
+    "marsorbital_defensesystems": {
+      "vendor_type": "defense_systems",
+      "entry_dialogue": "Military-grade defensive systems available.",
+      "options": []
+    }
   },
-  "piratehaven_blackmarket": {
-    "location": "Pirate_Haven",
-    "vendor_type": "black_market",
-    "name": "The Fence",
-    "dialogue": [
-      "Stolen goods, military surplus, experimental tech. I don't ask where you got it.",
-      "Cash only. No records. No witnesses.",
-      "You didn't hear this from me, but there's a derelict carrier near the Graveyard..."
-    ]
+  "Mars_Moon_1_Ground_Station": {
+    "marsmoon1_weaponsdealer": {
+      "vendor_type": "weapons_dealer",
+      "entry_dialogue": "Phobos Arsenal. The finest weapons in the system.",
+      "options": []
+    },
+    "marsmoon1_ammunition": {
+      "vendor_type": "ammunition",
+      "entry_dialogue": "Ammunition depot. What caliber?",
+      "options": []
+    }
+  },
+  "Mars_Moon_2_Ground_Station": {
+    "marsmoon2_stealthcloakvendor": {
+      "vendor_type": "stealth_vendor",
+      "entry_dialogue": "Stealth technology and cloaking devices.",
+      "options": []
+    },
+    "marsmoon2_stealthresearch": {
+      "vendor_type": "research",
+      "entry_dialogue": "Deimos Research. Our work is... classified.",
+      "options": []
+    }
+  },
+  "ABR1_Space_Station": {
+    "abr1station_maildelivery": {
+      "vendor_type": "mail_delivery",
+      "entry_dialogue": "Mail delivery contracts available.",
+      "options": []
+    },
+    "abr1station_miningequipment": {
+      "vendor_type": "mining_equipment",
+      "entry_dialogue": "Mining equipment and supplies.",
+      "options": []
+    }
+  },
+  "ABR2_Space_Station": {
+    "abr2station_weapontraffickers": {
+      "vendor_type": "weapons_dealer",
+      "entry_dialogue": "Weapons available. ORION doesn't need to know.",
+      "options": []
+    },
+    "abr2station_informationbroker": {
+      "vendor_type": "information_broker",
+      "entry_dialogue": "Information is the most valuable commodity.",
+      "options": []
+    }
+  },
+  "ABR3_Space_Station": {
+    "abr3station_shieldspecialists": {
+      "vendor_type": "shield_specialist",
+      "entry_dialogue": "Shield technology and upgrades.",
+      "options": []
+    },
+    "abr3station_explosives": {
+      "vendor_type": "explosives",
+      "entry_dialogue": "Experimental explosives. Handle with care.",
+      "options": []
+    },
+    "abr3station_researchdata": {
+      "vendor_type": "research_data",
+      "entry_dialogue": "Research data exchange. What have you discovered?",
+      "options": []
+    }
+  },
+  "Jupiter_Thunder_Station": {
+    "jupiterthunder_gasshipments": {
+      "vendor_type": "gas_trader",
+      "entry_dialogue": "Gas collection contracts. Dangerous but profitable.",
+      "options": []
+    },
+    "jupiterthunder_stormdata": {
+      "vendor_type": "data_buyer",
+      "entry_dialogue": "We buy storm data from Jupiter's atmosphere.",
+      "options": []
+    },
+    "jupiterthunder_hazardpay": {
+      "vendor_type": "contractor",
+      "entry_dialogue": "Hazard pay jobs available. High risk, high reward.",
+      "options": []
+    }
+  },
+  "IO_Station_Weapon_Specialist": {
+    "io_weapon_upgrades": {
+      "vendor_type": "weapon_upgrades",
+      "entry_dialogue": "Io Weapons Research. Premier weapons facility in Sol.",
+      "options": []
+    },
+    "io_ballistics_expert": {
+      "vendor_type": "ballistics",
+      "entry_dialogue": "Ballistics specialist. Let's upgrade your firepower.",
+      "options": []
+    }
+  },
+  "Ganymede_Station_Shipwright": {
+    "ganymede_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Ganymede Shipyards. The largest in the outer system.",
+      "options": []
+    },
+    "ganymede_hull_specialist": {
+      "vendor_type": "hull_specialist",
+      "entry_dialogue": "Hull modifications and reinforcement.",
+      "options": []
+    }
+  },
+  "Europa_Station_Engine_Specialist": {
+    "europa_engine_upgrades": {
+      "vendor_type": "engine_upgrades",
+      "entry_dialogue": "Engine and propulsion upgrades. Make your ship fly.",
+      "options": []
+    },
+    "europa_propulsion_engineer": {
+      "vendor_type": "propulsion",
+      "entry_dialogue": "Propulsion engineering. Speed is survival.",
+      "options": []
+    }
+  },
+  "Callisto_Station_Shield_Specialist": {
+    "callisto_shield_upgrades": {
+      "vendor_type": "shield_upgrades",
+      "entry_dialogue": "Shield generator research and upgrades.",
+      "options": []
+    },
+    "callisto_energy_systems": {
+      "vendor_type": "energy_systems",
+      "entry_dialogue": "Energy systems and power management.",
+      "options": []
+    }
+  },
+  "Amalthea_Station_Cargo_Specialist": {
+    "amalthea_cargo_upgrades": {
+      "vendor_type": "cargo_upgrades",
+      "entry_dialogue": "Cargo hold expansion and storage optimization.",
+      "options": []
+    },
+    "amalthea_storage_engineer": {
+      "vendor_type": "storage",
+      "entry_dialogue": "Storage solutions for every ship class.",
+      "options": []
+    }
+  },
+  "Himalia_Station_Sensor_Specialist": {
+    "himalia_sensor_upgrades": {
+      "vendor_type": "sensor_upgrades",
+      "entry_dialogue": "Sensor arrays and detection systems.",
+      "options": []
+    },
+    "himalia_detection_specialist": {
+      "vendor_type": "detection",
+      "entry_dialogue": "Long-range detection technology.",
+      "options": []
+    }
+  },
+  "Thebe_Station_Stealth_Specialist": {
+    "thebe_stealth_upgrades": {
+      "vendor_type": "stealth_upgrades",
+      "entry_dialogue": "Stealth cloaking technology.",
+      "options": []
+    },
+    "thebe_cloak_specialist": {
+      "vendor_type": "cloaking",
+      "entry_dialogue": "Signature dampening and cloaking systems.",
+      "options": []
+    }
+  },
+  "Saturn_Ring_Station_1": {
+    "saturnring1_datacollection": {
+      "vendor_type": "data_collector",
+      "entry_dialogue": "Ring research data collection.",
+      "options": []
+    },
+    "saturnring1_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Ring Station shipyard services.",
+      "options": []
+    }
+  },
+  "Saturn_Ring_Station_2": {
+    "saturnring2_datacollection": {
+      "vendor_type": "data_collector",
+      "entry_dialogue": "Ring data analysis and collection.",
+      "options": []
+    },
+    "saturnring2_shipwright": {
+      "vendor_type": "shipwright",
+      "entry_dialogue": "Shipyard and modification services.",
+      "options": []
+    },
+    "saturnring2_scanningtech": {
+      "vendor_type": "scanning",
+      "entry_dialogue": "Long-range scanning equipment.",
+      "options": []
+    }
+  },
+  "Titan_Station_Elite_Outfitter": {
+    "titan_elite_weapons": {
+      "vendor_type": "elite_weapons",
+      "entry_dialogue": "Titan Elite Arsenal. Only the finest.",
+      "options": []
+    },
+    "titan_elite_defense": {
+      "vendor_type": "elite_defense",
+      "entry_dialogue": "Elite defensive systems.",
+      "options": []
+    },
+    "titan_premium_outfitter": {
+      "vendor_type": "premium_outfitter",
+      "entry_dialogue": "Premium ship outfitting. If you can afford it.",
+      "options": []
+    }
+  },
+  "Enceladus_Station_Rare_Materials_Trading": {
+    "enceladus_rare_materials": {
+      "vendor_type": "rare_materials",
+      "entry_dialogue": "Rare materials exchange.",
+      "options": []
+    },
+    "enceladus_exotic_trader": {
+      "vendor_type": "exotic_trader",
+      "entry_dialogue": "Exotic compounds and materials.",
+      "options": []
+    },
+    "enceladus_material_exchange": {
+      "vendor_type": "material_exchange",
+      "entry_dialogue": "Material exchange and trading.",
+      "options": []
+    }
+  },
+  "Rhea_Station_Advanced_Manufacturing": {
+    "rhea_advanced_manufacturing": {
+      "vendor_type": "advanced_manufacturing",
+      "entry_dialogue": "Advanced fabrication services.",
+      "options": []
+    },
+    "rhea_prototype_components": {
+      "vendor_type": "prototype_components",
+      "entry_dialogue": "Prototype components and experimental tech.",
+      "options": []
+    },
+    "rhea_experimental_tech": {
+      "vendor_type": "experimental_tech",
+      "entry_dialogue": "Experimental technology. Buyer beware.",
+      "options": []
+    }
+  },
+  "Uranus_Atmo_Station": {
+    "uranusatmo_gasharvesting": {
+      "vendor_type": "gas_harvesting",
+      "entry_dialogue": "Gas harvesting contracts available.",
+      "options": []
+    },
+    "uranusatmo_raregases": {
+      "vendor_type": "rare_gases",
+      "entry_dialogue": "Rare gas trading.",
+      "options": []
+    }
+  },
+  "Titania_Station_Data_Archive": {
+    "titania_data_collector": {
+      "vendor_type": "data_collector",
+      "entry_dialogue": "Data archive. We pay for information.",
+      "options": []
+    },
+    "titania_research_buyer": {
+      "vendor_type": "research_buyer",
+      "entry_dialogue": "Research and discovery purchases.",
+      "options": []
+    },
+    "titania_exploration_records": {
+      "vendor_type": "exploration_records",
+      "entry_dialogue": "Exploration records and discoveries.",
+      "options": []
+    }
+  },
+  "Oberon_Station_Sample_Repository": {
+    "oberon_sample_collector": {
+      "vendor_type": "sample_collector",
+      "entry_dialogue": "Sample repository. Bring us materials.",
+      "options": []
+    },
+    "oberon_material_analyst": {
+      "vendor_type": "material_analyst",
+      "entry_dialogue": "Material analysis and evaluation.",
+      "options": []
+    },
+    "oberon_specimen_buyer": {
+      "vendor_type": "specimen_buyer",
+      "entry_dialogue": "We purchase physical samples from across Sol.",
+      "options": []
+    }
+  },
+  "Neptune_Orbital_Station": {
+    "neptuneorbital_explorer_supplies": {
+      "vendor_type": "explorer_supplies",
+      "entry_dialogue": "Explorer supplies for deep space travel.",
+      "options": []
+    },
+    "neptuneorbital_deepspace_outfitter": {
+      "vendor_type": "deepspace_outfitter",
+      "entry_dialogue": "Deep space outfitting services.",
+      "options": []
+    }
+  },
+  "Triton_Station_Cartography_Center": {
+    "triton_cartographer": {
+      "vendor_type": "cartographer",
+      "entry_dialogue": "Cartography center. We map the stars.",
+      "options": []
+    },
+    "triton_navigation_data_buyer": {
+      "vendor_type": "navigation_data",
+      "entry_dialogue": "Navigation data purchases.",
+      "options": []
+    },
+    "triton_stellar_mapping": {
+      "vendor_type": "stellar_mapping",
+      "entry_dialogue": "Stellar mapping and charting services.",
+      "options": []
+    }
+  },
+  "Nereid_Station_Frontier_Research": {
+    "nereid_frontier_researcher": {
+      "vendor_type": "frontier_researcher",
+      "entry_dialogue": "Frontier research. The further out, the better we pay.",
+      "options": []
+    },
+    "nereid_remote_samples": {
+      "vendor_type": "remote_samples",
+      "entry_dialogue": "Remote sample collection.",
+      "options": []
+    },
+    "nereid_deep_space_data": {
+      "vendor_type": "deep_space_data",
+      "entry_dialogue": "Deep space data purchases.",
+      "options": []
+    }
+  },
+  "Kuiper_Region_1_Station": {
+    "kr1station_icegathering": {
+      "vendor_type": "ice_gathering",
+      "entry_dialogue": "Ice gathering contracts.",
+      "options": []
+    },
+    "kr1station_icetrader": {
+      "vendor_type": "ice_trader",
+      "entry_dialogue": "Ice and volatiles trading.",
+      "options": []
+    },
+    "kr1station_coldweather_gear": {
+      "vendor_type": "cold_weather_gear",
+      "entry_dialogue": "Cold weather equipment and gear.",
+      "options": []
+    }
+  },
+  "Kuiper_Region_2_Station": {
+    "kr2station_independenttrader": {
+      "vendor_type": "independent_trader",
+      "entry_dialogue": "Independent trader. ORION doesn't come out here.",
+      "options": []
+    },
+    "kr2station_fuelprocessing": {
+      "vendor_type": "fuel_processing",
+      "entry_dialogue": "Fuel processing and refining.",
+      "options": []
+    },
+    "kr2station_blackmarket": {
+      "vendor_type": "black_market",
+      "entry_dialogue": "Black market goods. No questions.",
+      "options": []
+    }
+  },
+  "Kuiper_Region_3_Station": {
+    "kr3station_fencedgoods": {
+      "vendor_type": "fence",
+      "entry_dialogue": "Fenced goods. Don't ask where they came from.",
+      "options": []
+    },
+    "kr3station_piratequartermaster": {
+      "vendor_type": "pirate_quartermaster",
+      "entry_dialogue": "Pirate supplies and equipment.",
+      "options": []
+    },
+    "kr3station_shady_shipwright": {
+      "vendor_type": "shady_shipwright",
+      "entry_dialogue": "Ship modifications. No records kept.",
+      "options": []
+    }
+  },
+  "Kuiper_Region_4_Station": {
+    "kr4station_exile_trader": {
+      "vendor_type": "exile_trader",
+      "entry_dialogue": "Exile trading post. We don't judge.",
+      "options": []
+    },
+    "kr4station_frontier_supplies": {
+      "vendor_type": "frontier_supplies",
+      "entry_dialogue": "Frontier supplies. Edge of known space.",
+      "options": []
+    },
+    "kr4station_mysterious_vendor": {
+      "vendor_type": "mysterious_vendor",
+      "entry_dialogue": "...",
+      "options": []
+    }
   }
 }

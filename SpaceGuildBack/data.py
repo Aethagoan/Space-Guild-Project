@@ -44,18 +44,20 @@ class DataHandler:
     
     """
     
-    def __init__(self, data_dir: str = "data"):
+    def __init__(self, data_dir: str = "data", create_dir: bool = True):
         """Initialize the data handler with empty collections and a lock cache.
         
         Args:
             data_dir: Directory where JSON files will be stored
+            create_dir: If True, create the data directory. Set to False for tests.
         """
         # A dictionary of locks, cleared each tick. It's similar to a cache.
         self._locks = defaultdict(Lock)
         
         # Data directories for JSON persistence
         self.data_dir = data_dir
-        os.makedirs(data_dir, exist_ok=True)
+        if create_dir:
+            os.makedirs(data_dir, exist_ok=True)
         
         # Entity collections
         # Locations use string names as keys
@@ -66,6 +68,9 @@ class DataHandler:
         self.Items: Dict[int, dict] = {}
         self.Players: Dict[int, dict] = {}
         self.Factions: Dict[int, dict] = {}
+        
+        # Vendors use location names as keys, each location has a dict of vendor_id -> vendor data
+        self.Vendors: Dict[str, Dict[str, dict]] = {}
         
         # Ship logs (ephemeral, not persisted) - lazily initialized
         self.ShipLogs: Dict[int, dict] = {}
@@ -105,11 +110,26 @@ class DataHandler:
     # LOCATION METHODS
     # ============================================================================
     
-    def add_location(self, name: str) -> dict:
+    def add_location(
+        self,
+        name: str,
+        location_type: str = 'space',
+        controlled_by: str = 'ORION',
+        description: str = '',
+        tags: Optional[List[str]] = None,
+        spawnable_ids: Optional[List[str]] = None,
+        resource_node_ids: Optional[List[str]] = None,
+    ) -> dict:
         """Add a new location to the game.
         
         Args:
             name: Unique name for the location
+            location_type: 'space', 'station', 'ground_station', 'resource_node'
+            controlled_by: Faction controlling this location (default 'ORION')
+            description: Descriptive text about the location
+            tags: Safety/danger tags ['Safe', 'Enforced', 'Patrolled', 'Dangerous']
+            spawnable_ids: List of IDs for NPCs/ships that can spawn here
+            resource_node_ids: List of IDs for resources that can be gathered here
             
         Returns:
             The newly created location dict
@@ -121,7 +141,15 @@ class DataHandler:
             raise KeyError(f"Location '{name}' already exists")
         
         with self._acquire_locks(f"location:{name}"):
-            location = Location(name)
+            location = Location(
+                name=name,
+                location_type=location_type,
+                controlled_by=controlled_by,
+                description=description,
+                tags=tags,
+                spawnable_ids=spawnable_ids,
+                resource_node_ids=resource_node_ids,
+            )
             self.Locations[name] = location
             return location
     
@@ -1012,6 +1040,12 @@ class DataHandler:
         if os.path.exists(filename):
             with open(filename, 'r') as f:
                 self.Locations = json.load(f)
+            
+            # Migrate old save files: ensure all locations have visible_ship_ids field
+            for location_name, location in self.Locations.items():
+                if 'visible_ship_ids' not in location:
+                    # Initialize with empty list (will be populated on first tick)
+                    location['visible_ship_ids'] = []
     
     def save_ships(self, filename: Optional[str] = None):
         """Save all ships to a JSON file.
@@ -1099,6 +1133,40 @@ class DataHandler:
             with open(filename, 'r') as f:
                 self.Factions = {int(k): v for k, v in json.load(f).items()}
     
+    def save_vendors(self, filename: Optional[str] = None):
+        """Save all vendors to a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'vendor_dialogue.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "vendor_dialogue.json")
+        with open(filename, 'w') as f:
+            json.dump(self.Vendors, f, indent=2)
+    
+    def load_vendors(self, filename: Optional[str] = None):
+        """Load vendors from a JSON file.
+        
+        Vendors are stored by location name. Each location can have multiple vendors.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'vendor_dialogue.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "vendor_dialogue.json")
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                self.Vendors = json.load(f)
+    
+    def get_vendors_at_location(self, location_name: str) -> Dict[str, dict]:
+        """Get all vendors at a specific location.
+        
+        Args:
+            location_name: Name of the location to get vendors for
+            
+        Returns:
+            Dict mapping vendor_id to vendor data, or empty dict if no vendors at location
+        """
+        return self.Vendors.get(location_name, {})
+    
     def save_all(self):
         """Save all game data to JSON files."""
         self.save_locations()
@@ -1106,6 +1174,7 @@ class DataHandler:
         self.save_items()
         self.save_players()
         self.save_factions()
+        self.save_vendors()
     
     def load_all(self):
         """Load all game data from JSON files."""
@@ -1114,6 +1183,7 @@ class DataHandler:
         self.load_items()
         self.load_players()
         self.load_factions()
+        self.load_vendors()
     
     # ============================================================================
     # SHIP LOG METHODS (Ephemeral - not persisted)

@@ -21,6 +21,16 @@ def _get_data_handler():
     return data_handler
 
 
+def _set_data_handler(handler):
+    """Set the data handler instance for testing purposes.
+    
+    Args:
+        handler: DataHandler instance to use
+    """
+    global data_handler
+    data_handler = handler
+
+
 # ============================================================================
 # ACTION NODE AND LINKED LIST IMPLEMENTATION
 # ============================================================================
@@ -367,6 +377,27 @@ def is_ship_stealthed(ship_id: int) -> bool:
     return ship_id in active_stealth
 
 
+def is_safe_zone(location_name: str) -> bool:
+    """Check if a location is a safe zone where weapons are disabled.
+    
+    Safe zones have the 'Safe' tag in their tags list.
+    
+    Args:
+        location_name: Location name to check
+        
+    Returns:
+        True if location is a safe zone (weapons disabled), False otherwise
+    """
+    dh = _get_data_handler()
+    try:
+        location = dh.get_location(location_name)
+        tags = location.get('tags', [])
+        return 'Safe' in tags
+    except KeyError:
+        # Location doesn't exist - default to not safe
+        return False
+
+
 def activate_stealth(ship_id: int) -> bool:
     """Activate stealth cloak for a ship.
     
@@ -466,6 +497,8 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
     1. Check shield pool first - if shields exist, they absorb damage
     2. If shields are depleted or don't exist, damage goes to ship HP
     
+    Weapons are disabled in safe zones (locations with 'Safe' tag).
+    
     Args:
         attacker_id: Attacking ship ID
         target_ship_id: Target ship ID
@@ -489,6 +522,10 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
         
         # Ships must be at same location
         if attacker_location is None or attacker_location != target_location:
+            return False
+        
+        # Check if location is a safe zone (weapons disabled)
+        if is_safe_zone(attacker_location):
             return False
         
         # Get attacker's weapon damage
@@ -533,7 +570,9 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
 
 
 def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot: str) -> bool:
-    """Attack a specific component on another ship (must be at same location).
+    """Attack a specific component slot on a target ship (ships must be at same location).
+    
+    Weapons are disabled in safe zones - attacks cannot be made from locations tagged as 'Safe'.
     
     Damage is applied in this order:
     1. Check shield pool first - if shields exist, they absorb damage
@@ -571,6 +610,10 @@ def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot:
         
         # Ships must be at same location
         if attacker_location is None or attacker_location != target_location:
+            return False
+        
+        # Check if attacker is in a safe zone (weapons disabled)
+        if is_safe_zone(attacker_location):
             return False
         
         # Get the component ID from the ship
@@ -634,6 +677,8 @@ def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot:
 def attack_item(attacker_id: int, target_item_id: int) -> bool:
     """Attack an item at a location (attacker must be at same location as item).
     
+    Weapons are disabled in safe zones - attacks cannot be made from locations tagged as 'Safe'.
+    
     Items don't have shields, so damage goes directly to the item's health.
     When an item's health reaches 0, its multiplier is set to 0 (destroyed).
     
@@ -664,6 +709,10 @@ def attack_item(attacker_id: int, target_item_id: int) -> bool:
         location = dh.get_location(attacker_location)
         if target_item_id not in location.get('items', []):
             return False  # Item is not at this location
+        
+        # Check if attacker is in a safe zone (weapons disabled)
+        if is_safe_zone(attacker_location):
+            return False
         
         # Get attacker's weapon damage
         damage = get_ship_weapon_damage(attacker_id)
@@ -1132,6 +1181,25 @@ def tick_stealth_timers() -> int:
     return expired_count
 
 
+def update_all_location_visibility():
+    """Update visible_ship_ids for all locations based on current stealth state.
+    
+    This should be called AFTER tick processing to cache the visible ships.
+    This converts O(n²) API requests into O(n) once per tick.
+    """
+    dh = _get_data_handler()
+    
+    for location_name, location in dh.Locations.items():
+        visible_ships = []
+        for ship_id in location.get('ship_ids', []):
+            # Only include ships that are not stealthed
+            if not is_ship_stealthed(ship_id):
+                visible_ships.append(ship_id)
+        
+        # Update the cached visible list
+        location['visible_ship_ids'] = visible_ships
+
+
 def process_tick() -> Dict[str, int]:
     """Process all queued actions with per-location multi-threading.
 
@@ -1169,9 +1237,10 @@ def process_tick() -> Dict[str, int]:
         'stealth_expirations': stealth_expirations
     }
     
-    # If no actions queued, return early
+    # If no actions queued, still update visibility before returning
     if not location_queues:
         clear_queues()
+        update_all_location_visibility()
         return total_stats
     
     # MULTI-THREADED EXECUTION: Process each location in parallel
@@ -1203,6 +1272,9 @@ def process_tick() -> Dict[str, int]:
     # Clear stealth_disabled set (ships can activate stealth next tick)
     stealth_disabled.clear()
     
+    # Update visible ship cache for ALL locations (O(n) once per tick vs O(n²) per API request)
+    update_all_location_visibility()
+    
     return total_stats
 
 
@@ -1210,6 +1282,7 @@ __all__ = [
     'queue_action',
     'process_tick',
     'clear_queues',
+    'update_all_location_visibility',
     'attack_ship',
     'attack_ship_component',
     'attack_item',

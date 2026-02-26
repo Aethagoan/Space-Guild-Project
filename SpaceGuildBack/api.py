@@ -363,6 +363,10 @@ def get_location_endpoint():
     used when entering a location or refreshing the current view. Stations disable 
     sensors, so this should not be used there.
     
+    PERFORMANCE NOTE: visible_ship_ids is pre-computed during tick processing (O(n) once per tick)
+    rather than filtering in real-time (O(n²) total across all player requests). This ensures
+    the endpoint remains fast even with thousands of players at the same location.
+    
     Query parameters:
         player_id: int - Player ID
     
@@ -371,7 +375,7 @@ def get_location_endpoint():
             "name": str,
             "description": str,
             "links": [str],
-            "ship_symbols": [int],  # Ship IDs (visible ships only, filtered by stealth)
+            "ship_symbols": [int],  # Ship IDs (visible ships only, pre-filtered by tick processing)
             "items": [int]  # Item IDs at this location
         } or {"error": "message"}
         
@@ -398,16 +402,9 @@ def get_location_endpoint():
         # Get location data
         location = data_handler.get_location(location_name)
         
-        # Filter out ships with active stealth cloaks
-        visible_ship_ids = []
-        for ship_id_at_loc in location.get('ship_ids', []):
-            try:
-                # Use is_ship_stealthed() to check if ship is currently stealthed
-                if not actions.is_ship_stealthed(ship_id_at_loc):
-                    visible_ship_ids.append(ship_id_at_loc)
-            except KeyError:
-                # Ship doesn't exist, skip
-                continue
+        # Use pre-computed visible_ship_ids from tick processing (avoids O(n²) problem)
+        # If visible_ship_ids doesn't exist (old save file), fall back to ship_ids
+        visible_ship_ids = location.get('visible_ship_ids', location.get('ship_ids', []))
         
         return jsonify({
             'name': location.get('name'),
@@ -415,6 +412,63 @@ def get_location_endpoint():
             'links': location.get('links', []),
             'ship_symbols': visible_ship_ids,
             'items': location.get('items', [])
+        }), 200
+        
+    except KeyError:
+        return jsonify({'error': 'Location not found'}), 404
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/vendors', methods=['GET'])
+def get_vendors_endpoint():
+    """Get all vendors at the player's current location.
+    
+    Returns vendor dialogue and options for all vendors at the player's current location.
+    This is typically called when the player is at a station or ground_station.
+    
+    Query parameters:
+        player_id: int - Player ID
+    
+    Returns:
+        {
+            "location_name": str,
+            "vendors": {
+                "vendor_id": {
+                    "vendor_type": str,
+                    "entry_dialogue": str,
+                    "options": []
+                },
+                ...
+            }
+        } or {"error": "message"}
+        
+    Note: If no vendors exist at the location, returns an empty vendors dict.
+    """
+    try:
+        player_id = request.args.get('player_id', type=int)
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required parameter: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Get ship's current location
+        ship = data_handler.get_ship(ship_id)
+        location_name = ship.get('location')
+        
+        if location_name is None:
+            return jsonify({'error': 'Ship has no location'}), 500
+        
+        # Get vendors at this location
+        vendors = data_handler.get_vendors_at_location(location_name)
+        
+        return jsonify({
+            'location_name': location_name,
+            'vendors': vendors
         }), 200
         
     except KeyError:

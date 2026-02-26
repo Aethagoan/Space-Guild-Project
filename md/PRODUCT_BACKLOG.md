@@ -6,9 +6,9 @@
 
 ---
 
-## SPRINT 0: Critical Blockers (Fix to Run Code) [~75% COMPLETE]
+## SPRINT 0: Critical Blockers (Fix to Run Code) [~83% COMPLETE]
 **Goal:** Make the codebase executable  
-**Estimated Effort:** 4-6 hours | **Remaining:** ~2 hours
+**Estimated Effort:** 4-6 hours | **Remaining:** ~1 hour
 
 ### P0 - Blocking Issues
 
@@ -36,12 +36,13 @@
   - Decision: Keep in codebase, API directly calls `queue_action()` for now
   - Can revisit later if needed
 
-- [ ] **RUN-001:** Add program entry point
+- [x] **RUN-001:** Add program entry point ✅
   - Add `if __name__ == '__main__'` block to `program.py`
   - Initialize DataHandler
-  - Start Flask app
+  - Start Flask app (runs separately via api.py)
   - Start tick loop (threading.Timer or asyncio)
   - **Blocks:** Running the game
+  - **Note:** Uses time.sleep() loop instead of threading.Timer, API runs separately
 
 - [~] **SHIP-001:** Implement basic ship creation (PARTIALLY DONE)
   - Ship factory exists ✅
@@ -50,19 +51,20 @@
 
 ---
 
-## SPRINT 1: Minimal Viable Backend (Week 1-2) [~10% COMPLETE]
+## SPRINT 1: Minimal Viable Backend (Week 1-2) [~42% COMPLETE]
 **Goal:** Get a runnable backend with basic state access  
-**Estimated Effort:** 20-30 hours
+**Estimated Effort:** 20-30 hours | **Remaining:** ~15 hours
 
 ### P0 - Critical for MVP
 
 #### Tick System
-- [~] **TICK-001:** Complete tick loop runner (PARTIALLY DONE)
+- [x] **TICK-001:** Complete tick loop runner ✅
   - `process_tick()` function exists ✅
-  - TODO: Add automated timer calling it every 5 seconds (threading.Timer or asyncio)
-  - TODO: Add tick counter/timestamp tracking
+  - Automated timer calling it every 5 seconds (time.sleep loop) ✅
+  - Tick counter/timestamp tracking ✅
   - **Epic:** Core Game Loop
   - **Estimate:** 2h remaining
+  - **Location:** program.py:86-182
 
 - [ ] **TICK-002:** Add tick broadcast mechanism
   - Store tick results per location
@@ -72,17 +74,21 @@
   - **Estimate:** 4h
 
 #### Basic API Expansion
-- [ ] **API-001:** Add GET `/ship/<id>` endpoint
-  - Return complete ship state (HP, location, components, items)
-  - Include equipped component details
+- [~] **API-001:** Add GET `/ship/<id>` endpoint (PARTIALLY DONE)
+  - Return complete ship state (HP, location, components, items) ✅
+  - Include equipped component details ✅
+  - TODO: Change from query param `?player_id=X` to path param `/ship/<id>`
   - **Epic:** State Access API
-  - **Estimate:** 2h
+  - **Estimate:** 2h → 0.5h remaining
+  - **Location:** api.py:306-354
 
-- [ ] **API-002:** Add GET `/location/<id>` endpoint
-  - Return location name, links, ships present, items present
-  - Include last tick events if logging implemented
+- [~] **API-002:** Add GET `/location/<id>` endpoint (PARTIALLY DONE)
+  - Return location name, links, ships present, items present ✅
+  - Include last tick events if logging implemented ✅
+  - TODO: Support arbitrary location ID lookup (currently returns player's location)
   - **Epic:** State Access API
-  - **Estimate:** 2h
+  - **Estimate:** 2h → 1h remaining
+  - **Location:** api.py:357-423
 
 - [ ] **API-003:** Add GET `/player/<id>` endpoint
   - Return player info and associated ship data
@@ -101,12 +107,13 @@
   - **Estimate:** 1h
 
 #### Minimal World Content
-- [ ] **WORLD-001:** Create starter location graph
-  - Create the first system in 
-  - Link them together
-  - write a setup script that is called if nothing gets loaded from the json files.
+- [x] **WORLD-001:** Create starter location graph ✅
+  - Create the first system 
+  - Link them together ✅
+  - write a setup script that is called if nothing gets loaded from the json files ✅
   - **Epic:** SOL System Content
   - **Estimate:** 3h
+  - **Location:** setup.py:34-351 (creates 20 locations across 5 systems)
 
 - [ ] **WORLD-002:** Create player spawn system
   - New player spawns at Earth Orbit
@@ -118,19 +125,21 @@
 ### P1 - High Priority
 
 #### Data Initialization
-- [ ] **DATA-001:** Add world data loading in `program.py`
-  - Load locations from JSON or create programmatically
-  - Load starter stations and inventories
-  - Initialize faction data
+- [x] **DATA-001:** Add world data loading in `program.py` ✅
+  - Load locations from JSON or create programmatically ✅
+  - Load starter stations and inventories ✅
+  - Initialize faction data ✅
   - **Epic:** Data Management
   - **Estimate:** 3h
+  - **Location:** program.py:25-123
 
-- [ ] **DATA-002:** Add save/autosave system
-  - Auto-save every N ticks
-  - Save on shutdown
-  - Backup system
+- [x] **DATA-002:** Add save/autosave system ✅
+  - Auto-save every N ticks ✅
+  - Save on shutdown ✅
+  - Backup system ✅
   - **Epic:** Data Management
   - **Estimate:** 4h
+  - **Location:** program.py:69-83, data.py:1102-1116
 
 #### Error Handling
 - [ ] **ERR-001:** Add Python logging throughout
@@ -140,13 +149,15 @@
   - Configure log levels
   - **Epic:** Debugging & Operations
   - **Estimate:** 3h
+  - **Note:** Currently uses print() instead of logging module
 
-- [ ] **ERR-002:** Add input validation to API endpoints
-  - Validate request schemas
-  - Return proper error messages
-  - Handle malformed data gracefully
+- [~] **ERR-002:** Add input validation to API endpoints (PARTIALLY DONE)
+  - Validate request schemas ✅ (basic validation only)
+  - Return proper error messages ✅
+  - Handle malformed data gracefully (needs comprehensive schema validation)
   - **Epic:** API Robustness
-  - **Estimate:** 4h
+  - **Estimate:** 4h → 2h remaining
+  - **Location:** api.py (basic validation at lines 74-75, 121-122, etc.)
 
 ---
 
@@ -244,12 +255,14 @@
 ### P1 - High Priority
 
 #### Location Event Log System
-- [ ] **LOG-001:** Implement location event log storage
-  - Add event list to Location entity (max 100 messages, ephemeral)
-  - Timestamp + event type + message
-  - FIFO rotation when full (same as ship logs)
+- [~] **LOG-001:** Implement location event log storage (PARTIALLY DONE)
+  - Add event list to Location entity (max 100 messages, ephemeral) ✅
+  - Timestamp + event type + message ✅
+  - FIFO rotation when full (same as ship logs) ✅
+  - **ISSUE:** Location 'logs' field exists but `add_location_log()` method not implemented in data.py
   - **Epic:** Logging System
-  - **Estimate:** 2h
+  - **Estimate:** 2h → 1h remaining
+  - **Location:** location.py:14 (field exists), actions.py:729 (called but not implemented)
 
 - [ ] **LOG-002:** Add event entries during tick processing
   - Movement actions: "Ship-X moved to Location-B"
@@ -266,18 +279,20 @@
   - **Estimate:** 1h
 
 #### Ship Logging (Optional - for personal ship history)
-- [ ] **LOG-003:** Implement ship log storage
-  - Add log list to Ship entity (max 100 messages)
-  - Timestamp + event type + message
-  - FIFO rotation when full
+- [x] **LOG-003:** Implement ship log storage ✅
+  - Add log list to Ship entity (max 100 messages) → Implemented as max 50 ✅
+  - Timestamp + event type + message ✅
+  - FIFO rotation when full ✅
   - **Epic:** Logging System
   - **Estimate:** 2h
+  - **Location:** data.py:1122-1203, data.py:27-39 (MessageType class)
 
-- [ ] **API-021:** Add GET `/ship/<id>/log` endpoint
-  - Return last N log entries for the ship
-  - Filter by event type
+- [x] **API-021:** Add GET `/ship/<id>/log` endpoint ✅
+  - Return last N log entries for the ship ✅
+  - Filter by event type ✅
   - **Epic:** Logging System
   - **Estimate:** 1h
+  - **Location:** api.py:263-303
 
 ---
 
@@ -532,12 +547,14 @@
   - **Estimate:** 8h
 
 ### Stealth Cloak Mechanics
-- [ ] **COMP-020:** Implement basic cloaking system
-  - "Cloak" action to enable stealth
-  - "Uncloak" action or auto-uncloak on action
-  - How many ticks can you go unnoticed?
-  - Basic stealth duration mechanics
+- [x] **COMP-020:** Implement basic cloaking system ✅
+  - "Cloak" action to enable stealth ✅
+  - "Uncloak" action or auto-uncloak on action ✅
+  - How many ticks can you go unnoticed? ✅ (timer-based)
+  - Basic stealth duration mechanics ✅
   - **Estimate:** 6h
+  - **Location:** actions.py:110-456, api.py:102-206
+  - **Note:** ALREADY IMPLEMENTED (not in backlog initially)
 
 ---
 
@@ -902,11 +919,13 @@
 3. **No requirements.txt** - Dependencies undocumented (P1, Sprint 0)
 4. **Magic numbers everywhere** - Formulas hardcoded in code (acceptable per scope decision)
 5. **Limited error handling** - Many functions return False without logging (P1, Sprint 1)
-6. **No input validation** - API accepts malformed data (P1, Sprint 1)
+6. **No input validation** - API accepts malformed data (P1, Sprint 1) - PARTIALLY FIXED (basic validation exists)
 7. **Thread safety questions** - Lock cache clearing during tick (P2, investigate)
-8. **No logging infrastructure** - Cannot debug production issues (P0, Sprint 1)
-9. **Faction factory types** - Still using type placeholders instead of default values (P0, Sprint 0)
-10. **Player factory types** - Still using type placeholders instead of default values (P0, Sprint 0)
+8. ~~**No logging infrastructure**~~ - ✅ Ship logs implemented, location logs partially done (P0, Sprint 1)
+9. ~~**Faction factory types**~~ - ✅ Fixed (Sprint 0)
+10. ~~**Player factory types**~~ - ✅ Fixed (Sprint 0)
+11. **Location logging incomplete** - `add_location_log()` called but not implemented in data.py (P1, Sprint 3)
+12. **API endpoint inconsistencies** - Some use query params instead of path params (P1, Sprint 1)
 
 ---
 
@@ -914,18 +933,18 @@
 
 | Epic | Total Tasks | Est. Hours | Priority | Status |
 |------|-------------|------------|----------|--------|
-| **Critical Blockers** | 8 | 2h remain | P0 | Sprint 0 (~75% done) |
-| **Core Game Loop** | 2 | 6h | P0 | Sprint 1 |
-| **State Access API** | 5 | 7h | P0 | Sprint 1 |
-| **SOL System Content** | 13 | 31h | P1 | Sprints 1-4 |
+| **Critical Blockers** | 8 | 1h remain | P0 | Sprint 0 (~83% done) |
+| **Core Game Loop** | 2 | 2h → DONE | P0 | Sprint 1 (COMPLETE ✅) |
+| **State Access API** | 5 | 7h → 4.5h remain | P0 | Sprint 1 (~40% done) |
+| **SOL System Content** | 13 | 31h → 28h remain | P1 | Sprints 1-4 (1 task done) |
 | **Player Progression** | 2 | 6h | P1 | Backlog (simplified) |
-| **Data Management** | 2 | 7h | P1 | Sprint 1 |
-| **API Robustness** | 2 | 7h | P1 | Sprint 1 |
-| **Station System** | 8 | 23h | P0 | Sprint 2 (no currency) |
-| **Location Event Logging** | 5 | 9h | P1 | Sprint 3 (simplified) |
-| **Testing Infrastructure** | 9 | 32h | P0 | Sprint 5 |
+| **Data Management** | 2 | 7h → DONE | P1 | Sprint 1 (COMPLETE ✅) |
+| **API Robustness** | 2 | 7h → 5h remain | P1 | Sprint 1 (~30% done) |
+| **Station System** | 8 | 23h | P0 | Sprint 2 (not started) |
+| **Location Event Logging** | 5 | 9h → 6h remain | P1 | Sprint 3 (~40% done) |
+| **Testing Infrastructure** | 9 | 32h | P0 | Sprint 5 (not started) |
 | **Authentication System** | 7 | 23h | P1 | Backlog |
-| **Component Systems** | 3 | 20h | P2 | Backlog (simplified) |
+| **Component Systems** | 3 | 20h → 14h remain | P2 | Backlog (stealth DONE ✅) |
 | **Faction & NPC Ships** | 5 | 46h | P1 | Backlog (redesigned) |
 | **Combat Systems** | 3 | 18h | P2 | Backlog (simplified) |
 | **Quest & Barter Economy** | 4 | 23h | P2 | Backlog (redesigned) |
@@ -993,6 +1012,7 @@
 **Scope Reduction:** ~300 hours removed/simplified
 
 **Current Progress:** 
-- Sprint 0: ~75% complete
-- Overall to v0.1.0: ~30%
-- Overall to v1.0.0: ~15%
+- Sprint 0: ~83% complete
+- Sprint 1: ~42% complete
+- Overall to v0.1.0: ~45%
+- Overall to v1.0.0: ~22%
