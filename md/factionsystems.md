@@ -73,7 +73,7 @@ The Nebula
 
 
       
-Scientific System 1:
+Scientific System 1 The Kajian system:
     Binary star system.
         Close Gas Giant.
         Asteroid belt.

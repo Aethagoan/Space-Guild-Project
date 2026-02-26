@@ -577,7 +577,8 @@ class DataHandler:
     def damage_item(self, item_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to an item's health (thread-safe).
         
-        When an item's health reaches 0, its multiplier is set to 0 (destroyed).
+        When an item's health reaches 0, it becomes disabled and stops functioning.
+        The item stays equipped but cannot be used until repaired.
         
         Args:
             item_id: Item ID to damage
@@ -587,7 +588,7 @@ class DataHandler:
             Dict with damage results: {
                 'health_damage': float,
                 'remaining_health': float,
-                'destroyed': bool
+                'disabled': bool
             }
             
         Raises:
@@ -601,19 +602,41 @@ class DataHandler:
             # Apply damage
             health_damage = min(damage, current_health)
             new_health = max(0.0, current_health - damage)
-            destroyed = new_health <= 0
+            disabled = new_health <= 0
             
             # Update health
             self.Items[item_id]['health'] = new_health
             
-            # If destroyed, set multiplier to 0
-            if destroyed:
-                self.Items[item_id]['multiplier'] = 0.0
+            # If disabled (health <= 0), handle special component behaviors
+            if disabled:
+                # Check if this is a shield or cargo component and handle special cases
+                item_type = self.Items[item_id].get('type')
+                
+                # If shield disabled, clear shield pool of the ship that has it equipped
+                if item_type == 'shield':
+                    for ship_id in self.Ships:
+                        if self.Ships[ship_id].get('shield_id') == item_id:
+                            self.Ships[ship_id]['shield_pool'] = 0.0
+                            break
+                
+                # If cargo disabled, spill all items to ship's location
+                elif item_type == 'cargo':
+                    for ship_id in self.Ships:
+                        if self.Ships[ship_id].get('cargo_id') == item_id:
+                            # Get ship's location
+                            location_name = self.Ships[ship_id].get('location')
+                            if location_name and location_name in self.Locations:
+                                # Transfer all items from ship to location
+                                items_to_spill = list(self.Ships[ship_id]['items'])  # Copy list
+                                for spill_item_id in items_to_spill:
+                                    self.Ships[ship_id]['items'].remove(spill_item_id)
+                                    self.Locations[location_name]['items'].append(spill_item_id)
+                            break
             
             return {
                 'health_damage': health_damage,
                 'remaining_health': new_health,
-                'destroyed': destroyed
+                'disabled': disabled
             }
     
     def damage_ship_hp(self, ship_id: int, damage: float) -> Dict[str, Any]:
@@ -839,6 +862,9 @@ class DataHandler:
         This is a convenience method that atomically removes an item from a location
         and adds it to a ship's cargo in one operation with proper locking.
         
+        TODO: Add transfer_item_ship_to_location for dropping/jettisoning items.
+              Should prevent drops at stations (stations don't allow item drops).
+        
         Args:
             item_id: ID of item to transfer
             location_name: Location the item is currently at
@@ -951,6 +977,10 @@ class DataHandler:
             # Verify item exists
             if item_id not in self.Items:
                 raise KeyError(f"Item {item_id} in slot '{slot_name}' doesn't exist in Items")
+            
+            # If unequipping shield, clear shield pool
+            if slot_name == 'shield_id':
+                self.Ships[ship_id]['shield_pool'] = 0.0
             
             # Move to cargo
             self.Ships[ship_id]['items'].append(item_id)

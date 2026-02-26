@@ -160,6 +160,11 @@ def test_move_action_execution():
 	ship = Ship(location='earth')
 	dh.add_ship(1, 'earth', ship)
 	
+	# Add engine so ship can move
+	engine = Engine(100, 'basic engine', 0, 1.0)
+	dh.add_item(100, engine)
+	dh.update_ship_component(1, 'engine_id', 100)
+	
 	# Queue and process move
 	actions.queue_action(1, 'move', 'mars')
 	stats = actions.process_tick()
@@ -252,6 +257,9 @@ def test_attack_with_shields():
 	# Create target with shields
 	ship2 = Ship(location='earth')
 	dh.add_ship(2, 'earth', ship2)
+	shield = Shield(200, 'shield', 0, 1.0)
+	dh.add_item(200, shield)
+	dh.update_ship_component(2, 'shield_id', 200)
 	dh.set_ship_shield_pool(2, 15.0)
 	
 	initial_hp = dh.Ships[2]['hp']
@@ -569,16 +577,23 @@ def test_action_queue_replacement():
 	ship = Ship(location='earth')
 	dh.add_ship(1, 'earth', ship)
 	
+	# Add engine component to enable movement
+	engine = Engine(100, 'basic engine', 0, 1.0)
+	dh.add_item(100, engine)
+	dh.update_ship_component(1, 'engine_id', 100)
+	
 	# Queue move to mars
 	actions.queue_action(1, 'move', 'mars')
-	assert actions.ship_to_node[1].action_type == 'move'
-	assert actions.ship_to_node[1].target == 'mars'
+	node, location = actions.ship_to_node[1]
+	assert node.action_type == 'move'
+	assert node.target == 'mars'
 	
 	# Replace with different move (should update)
 	dh.add_location('jupiter')
 	dh.double_link_locations('earth', 'jupiter')
 	actions.queue_action(1, 'move', 'jupiter')
-	assert actions.ship_to_node[1].target == 'jupiter'
+	node, location = actions.ship_to_node[1]
+	assert node.target == 'jupiter'
 	
 	# Process tick - should go to jupiter, not mars
 	actions.process_tick()
@@ -606,18 +621,20 @@ def test_add_player_to_faction():
 	
 	assert 1 in dh.Factions[1]['player_ids']
 
-def test_component_destroyed_at_zero_health():
+def test_component_disabled_at_zero_health():
 	dh = DataHandler(data_dir="test_data")
 	
 	weapon = Weapon(100, 'laser', 0, 5.0)
 	dh.add_item(100, weapon)
 	
+	initial_multiplier = dh.Items[100]['multiplier']
+	
 	# Damage to zero
 	result = dh.damage_item(100, 999)
 	
-	assert result['destroyed'] == True
+	assert result['disabled'] == True
 	assert dh.Items[100]['health'] == 0.0
-	assert dh.Items[100]['multiplier'] == 0.0
+	assert dh.Items[100]['multiplier'] == initial_multiplier  # Multiplier unchanged
 
 def test_can_equip_item_tier_restriction():
 	dh = DataHandler(data_dir="test_data")

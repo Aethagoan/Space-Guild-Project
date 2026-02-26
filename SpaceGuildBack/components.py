@@ -182,7 +182,7 @@ def get_ship_max_hp(ship_id: int) -> float:
 def get_ship_weapon_damage(ship_id: int) -> float:
     """Calculate a ship's weapon damage.
     
-    Returns the weapon's multiplier, or 0 if no weapon equipped.
+    Returns the weapon's multiplier if health > 0, or 0 if no weapon equipped or weapon disabled.
     
     Args:
         ship_id: Ship ID
@@ -192,6 +192,11 @@ def get_ship_weapon_damage(ship_id: int) -> float:
     """
     weapon = get_ship_weapon(ship_id)
     if weapon is None:
+        return 0.0
+    
+    # Check if weapon is disabled (health <= 0)
+    health = weapon.get('health', 0.0)
+    if health <= 0:
         return 0.0
     
     return float(weapon.get('multiplier', 0.0))

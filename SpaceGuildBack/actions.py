@@ -87,11 +87,15 @@ class ActionList:
         # Don't clear node.prev/next - might reuse them for debugging
     
     def iterate(self):
-        """Iterate through all real nodes (skipping sentinels)."""
-        current = self.head.next
+        """Iterate through all real nodes (skipping sentinels).
+        
+        Yields:
+            ActionNode: Real action nodes (not sentinels)
+        """
+        current: ActionNode = self.head.next  # type: ignore - sentinel.next is always ActionNode
         while current != self.tail:
             yield current
-            current = current.next
+            current = current.next  # type: ignore - during iteration, next is always valid
     
     def clear(self):
         """Clear the list by reconnecting head and tail."""
@@ -100,28 +104,94 @@ class ActionList:
 
 
 # ============================================================================
+# STEALTH NODE AND LINKED LIST IMPLEMENTATION
+# ============================================================================
+
+class StealthNode:
+    """Node in the active stealth linked list.
+    
+    Tracks ships with active stealth cloaks and their remaining duration.
+    """
+    def __init__(self, ship_id: int, duration_ticks: int):
+        self.ship_id = ship_id
+        self.remaining_ticks = duration_ticks
+        self.prev: Optional['StealthNode'] = None
+        self.next: Optional['StealthNode'] = None
+        self._lock = Lock()
+
+
+class StealthList:
+    """Doubly-linked list for active stealth ships with sentinel nodes."""
+    def __init__(self):
+        # Sentinel nodes (ship_id = -1 means not a real ship)
+        self.head = StealthNode(-1, 0)
+        self.tail = StealthNode(-1, 0)
+        self.head.next = self.tail
+        self.tail.prev = self.head
+    
+    def append(self, node: StealthNode):
+        """Append node to the tail of the list."""
+        with self.tail._lock, self.tail.prev._lock:
+            node.prev = self.tail.prev
+            node.next = self.tail
+            self.tail.prev.next = node
+            self.tail.prev = node
+    
+    def remove(self, node: StealthNode):
+        """Remove node from the list."""
+        with node.prev._lock, node.next._lock:
+            node.prev.next = node.next
+            node.next.prev = node.prev
+    
+    def iterate(self):
+        """Iterate through all real nodes (skipping sentinels)."""
+        current: StealthNode = self.head.next  # type: ignore
+        while current != self.tail:
+            yield current
+            current = current.next  # type: ignore
+
+
+# ============================================================================
+# STEALTH TRACKING (persists across ticks)
+# ============================================================================
+
+# Active stealth ships (persists across ticks)
+active_stealth_list = StealthList()
+
+# Ship ID -> StealthNode for O(1) lookup
+active_stealth: Dict[int, StealthNode] = {}
+
+# Ships that took damage this tick - can't activate stealth (cleared each tick)
+stealth_disabled: set[int] = set()
+
+
+# ============================================================================
 # ACTION QUEUES (cleared each tick)
 # ============================================================================
-# Per tick, actions are queued by type and executed in order: attack -> move -> collect
+# MULTI-THREADED ARCHITECTURE:
+# Actions are organized by LOCATION to enable parallel processing per location.
+# Each location is processed in its own thread during tick execution.
+# 
+# Per tick execution order within each location thread:
+#   1. All scans (scan ship, scan item, scan location)
+#   2. All attacks (attack_ship, attack_ship_component, attack_item)
+#   3. All moves
+#   4. All collects
 
-# Five action lists (one per action type)
-attack_ship_list = ActionList('attack_ship')
-attack_ship_component_list = ActionList('attack_ship_component')
-attack_item_list = ActionList('attack_item')
-move_list = ActionList('move')
-collect_list = ActionList('collect')
 
-# Map action type to list for easy lookup
-action_type_to_list: Dict[str, ActionList] = {
-    'attack_ship': attack_ship_list,
-    'attack_ship_component': attack_ship_component_list,
-    'attack_item': attack_item_list,
-    'move': move_list,
-    'collect': collect_list,
-}
+location_queues: Dict[str, Dict[str, ActionList]] = defaultdict(lambda: {
+    'scan': ActionList('scan'),
+    'attack_ship': ActionList('attack_ship'),
+    'attack_ship_component': ActionList('attack_ship_component'),
+    'attack_item': ActionList('attack_item'),
+    'move': ActionList('move'),
+    'collect': ActionList('collect'),
+    'activate_stealth': ActionList('activate_stealth'),
+    'deactivate_stealth': ActionList('deactivate_stealth'),
+})
 
-# Ship ID -> ActionNode (for O(1) lookup and updates)
-ship_to_node: Dict[int, ActionNode] = {}
+# Ship ID -> (ActionNode, location_name) for O(1) lookup and updates
+ship_to_node: Dict[int, Tuple[ActionNode, str]] = {}
 
 # Node pool for reuse (ship_id -> ActionNode)
 node_pool: Dict[int, ActionNode] = {}
@@ -129,6 +199,9 @@ node_pool: Dict[int, ActionNode] = {}
 
 def queue_action(ship_id: int, action: str, target, target_data: Optional[str] = None, action_hash: Optional[str] = None) -> bool:
     """Queue an action to be executed on the next tick.
+    
+    Actions are organized by LOCATION to support multi-threaded tick processing.
+    Each location's actions will be processed in a separate thread.
     
     If the ship already has an action queued:
     - If action_hash matches: do nothing (spam protection)
@@ -145,23 +218,28 @@ def queue_action(ship_id: int, action: str, target, target_data: Optional[str] =
         True if action was queued successfully, False if action type is invalid
     """
     # Validate action type
-    if action not in action_type_to_list:
+    valid_actions = {'scan', 'attack_ship', 'attack_ship_component', 'attack_item', 'move', 'collect', 'activate_stealth', 'deactivate_stealth'}
+    if action not in valid_actions:
         return False
     
     # Special validation for attack_ship_component
     if action == 'attack_ship_component' and target_data is None:
         return False  # Component slot is required
     
+    # Get ship's current location - required to queue action in correct location bucket
+    ship_location = get_ship_location(ship_id)
+    if ship_location is None:
+        return False  # Ship doesn't exist or has no location
+    
     # Get or create node for this ship
     if ship_id in ship_to_node:
-        node = ship_to_node[ship_id]
+        node, old_location = ship_to_node[ship_id]
         
         # Check if action is identical (spam protection)
         if action_hash is not None and node.action_hash == action_hash:
             return True  # Same action, do nothing
         
-        # Action changed - remove from current list
-        # We don't need to know which list it's in - just remove it locally
+        # Action changed - remove from old list in old location
         remove_node_from_list(node)
         
         # Update node data
@@ -175,11 +253,12 @@ def queue_action(ship_id: int, action: str, target, target_data: Optional[str] =
             node = ActionNode(ship_id)
             node.update_action(action, target, target_data, action_hash)
             node_pool[ship_id] = node
-        
-        ship_to_node[ship_id] = node
     
-    # Append to the appropriate list
-    target_list = action_type_to_list[action]
+    # Update ship-to-node mapping with current location
+    ship_to_node[ship_id] = (node, ship_location)
+    
+    # Append to the appropriate location's action list
+    target_list = location_queues[ship_location][action]
     target_list.append(node)
     
     return True
@@ -198,13 +277,15 @@ def remove_node_from_list(node: ActionNode):
 def clear_queues():
     """Clear all action queues. Called after tick execution.
     
-    Clears the linked lists but keeps nodes in the pool for reuse.
+    Clears all location-based linked lists but keeps nodes in the pool for reuse.
     """
-    attack_ship_list.clear()
-    attack_ship_component_list.clear()
-    attack_item_list.clear()
-    move_list.clear()
-    collect_list.clear()
+    # Clear all action lists for all locations
+    for location_name, action_lists in location_queues.items():
+        for action_type, action_list in action_lists.items():
+            action_list.clear()
+    
+    # Clear the location queues dictionary
+    location_queues.clear()
     
     # Clear the ship-to-node mapping (but keep nodes in pool)
     ship_to_node.clear()
@@ -242,6 +323,136 @@ def can_fit_item(ship_id: int, item_id: int) -> bool:
     """
     from components import can_fit_item_in_cargo
     return can_fit_item_in_cargo(ship_id, item_id)
+
+
+def _spill_cargo_to_location(ship_id: int, location_name: str) -> None:
+    """Spill all items from a ship's cargo to a location when cargo is destroyed.
+    
+    Args:
+        ship_id: Ship ID whose cargo was destroyed
+        location_name: Location to spill items to
+    """
+    dh = _get_data_handler()
+    
+    try:
+        ship = dh.get_ship(ship_id)
+        items_to_spill = ship.get('items', []).copy()
+        
+        # Move each item from ship's cargo to the location
+        for item_id in items_to_spill:
+            try:
+                # Add item to location
+                dh.add_item_to_location(location_name, item_id)
+            except (KeyError, ValueError):
+                # Item doesn't exist or other error - skip it
+                pass
+        
+        # Clear the ship's items list
+        ship['items'] = []
+        
+    except KeyError:
+        # Ship doesn't exist - nothing to spill
+        pass
+
+
+def is_ship_stealthed(ship_id: int) -> bool:
+    """Check if a ship currently has active stealth (O(1) lookup).
+    
+    Args:
+        ship_id: Ship ID to check
+        
+    Returns:
+        True if ship has active stealth, False otherwise
+    """
+    return ship_id in active_stealth
+
+
+def activate_stealth(ship_id: int) -> bool:
+    """Activate stealth cloak for a ship.
+    
+    Duration is calculated as: floor(5 * (1 + tier) * multiplier) ticks
+    
+    Args:
+        ship_id: Ship ID
+        
+    Returns:
+        True if stealth activated successfully, False otherwise
+    """
+    from components import get_ship_stealth_cloak
+    dh = _get_data_handler()
+    
+    try:
+        # Check if stealth is disabled (took damage this tick)
+        if ship_id in stealth_disabled:
+            return False
+        
+        # Check if already stealthed
+        if ship_id in active_stealth:
+            return False
+        
+        # Get stealth cloak component
+        stealth_cloak = get_ship_stealth_cloak(ship_id)
+        if stealth_cloak is None:
+            return False
+        
+        # Check health
+        health = stealth_cloak.get('health', 0.0)
+        if health <= 0:
+            return False
+        
+        # Calculate duration: floor(5 * (1 + tier) * multiplier)
+        tier = stealth_cloak.get('tier', 0)
+        multiplier = stealth_cloak.get('multiplier', 1.0)
+        duration = int(5 * (1 + tier) * multiplier)
+        
+        if duration <= 0:
+            return False
+        
+        # Create stealth node and add to list
+        node = StealthNode(ship_id, duration)
+        active_stealth_list.append(node)
+        active_stealth[ship_id] = node
+        
+        return True
+        
+    except (KeyError, ValueError):
+        return False
+
+
+def deactivate_stealth(ship_id: int) -> bool:
+    """Deactivate stealth for a ship (manual or forced).
+    
+    Args:
+        ship_id: Ship ID
+        
+    Returns:
+        True if stealth was deactivated, False if not stealthed
+    """
+    if ship_id not in active_stealth:
+        return False
+    
+    # Remove from list and dictionary
+    node = active_stealth[ship_id]
+    active_stealth_list.remove(node)
+    del active_stealth[ship_id]
+    
+    return True
+
+
+def mark_ship_took_damage(ship_id: int) -> None:
+    """Mark that a ship took damage - disables stealth activation and deactivates if active.
+    
+    This is called when a ship takes damage. The stealth_disabled flag is cleared
+    at the end of the tick.
+    
+    Args:
+        ship_id: Ship ID that took damage
+    """
+    # Add to disabled set
+    stealth_disabled.add(ship_id)
+    
+    # Deactivate stealth if currently active
+    deactivate_stealth(ship_id)
 
 
 # ============================================================================
@@ -286,8 +497,18 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
         if damage <= 0:
             return False  # No weapon or no damage
         
-        # Check shield pool first
-        current_shield = target_ship.get('shield_pool', 0.0)
+        # Attacking deactivates stealth
+        deactivate_stealth(attacker_id)
+        
+        # Check shield pool first (capped at max shield pool)
+        from components import get_ship_max_shield_pool
+        max_shield = get_ship_max_shield_pool(target_ship_id)
+        current_shield = min(target_ship.get('shield_pool', 0.0), max_shield)
+        
+        # If shield is destroyed or unequipped, clear the shield pool
+        if max_shield <= 0 and current_shield > 0:
+            dh.set_ship_shield_pool(target_ship_id, 0.0)
+            current_shield = 0.0
         
         if current_shield > 0:
             # Shields absorb damage first
@@ -297,9 +518,13 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
             # If there's overflow damage, apply it to ship HP
             if overflow_damage > 0:
                 dh.damage_ship_hp(target_ship_id, overflow_damage)
+                # Mark that ship took damage (disables stealth)
+                mark_ship_took_damage(target_ship_id)
         else:
             # No shields, damage goes directly to HP
             dh.damage_ship_hp(target_ship_id, damage)
+            # Mark that ship took damage (disables stealth)
+            mark_ship_took_damage(target_ship_id)
         
         return True
         
@@ -312,7 +537,9 @@ def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot:
     
     Damage is applied in this order:
     1. Check shield pool first - if shields exist, they absorb damage
-    2. If shields are depleted or don't exist, damage goes to the component
+    2. If shields are depleted:
+       - If component exists in slot, damage goes to the component
+       - If component slot is empty, deal 5x critical damage directly to ship HP
     
     Args:
         attacker_id: Attacking ship ID
@@ -349,29 +576,54 @@ def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot:
         # Get the component ID from the ship
         component_id = target_ship.get(component_slot)
         
-        if component_id is None or not isinstance(component_id, int):
-            return False  # No component equipped in that slot
-        
         # Get attacker's weapon damage
         damage = get_ship_weapon_damage(attacker_id)
         
         if damage <= 0:
             return False  # No weapon or no damage
         
-        # Check shield pool first
-        current_shield = target_ship.get('shield_pool', 0.0)
+        # Attacking deactivates stealth
+        deactivate_stealth(attacker_id)
+        
+        # Check shield pool first (capped at max shield pool)
+        from components import get_ship_max_shield_pool
+        max_shield = get_ship_max_shield_pool(target_ship_id)
+        current_shield = min(target_ship.get('shield_pool', 0.0), max_shield)
+        
+        # If shield is destroyed or unequipped, clear the shield pool
+        if max_shield <= 0 and current_shield > 0:
+            dh.set_ship_shield_pool(target_ship_id, 0.0)
+            current_shield = 0.0
         
         if current_shield > 0:
             # Shields absorb damage first
             shield_result = dh.damage_shield_pool(target_ship_id, damage)
             overflow_damage = shield_result['overflow_damage']
             
-            # If there's overflow damage, apply it to the component
+            # If there's overflow damage, apply it to the component (if exists)
             if overflow_damage > 0:
-                dh.damage_item(component_id, overflow_damage)
+                if component_id is not None and isinstance(component_id, int):
+                    damage_result = dh.damage_item(component_id, overflow_damage)
+                    
+                    # If cargo was disabled, spill all items to location
+                    if damage_result['disabled'] and component_slot == 'cargo_id' and target_location is not None:
+                        _spill_cargo_to_location(target_ship_id, target_location)
+                # If no component in slot, overflow damage is wasted (shields still absorbed it)
         else:
-            # No shields, damage goes directly to component
-            dh.damage_item(component_id, damage)
+            # No shields - check if component slot is empty
+            if component_id is None or not isinstance(component_id, int):
+                # CRITICAL HIT: Empty component slot with shields down = 5x damage to ship HP
+                critical_damage = damage * 5.0
+                dh.damage_ship_hp(target_ship_id, critical_damage)
+                # Mark that ship took damage (disables stealth)
+                mark_ship_took_damage(target_ship_id)
+            else:
+                # Normal: damage goes directly to component
+                damage_result = dh.damage_item(component_id, damage)
+                
+                # If cargo was disabled, spill all items to location
+                if damage_result['disabled'] and component_slot == 'cargo_id' and target_location is not None:
+                    _spill_cargo_to_location(target_ship_id, target_location)
         
         return True
         
@@ -441,9 +693,21 @@ def move(ship_id: int, destination: str) -> bool:
     dh = _get_data_handler()
     
     try:
+        # Import components module
+        from components import get_ship_engine
+        
         # Verify ship and destination exist
         _ = dh.get_ship(ship_id)
         dest_location = dh.get_location(destination)
+        
+        # Check if engine exists and has health > 0
+        engine = get_ship_engine(ship_id)
+        if engine is None:
+            return False  # No engine equipped
+        
+        engine_health = engine.get('health', 0.0)
+        if engine_health <= 0:
+            return False  # Engine is destroyed - can't move
         
         # Get current location (O(1) lookup)
         current_location_name = get_ship_location(ship_id)
@@ -456,8 +720,21 @@ def move(ship_id: int, destination: str) -> bool:
         if destination not in current_location.get('links', []):
             return False
         
+        # Check if ship is stealthed and add engine trail log
+        was_stealthed = is_ship_stealthed(ship_id)
+        if was_stealthed:
+            # Add log to current location about energy signatures
+            ship = dh.get_ship(ship_id)
+            ship_name = ship.get('name', f'Ship {ship_id}')
+            current_location['logs'].append(f"Faint energy signatures detected from {ship_name} departing toward {destination}.")
+        
         # Use thread-safe move method
         dh.move_ship_between_locations(ship_id, current_location_name, destination)
+        
+        # Disable stealth if entering a station or starport
+        dest_type = dest_location.get('type', 'space')
+        if dest_type in ['station', 'starport']:
+            deactivate_stealth(ship_id)
         
         return True
         
@@ -478,9 +755,21 @@ def collect(collector_id: int, item_id: int) -> bool:
     dh = _get_data_handler()
     
     try:
+        # Import components module
+        from components import get_ship_cargo
+        
         # Verify ship and item exist
-        _ = dh.get_ship(collector_id)
+        ship = dh.get_ship(collector_id)
         _ = dh.get_item(item_id)
+        
+        # Check if cargo exists and has health > 0
+        cargo = get_ship_cargo(collector_id)
+        if cargo is None:
+            return False  # No cargo equipped
+        
+        cargo_health = cargo.get('health', 0.0)
+        if cargo_health <= 0:
+            return False  # Cargo is destroyed - can't pick up items
         
         # Get ship's location (O(1) lookup)
         ship_location = get_ship_location(collector_id)
@@ -506,136 +795,357 @@ def collect(collector_id: int, item_id: int) -> bool:
         return False
 
 
-# ============================================================================
-# TICK PROCESSING
-# ============================================================================
-
-def _group_actions_by_location() -> Dict[str, Dict[str, List[ActionNode]]]:
-    """Group all queued actions by the location where they occur.
+def scan_ship(scanner_id: int, target_ship_id: int) -> Optional[Dict[str, Any]]:
+    """Scan another ship to reveal all its information.
     
-    ARCHITECTURE NOTE (for audit):
-    -------------------------------
-    This function enables per-location concurrent processing. Each location's
-    actions can execute in parallel with other locations' actions because:
+    Ships must be at the same location. Returns full ship data including HP, 
+    components, cargo, and all other stats. Scan results are not persisted in 
+    the backend - they're returned once and the client manages caching.
     
-    1. Attacks: Ships at Earth attacking each other don't conflict with
-       ships at Mars attacking each other (different location locks)
-    
-    2. Collects: Items at Earth being collected don't conflict with
-       items at Mars being collected (different location locks)
-    
-    3. Moves: Special case - moves OUT of a location can run concurrently
-       with other locations' moves, but moves INTO the same destination
-       will still serialize (destination location lock contention).
-    
+    Args:
+        scanner_id: Scanning ship ID
+        target_ship_id: Target ship ID to scan
+        
     Returns:
-        Dict mapping location_name -> {action_type -> [nodes]}
-        Example: {
-            'Earth': {
-                'attack_ship': [node1, node2],
-                'move': [node3],
-                'collect': [node4]
-            },
-            'Mars': {
-                'attack_ship': [node5],
-                'move': [node6]
-            }
-        }
+        Dict with full ship data if successful, None if scan failed
     """
     dh = _get_data_handler()
-    location_actions: Dict[str, Dict[str, List[ActionNode]]] = defaultdict(lambda: defaultdict(list))
     
-    # Group attack_ship actions by attacker location
-    for node in attack_ship_list.iterate():
-        location = get_ship_location(node.ship_id)
-        if location:
-            location_actions[location]['attack_ship'].append(node)
-    
-    # Group attack_ship_component actions by attacker location
-    for node in attack_ship_component_list.iterate():
-        location = get_ship_location(node.ship_id)
-        if location:
-            location_actions[location]['attack_ship_component'].append(node)
-    
-    # Group attack_item actions by attacker location
-    for node in attack_item_list.iterate():
-        location = get_ship_location(node.ship_id)
-        if location:
-            location_actions[location]['attack_item'].append(node)
-    
-    # Group move actions by SOURCE location (where ship currently is)
-    for node in move_list.iterate():
-        location = get_ship_location(node.ship_id)
-        if location:
-            location_actions[location]['move'].append(node)
-    
-    # Group collect actions by collector location
-    for node in collect_list.iterate():
-        location = get_ship_location(node.ship_id)
-        if location:
-            location_actions[location]['collect'].append(node)
-    
-    return location_actions
+    try:
+        # Import components module
+        from components import get_ship_sensor
+        
+        # Verify both ships exist
+        scanner_ship = dh.get_ship(scanner_id)
+        target_ship = dh.get_ship(target_ship_id)
+        
+        # Check if scanner has a sensor with health > 0
+        sensor = get_ship_sensor(scanner_id)
+        if sensor is None:
+            return None  # No sensor equipped
+        
+        sensor_health = sensor.get('health', 0.0)
+        if sensor_health <= 0:
+            return None  # Sensor is destroyed - can't scan
+        
+        # Get locations (O(1) lookups)
+        scanner_location = get_ship_location(scanner_id)
+        target_location = get_ship_location(target_ship_id)
+        
+        # Ships must be at same location
+        if scanner_location is None or scanner_location != target_location:
+            return None
+        
+        # Check if target has active stealth
+        if is_ship_stealthed(target_ship_id):
+            # Ship is stealthed - hidden from scans
+            return None
+        
+        # Log the scan event to location
+        dh.add_location_log(scanner_location, {
+            'type': 'scan',
+            'content': f'ship:{scanner_id} scanned ship:{target_ship_id}',
+            'scanner': f'ship:{scanner_id}',
+            'target': f'ship:{target_ship_id}'
+        })
+        
+        # Notify the target ship that it was scanned
+        dh.add_ship_log(target_ship_id, {
+            'type': 'computer',
+            'content': f'Scanned by ship:{scanner_id}',
+            'source': f'ship:{scanner_id}'
+        })
+        
+        # Return full ship data (copy to avoid reference issues)
+        return dict(target_ship)
+        
+    except (KeyError, ValueError):
+        return None
 
 
-def _process_location_actions(location_name: str, actions: Dict[str, List[ActionNode]]) -> Dict[str, int]:
-    """Process all actions for a specific location.
+def scan_item(scanner_id: int, target_item_id: int) -> Optional[Dict[str, Any]]:
+    """Scan an item at a location to reveal all its information.
+    
+    Scanner must be at same location as the item. Returns full item data.
+    
+    Args:
+        scanner_id: Scanning ship ID
+        target_item_id: Target item ID to scan
+        
+    Returns:
+        Dict with full item data if successful, None if scan failed
+    """
+    dh = _get_data_handler()
+    
+    try:
+        # Import components module
+        from components import get_ship_sensor
+        
+        # Verify ship and item exist
+        _ = dh.get_ship(scanner_id)
+        target_item = dh.get_item(target_item_id)
+        
+        # Check if scanner has a sensor with health > 0
+        sensor = get_ship_sensor(scanner_id)
+        if sensor is None:
+            return None  # No sensor equipped
+        
+        sensor_health = sensor.get('health', 0.0)
+        if sensor_health <= 0:
+            return None  # Sensor is destroyed - can't scan
+        
+        # Get scanner's location (O(1) lookup)
+        scanner_location = get_ship_location(scanner_id)
+        if scanner_location is None:
+            return None
+        
+        location = dh.get_location(scanner_location)
+        
+        # Verify item is at this location
+        if target_item_id not in location.get('items', []):
+            return None
+        
+        # Log the scan event to location
+        dh.add_location_log(scanner_location, {
+            'type': 'scan',
+            'content': f'ship:{scanner_id} scanned item:{target_item_id}',
+            'scanner': f'ship:{scanner_id}',
+            'target': f'item:{target_item_id}'
+        })
+        
+        # Return full item data (copy to avoid reference issues)
+        return dict(target_item)
+        
+    except (KeyError, ValueError):
+        return None
+
+
+def scan_location(scanner_id: int, target_location_name: str) -> Optional[Dict[str, Any]]:
+    """Scan a different location to reveal ships and items there.
+    
+    Scanner must NOT be at the target location (scan remote locations only).
+    Returns location data including ship IDs and item IDs, filtered by stealth.
+    
+    Args:
+        scanner_id: Scanning ship ID
+        target_location_name: Target location name to scan
+        
+    Returns:
+        Dict with location data if successful, None if scan failed
+    """
+    dh = _get_data_handler()
+    
+    try:
+        # Import components module
+        from components import get_ship_sensor
+        
+        # Verify ship exists
+        _ = dh.get_ship(scanner_id)
+        
+        # Check if scanner has a sensor with health > 0
+        sensor = get_ship_sensor(scanner_id)
+        if sensor is None:
+            return None  # No sensor equipped
+        
+        sensor_health = sensor.get('health', 0.0)
+        if sensor_health <= 0:
+            return None  # Sensor is destroyed - can't scan
+        
+        # Get scanner's location
+        scanner_location = get_ship_location(scanner_id)
+        if scanner_location is None:
+            return None
+        
+        # Can't scan own location (use local sensors for that)
+        if scanner_location == target_location_name:
+            return None
+        
+        # Verify target location exists
+        target_location = dh.get_location(target_location_name)
+        
+        # Filter out ships with active stealth cloaks
+        from components import get_ship_stealth_cloak
+        visible_ship_ids = []
+        for ship_id in target_location.get('ship_ids', []):
+            try:
+                # Check if ship has active stealth
+                if not is_ship_stealthed(ship_id):
+                    visible_ship_ids.append(ship_id)
+            except KeyError:
+                # Ship doesn't exist, skip
+                continue
+        
+        # Log the scan event to scanner's location
+        dh.add_location_log(scanner_location, {
+            'type': 'scan',
+            'content': f'ship:{scanner_id} scanned location:{target_location_name}',
+            'scanner': f'ship:{scanner_id}',
+            'target': f'location:{target_location_name}'
+        })
+        
+        # Return location data with filtered ships
+        return {
+            'name': target_location.get('name'),
+            'description': target_location.get('description'),
+            'links': target_location.get('links', []),
+            'ship_ids': visible_ship_ids,
+            'items': target_location.get('items', [])
+        }
+        
+    except (KeyError, ValueError):
+        return None
+
+
+# ============================================================================
+# TICK PROCESSING (MULTI-THREADED BY LOCATION)
+# ============================================================================
+
+def _process_location_actions(location_name: str, actions: Dict[str, ActionList]) -> Dict[str, int]:
+    """Process all actions for a specific location in a dedicated thread.
+    
+    THREAD SAFETY:
+    - Each location is processed in its own thread
+    - Different locations can execute concurrently without conflicts
+    - Location-specific locks in data_handler ensure thread safety
+    
+    EXECUTION ORDER (within each location thread):
+    0. All scans (scan_ship, scan_item, scan_location) - sequential
+    1. All attacks (attack_ship, attack_ship_component, attack_item) - sequential
+    2. All moves - sequential (moves OUT of location are concurrent across threads)
+    3. All collects - sequential
     
     Args:
         location_name: Name of location being processed
-        actions: Dict of action_type -> list of ActionNodes
+        actions: Dict mapping action_type -> ActionList for this location
         
     Returns:
         Dict with counts of successful actions for this location
     """
     stats = {
+        'scans': 0,
         'attack_ship': 0,
         'attack_ship_component': 0,
         'attack_item': 0,
         'moves': 0,
-        'collects': 0
+        'collects': 0,
+        'stealth_activations': 0,
+        'stealth_deactivations': 0,
+        'stealth_expirations': 0  # Expirations are counted at tick level, not location level
     }
     
+    # Phase 0: Process scans (in order within location)
+    # Scans can target ships, items, or other locations
+    for node in actions['scan'].iterate():
+        if node.target is not None:
+            # target_data determines scan type: 'ship', 'item', or 'location'
+            scan_type = node.target_data
+            result = None
+            
+            if scan_type == 'ship':
+                result = scan_ship(node.ship_id, node.target)
+            elif scan_type == 'item':
+                result = scan_item(node.ship_id, node.target)
+            elif scan_type == 'location':
+                result = scan_location(node.ship_id, node.target)
+            
+            # If scan succeeded, add result to scanner's ship log
+            if result is not None:
+                dh = _get_data_handler()
+                dh.add_ship_log(node.ship_id, {
+                    'type': 'computer',
+                    'content': f'Scan complete: {scan_type}:{node.target}',
+                    'source': f'{scan_type}:{node.target}',
+                    'scan_data': result
+                })
+                stats['scans'] += 1
+    
     # Phase 1a: Process ship attacks (in order within location)
-    for node in actions.get('attack_ship', []):
-        if attack_ship(node.ship_id, node.target):
+    for node in actions['attack_ship'].iterate():
+        if node.target is not None and attack_ship(node.ship_id, node.target):
             stats['attack_ship'] += 1
     
     # Phase 1b: Process ship component attacks (in order within location)
-    for node in actions.get('attack_ship_component', []):
-        if attack_ship_component(node.ship_id, node.target, node.target_data):
-            stats['attack_ship_component'] += 1
+    for node in actions['attack_ship_component'].iterate():
+        if node.target is not None and node.target_data is not None:
+            if attack_ship_component(node.ship_id, node.target, str(node.target_data)):
+                stats['attack_ship_component'] += 1
     
     # Phase 1c: Process item attacks (in order within location)
-    for node in actions.get('attack_item', []):
-        if attack_item(node.ship_id, node.target):
+    for node in actions['attack_item'].iterate():
+        if node.target is not None and attack_item(node.ship_id, node.target):
             stats['attack_item'] += 1
     
     # Phase 2: Process moves (in order within location)
-    # NOTE: Moves out of this location run concurrently with other locations,
-    # but moves into the same destination will serialize via locks
-    for node in actions.get('move', []):
-        if move(node.ship_id, node.target):
+    # NOTE: Moves OUT of this location run concurrently with other location threads,
+    # but moves INTO the same destination will serialize via location locks
+    for node in actions['move'].iterate():
+        if node.target is not None and move(node.ship_id, node.target):
             stats['moves'] += 1
     
     # Phase 3: Process collects (in order within location)
-    for node in actions.get('collect', []):
-        if collect(node.ship_id, node.target):
+    for node in actions['collect'].iterate():
+        if node.target is not None and collect(node.ship_id, node.target):
             stats['collects'] += 1
+    
+    # Phase 4: Process stealth deactivations (in order within location)
+    for node in actions['deactivate_stealth'].iterate():
+        if deactivate_stealth(node.ship_id):
+            stats['stealth_deactivations'] += 1
+    
+    # Phase 5: Process stealth activations (in order within location)
+    for node in actions['activate_stealth'].iterate():
+        if activate_stealth(node.ship_id):
+            stats['stealth_activations'] += 1
     
     return stats
 
 
+def tick_stealth_timers() -> int:
+    """Tick down all active stealth timers and remove expired ones.
+    
+    This runs BEFORE processing location actions, so stealth status is
+    consistent throughout the tick.
+    
+    Returns:
+        Number of stealth cloaks that expired this tick
+    """
+    expired_count = 0
+    
+    # Iterate through active stealth list
+    current = active_stealth_list.head.next
+    while current != active_stealth_list.tail:
+        # Save next before we potentially remove this node
+        next_node = current.next
+        
+        # Decrement timer
+        current.remaining_ticks -= 1
+        
+        # Check if expired
+        if current.remaining_ticks <= 0:
+            # Remove from tracking
+            active_stealth_list.remove(current)
+            del active_stealth[current.ship_id]
+            expired_count += 1
+        
+        current = next_node
+    
+    return expired_count
+
+
 def process_tick() -> Dict[str, int]:
-    """Process all queued actions with per-location concurrency.
+    """Process all queued actions with per-location multi-threading.
 
     Returns:
         Dict with counts of successful actions (aggregated across all locations): {
+            'scans': n,
             'attack_ship': n,
             'attack_ship_component': n,
             'attack_item': n,
             'moves': n,
-            'collects': n
+            'collects': n,
+            'stealth_activations': n,
+            'stealth_deactivations': n,
+            'stealth_expirations': n
         }
     """
     dh = _get_data_handler()
@@ -643,32 +1153,36 @@ def process_tick() -> Dict[str, int]:
     # Clear locks from previous tick
     dh.clear_locks()
     
-    # Group actions by location
-    location_actions = _group_actions_by_location()
+    # Tick down stealth timers BEFORE processing actions
+    stealth_expirations = tick_stealth_timers()
     
     # Initialize aggregate stats
     total_stats = {
+        'scans': 0,
         'attack_ship': 0,
         'attack_ship_component': 0,
         'attack_item': 0,
         'moves': 0,
-        'collects': 0
+        'collects': 0,
+        'stealth_activations': 0,
+        'stealth_deactivations': 0,
+        'stealth_expirations': stealth_expirations
     }
     
-    # If no actions, return early
-    if not location_actions:
+    # If no actions queued, return early
+    if not location_queues:
         clear_queues()
         return total_stats
     
-    # Process each location's actions concurrently
+    # MULTI-THREADED EXECUTION: Process each location in parallel
     # ThreadPoolExecutor size = number of active locations (up to reasonable max)
-    max_workers = min(len(location_actions), 32)  # Cap at 32 threads
+    max_workers = min(len(location_queues), 32)  # Cap at 32 threads
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all location processing tasks
         future_to_location = {
             executor.submit(_process_location_actions, location, actions): location
-            for location, actions in location_actions.items()
+            for location, actions in location_queues.items()
         }
         
         # Collect results as they complete
@@ -676,7 +1190,7 @@ def process_tick() -> Dict[str, int]:
             location = future_to_location[future]
             try:
                 location_stats = future.result()
-                # Aggregate stats
+                # Aggregate stats from all location threads
                 for key in total_stats:
                     total_stats[key] += location_stats[key]
             except Exception as e:
@@ -685,6 +1199,9 @@ def process_tick() -> Dict[str, int]:
     
     # Clear queues for next tick
     clear_queues()
+    
+    # Clear stealth_disabled set (ships can activate stealth next tick)
+    stealth_disabled.clear()
     
     return total_stats
 
@@ -696,6 +1213,12 @@ __all__ = [
     'attack_ship',
     'attack_ship_component',
     'attack_item',
+    'scan_ship',
+    'scan_item',
+    'scan_location',
+    'activate_stealth',
+    'deactivate_stealth',
+    'is_ship_stealthed',
     'ActionNode',
     'ActionList',
     'ship_to_node',

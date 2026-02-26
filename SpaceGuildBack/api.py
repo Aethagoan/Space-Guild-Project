@@ -6,6 +6,7 @@
 from flask import Flask, request, jsonify
 from typing import Optional, Dict, Any
 import os
+import hashlib
 import actions
 import components
 from program import data_handler
@@ -51,14 +52,16 @@ def queue_action_endpoint():
     Request JSON format:
     {
         "player_id": int,
-        "action_type": str,  # 'attack_ship', 'attack_ship_component', 'attack_item', 'move', 'collect'
+        "action_type": str,  # 'scan', 'attack_ship', 'attack_ship_component', 'attack_item', 'move', 'collect'
         "target": int | str,  # ship_id/item_id (int) or location_name (str)
-        "target_data": str (optional),  # e.g., component slot for attack_ship_component
-        "action_hash": str (optional)  # Client-side hash for spam protection
+        "target_data": str (optional)  # e.g., component slot for attack_ship_component, or scan type ('ship', 'item', 'location')
     }
     
     Returns:
         {"status": "success"} or {"error": "message"}
+        
+    Note: Action hash is computed server-side for spam protection based on 
+          (ship_id, action_type, target, target_data) to detect duplicate actions.
     """
     try:
         data = request.json
@@ -78,7 +81,11 @@ def queue_action_endpoint():
         
         # Get optional fields
         target_data = data.get('target_data')
-        action_hash = data.get('action_hash')
+        
+        # Compute action hash server-side for spam protection
+        # Hash is based on: ship_id + action_type + target + target_data
+        hash_input = f"{ship_id}:{action_type}:{target}:{target_data or ''}"
+        action_hash = hashlib.sha256(hash_input.encode()).hexdigest()
         
         # Queue the action
         success = actions.queue_action(ship_id, action_type, target, target_data, action_hash)
@@ -88,6 +95,113 @@ def queue_action_endpoint():
         else:
             return jsonify({'error': 'Invalid action type or parameters'}), 400
             
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/stealth/activate', methods=['POST'])
+def activate_stealth_endpoint():
+    """Activate stealth cloak for a player's ship.
+    
+    Request JSON format:
+    {
+        "player_id": int
+    }
+    
+    Returns:
+        {"status": "success"} or {"error": "message"}
+    
+    Note: Stealth is queued as an action and activates at the end of the tick.
+          Ships cannot activate stealth if they took damage on the same tick.
+    """
+    try:
+        data = request.json
+        player_id = data.get('player_id')
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required field: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Queue stealth activation action
+        success = actions.queue_action(ship_id, 'activate_stealth', ship_id, None, None)
+        
+        if success:
+            return jsonify({'status': 'success', 'message': 'Stealth activation queued'}), 200
+        else:
+            return jsonify({'error': 'Failed to queue stealth activation'}), 400
+            
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/stealth/deactivate', methods=['POST'])
+def deactivate_stealth_endpoint():
+    """Deactivate stealth cloak for a player's ship.
+    
+    Request JSON format:
+    {
+        "player_id": int
+    }
+    
+    Returns:
+        {"status": "success"} or {"error": "message"}
+    
+    Note: Stealth deactivation is queued as an action and processes before stealth activations.
+    """
+    try:
+        data = request.json
+        player_id = data.get('player_id')
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required field: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Queue stealth deactivation action
+        success = actions.queue_action(ship_id, 'deactivate_stealth', ship_id, None, None)
+        
+        if success:
+            return jsonify({'status': 'success', 'message': 'Stealth deactivation queued'}), 200
+        else:
+            return jsonify({'error': 'Failed to queue stealth deactivation'}), 400
+            
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/stealth/status', methods=['GET'])
+def stealth_status_endpoint():
+    """Check if a player's ship currently has active stealth.
+    
+    Query parameters:
+        player_id: int - Player ID
+    
+    Returns:
+        {"stealthed": bool} or {"error": "message"}
+    """
+    try:
+        player_id = request.args.get('player_id', type=int)
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required parameter: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Check stealth status
+        is_stealthed = actions.is_ship_stealthed(ship_id)
+        
+        return jsonify({'stealthed': is_stealthed}), 200
+        
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
@@ -185,6 +299,126 @@ def get_ship_log_endpoint():
         
         return jsonify({'entries': entries}), 200
         
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/ship', methods=['GET'])
+def get_ship_endpoint():
+    """Get the player's ship information.
+    
+    Returns all ship data including HP, tier, components, cargo, shield pool, and location.
+    
+    Query parameters:
+        player_id: int - Player ID
+    
+    Returns:
+        {
+            "ship_id": int,
+            "hp": float,
+            "tier": int,
+            "location": str,
+            "shield_pool": float,
+            "engine_id": int | null,
+            "weapon_id": int | null,
+            "shield_id": int | null,
+            "cargo_id": int | null,
+            "sensor": int | null,
+            "stealth_cloak_id": int | null,
+            "items": [int]  # Item IDs in cargo
+        } or {"error": "message"}
+    """
+    try:
+        player_id = request.args.get('player_id', type=int)
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required parameter: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Get ship data
+        ship = data_handler.get_ship(ship_id)
+        
+        # Return ship data with ship_id included
+        return jsonify({
+            'ship_id': ship_id,
+            **ship
+        }), 200
+        
+    except KeyError:
+        return jsonify({'error': 'Ship not found'}), 404
+    except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/location', methods=['GET'])
+def get_location_endpoint():
+    """Get the player's current location information including visible ships and items.
+    
+    This endpoint returns the "situation" at the player's current location - what ships 
+    and items are present. Ships with active stealth cloaks are filtered out. This is 
+    used when entering a location or refreshing the current view. Stations disable 
+    sensors, so this should not be used there.
+    
+    Query parameters:
+        player_id: int - Player ID
+    
+    Returns:
+        {
+            "name": str,
+            "description": str,
+            "links": [str],
+            "ship_symbols": [int],  # Ship IDs (visible ships only, filtered by stealth)
+            "items": [int]  # Item IDs at this location
+        } or {"error": "message"}
+        
+    Note: Ship data is NOT included - only ship IDs (symbols). Use scan action to get ship details.
+    """
+    try:
+        player_id = request.args.get('player_id', type=int)
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required parameter: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Get ship's current location
+        ship = data_handler.get_ship(ship_id)
+        location_name = ship.get('location')
+        
+        if location_name is None:
+            return jsonify({'error': 'Ship has no location'}), 500
+        
+        # Get location data
+        location = data_handler.get_location(location_name)
+        
+        # Filter out ships with active stealth cloaks
+        visible_ship_ids = []
+        for ship_id_at_loc in location.get('ship_ids', []):
+            try:
+                # Use is_ship_stealthed() to check if ship is currently stealthed
+                if not actions.is_ship_stealthed(ship_id_at_loc):
+                    visible_ship_ids.append(ship_id_at_loc)
+            except KeyError:
+                # Ship doesn't exist, skip
+                continue
+        
+        return jsonify({
+            'name': location.get('name'),
+            'description': location.get('description'),
+            'links': location.get('links', []),
+            'ship_symbols': visible_ship_ids,
+            'items': location.get('items', [])
+        }), 200
+        
+    except KeyError:
+        return jsonify({'error': 'Location not found'}), 404
     except Exception as e:
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 

@@ -57,21 +57,25 @@ SCIENTIFIC FACTION
 
 
 
-SCAVENGERS FACTION
-    "money through finds"
+SCAVENGERS FACTION 
+    "money through finds" 
 
-    work closesly with scientific faction
-
-    Semi-Unified: Branches by barons -
-        Three Branches - 
-            A little Piraty and underhanded, 
-                "scavenge by sometimes taking"
-            well equipped/well geared kinda rich,
-                "scavenge by excelence"
-            and just some regular guys
-                "get stuff make money (but not in a piraty way) and mostly honest"
+    work closely with scientific faction 
 
 
+    Semi-Unified: Branches by "barons" - 
+    Three Branches -  
+        Admiral Gecko Panan and the Baajak Scavenger's Guild - A little Piraty and underhanded,  
+            "scavenge by sometimes taking" 
+            Will accept unwanted items for access to guild rentals 
+            Give item to ship with return quest, time stamp, if it is late when returned consequence???? 
+        Baron Bay Maju and the Hamajuun Scavenger Association - well-equipped/well geared kinda rich, 
+            "scavenge by excellence" 
+            Joining grants access to a library of equipment and items for a ship, cannot join other factions, and all gear obtained from the library must be returned if the faction is left. 
+        Director Boisa Iunsagahkon and the Taratur Scavenger Company - just some regular guys 
+            "get stuff make money (but not in a piraty way) and mostly honest" 
+            Offers short term "contracts" for rewards 
+            Value of Items collected can grant access to various tiers of rewards 
 
 
 
