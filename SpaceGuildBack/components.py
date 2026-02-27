@@ -171,12 +171,9 @@ def get_ship_max_hp(ship_id: int) -> float:
         Maximum HP as a float
     """
     dh = _get_data_handler()
-    try:
-        ship = dh.get_ship(ship_id)
-        tier = ship.get('tier', 0)
-        return 100.0 * math.pow(1 + tier, 2)
-    except KeyError:
-        return 100.0  # Default tier 0
+    ship = dh.get_ship(ship_id)
+    tier = ship['tier']
+    return 100.0 * math.pow(1 + tier, 2)
 
 
 def get_ship_weapon_damage(ship_id: int) -> float:
@@ -195,11 +192,11 @@ def get_ship_weapon_damage(ship_id: int) -> float:
         return 0.0
     
     # Check if weapon is disabled (health <= 0)
-    health = weapon.get('health', 0.0)
+    health = weapon['health']
     if health <= 0:
         return 0.0
     
-    return float(weapon.get('multiplier', 0.0))
+    return float(weapon['multiplier'])
 
 
 def get_ship_cargo_capacity(ship_id: int) -> float:
@@ -217,8 +214,8 @@ def get_ship_cargo_capacity(ship_id: int) -> float:
     if cargo is None:
         return 0.0
     
-    tier = cargo.get('tier', 0)
-    multiplier = cargo.get('multiplier', 1.0)
+    tier = cargo['tier']
+    multiplier = cargo['multiplier']
     
     return 100.0 * (1 + tier) * multiplier
 
@@ -238,8 +235,8 @@ def get_ship_max_shield_pool(ship_id: int) -> float:
     if shield is None:
         return 0.0
     
-    tier = shield.get('tier', 0)
-    multiplier = shield.get('multiplier', 1.0)
+    tier = shield['tier']
+    multiplier = shield['multiplier']
     
     return 50.0 * math.pow(1 + tier, 1.5) * multiplier
 
@@ -254,11 +251,8 @@ def get_ship_current_shield_pool(ship_id: int) -> float:
         Current shield pool as a float
     """
     dh = _get_data_handler()
-    try:
-        ship = dh.get_ship(ship_id)
-        return float(ship.get('shield_pool', 0.0))
-    except KeyError:
-        return 0.0
+    ship = dh.get_ship(ship_id)
+    return float(ship['shield_pool'])
 
 
 # ============================================================================
@@ -282,19 +276,17 @@ def repair_ship_hp(ship_id: int) -> float:
     dh = _get_data_handler()
     ship = dh.get_ship(ship_id)
     
+    # Get current HP before repair
+    current_hp = ship['hp']
+    
     # Calculate max HP
     max_hp = get_ship_max_hp(ship_id)
     
-    # Get current HP
-    current_hp = ship.get('hp', 0.0)
+    # Use DataHandler's set_ship_to_max_hp method
+    dh.set_ship_to_max_hp(ship_id)
     
-    # Calculate restoration amount
-    hp_restored = max_hp - current_hp
-    
-    # Apply repair using DataHandler's method
-    dh.set_ship_hp(ship_id, int(max_hp))
-    
-    return hp_restored
+    # Return amount restored
+    return max_hp - current_hp
 
 
 def refill_shield_pool(ship_id: int) -> float:
@@ -314,19 +306,17 @@ def refill_shield_pool(ship_id: int) -> float:
     dh = _get_data_handler()
     ship = dh.get_ship(ship_id)
     
+    # Get current shield pool before refill
+    current_shield = ship['shield_pool']
+    
     # Calculate max shield pool
     max_shield = get_ship_max_shield_pool(ship_id)
     
-    # Get current shield pool
-    current_shield = ship.get('shield_pool', 0.0)
+    # Use DataHandler's set_shield_to_max method
+    dh.set_shield_to_max(ship_id)
     
-    # Calculate restoration amount
-    shields_restored = max_shield - current_shield
-    
-    # Apply refill using DataHandler's method
-    dh.set_ship_shield_pool(ship_id, max_shield)
-    
-    return shields_restored
+    # Return amount restored
+    return max_shield - current_shield
 
 
 def _calculate_multiplier_reduction(health_percent: float) -> float:
@@ -445,16 +435,16 @@ def repair_component(item_id: int) -> Dict[str, float]:
     component = dh.get_item(item_id)
     
     # Verify this is a component
-    item_type = component.get('type', '')
+    item_type = component['type']
     valid_types = ['engine', 'weapon', 'shield', 'cargo', 'sensor', 'stealth_cloak']
     if item_type not in valid_types:
         raise ValueError(f"Item {item_id} is not a component (type: '{item_type}'). Must be one of {valid_types}")
     
     # Get current values
-    current_health = component.get('health', 0.0)
-    tier = component.get('tier', 0)
-    current_mult = component.get('multiplier', 1.0)
-    min_mult = component.get('min_multiplier', 1.0)
+    current_health = component['health']
+    tier = component['tier']
+    current_mult = component['multiplier']
+    min_mult = component['min_multiplier']
     
     # Calculate max health based on type and tier
     max_health = get_component_max_health(item_type, tier)
@@ -471,8 +461,9 @@ def repair_component(item_id: int) -> Dict[str, float]:
     # Calculate health restored
     health_restored = max_health - current_health
     
-    # Apply repairs using DataHandler's method
-    dh.repair_item_component(item_id, max_health, new_multiplier)
+    # Apply repairs using DataHandler's methods
+    dh.set_item_to_max_health(item_id)
+    dh.update_item_multiplier(item_id, new_multiplier)
     
     return {
         'health_restored': health_restored,
@@ -491,7 +482,7 @@ def repair_component(item_id: int) -> Dict[str, float]:
 def can_equip_item(ship_id: int, item_id: int) -> bool:
     """Check if a ship can equip an item based on tier restrictions.
     
-    A ship can only equip items with tier <= ship tier.
+    A ship can only equip items with tier <= ship tier + 2.
     
     Args:
         ship_id: Ship ID
@@ -505,8 +496,8 @@ def can_equip_item(ship_id: int, item_id: int) -> bool:
         ship = dh.get_ship(ship_id)
         item = dh.get_item(item_id)
         
-        ship_tier = ship.get('tier', 0)
-        item_tier = item.get('tier', 0)
+        ship_tier = ship['tier']
+        item_tier = item['tier']
         
         return item_tier <= ship_tier + 2
     except KeyError:
@@ -525,13 +516,13 @@ def get_ship_total_cargo_weight(ship_id: int) -> float:
     dh = _get_data_handler()
     try:
         ship = dh.get_ship(ship_id)
-        item_ids = ship.get('items', [])
+        item_ids = ship['items']
         
         total_weight = 0.0
         for item_id in item_ids:
             try:
                 item = dh.get_item(item_id)
-                total_weight += item.get('weight', 0.0)
+                total_weight += item['weight']
             except KeyError:
                 continue  # Skip missing items
         
@@ -553,7 +544,7 @@ def can_fit_item_in_cargo(ship_id: int, item_id: int) -> bool:
     dh = _get_data_handler()
     try:
         item = dh.get_item(item_id)
-        item_weight = item.get('weight', 0.0)
+        item_weight = item['weight']
         
         current_weight = get_ship_total_cargo_weight(ship_id)
         capacity = get_ship_cargo_capacity(ship_id)

@@ -77,7 +77,7 @@ def save_world_data(save_interval: int, tick_number: int, data_handler: DataHand
     if tick_number % save_interval == 0:
         print(f"\n[*] Auto-saving world data (tick #{tick_number})...")
         try:
-            data_handler.save_all()
+            data_handler.save_dynamic()
             print("  [+] Save complete")
         except Exception as e:
             print(f"  [X] Save failed: {e}")
@@ -170,7 +170,7 @@ def run_game_loop(tick_interval: float = 5.0, save_interval: int = 60):
         # Final save
         print("\n[*] Saving final world state...")
         try:
-            data_handler.save_all()
+            data_handler.save_dynamic()
             print("  [+] Final save complete")
         except Exception as e:
             print(f"  [X] Final save failed: {e}")

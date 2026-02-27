@@ -187,6 +187,7 @@ stealth_disabled: set[int] = set()
 #   2. All attacks (attack_ship, attack_ship_component, attack_item)
 #   3. All moves
 #   4. All collects
+#   5. All stealth activation and deactivation
 
 
 location_queues: Dict[str, Dict[str, ActionList]] = defaultdict(lambda: {
@@ -346,19 +347,15 @@ def _spill_cargo_to_location(ship_id: int, location_name: str) -> None:
     
     try:
         ship = dh.get_ship(ship_id)
-        items_to_spill = ship.get('items', []).copy()
+        items_to_spill = ship['items'].copy()
         
-        # Move each item from ship's cargo to the location
+        # Move each item from ship's cargo to the location using thread-safe method
         for item_id in items_to_spill:
             try:
-                # Add item to location
-                dh.add_item_to_location(location_name, item_id)
+                dh.move_item_ship_to_location(item_id, ship_id, location_name)
             except (KeyError, ValueError):
                 # Item doesn't exist or other error - skip it
                 pass
-        
-        # Clear the ship's items list
-        ship['items'] = []
         
     except KeyError:
         # Ship doesn't exist - nothing to spill
@@ -427,13 +424,13 @@ def activate_stealth(ship_id: int) -> bool:
             return False
         
         # Check health
-        health = stealth_cloak.get('health', 0.0)
+        health = stealth_cloak['health']
         if health <= 0:
             return False
         
         # Calculate duration: floor(5 * (1 + tier) * multiplier)
-        tier = stealth_cloak.get('tier', 0)
-        multiplier = stealth_cloak.get('multiplier', 1.0)
+        tier = stealth_cloak['tier']
+        multiplier = stealth_cloak['multiplier']
         duration = int(5 * (1 + tier) * multiplier)
         
         if duration <= 0:
@@ -537,30 +534,17 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
         # Attacking deactivates stealth
         deactivate_stealth(attacker_id)
         
-        # Check shield pool first (capped at max shield pool)
-        from components import get_ship_max_shield_pool
-        max_shield = get_ship_max_shield_pool(target_ship_id)
-        current_shield = min(target_ship.get('shield_pool', 0.0), max_shield)
+        # Apply damage - shields absorb first, overflow goes to HP
+        shield_result = dh.damage_shield_pool(target_ship_id, damage)
+        overflow_damage = shield_result['overflow_damage']
         
-        # If shield is destroyed or unequipped, clear the shield pool
-        if max_shield <= 0 and current_shield > 0:
-            dh.set_ship_shield_pool(target_ship_id, 0.0)
-            current_shield = 0.0
-        
-        if current_shield > 0:
-            # Shields absorb damage first
-            shield_result = dh.damage_shield_pool(target_ship_id, damage)
-            overflow_damage = shield_result['overflow_damage']
-            
-            # If there's overflow damage, apply it to ship HP
-            if overflow_damage > 0:
-                dh.damage_ship_hp(target_ship_id, overflow_damage)
-                # Mark that ship took damage (disables stealth)
-                mark_ship_took_damage(target_ship_id)
-        else:
-            # No shields, damage goes directly to HP
-            dh.damage_ship_hp(target_ship_id, damage)
+        # If there's overflow damage, apply it to ship HP
+        if overflow_damage > 0:
+            dh.damage_ship_hp(target_ship_id, overflow_damage)
             # Mark that ship took damage (disables stealth)
+            mark_ship_took_damage(target_ship_id)
+        elif shield_result['shield_damage'] > 0:
+            # Shields absorbed some/all damage but didn't break - still counts as taking damage
             mark_ship_took_damage(target_ship_id)
         
         return True
@@ -628,41 +612,22 @@ def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot:
         # Attacking deactivates stealth
         deactivate_stealth(attacker_id)
         
-        # Check shield pool first (capped at max shield pool)
-        from components import get_ship_max_shield_pool
-        max_shield = get_ship_max_shield_pool(target_ship_id)
-        current_shield = min(target_ship.get('shield_pool', 0.0), max_shield)
+        # Apply damage - shields absorb first, overflow goes to component or HP
+        shield_result = dh.damage_shield_pool(target_ship_id, damage)
+        overflow_damage = shield_result['overflow_damage']
         
-        # If shield is destroyed or unequipped, clear the shield pool
-        if max_shield <= 0 and current_shield > 0:
-            dh.set_ship_shield_pool(target_ship_id, 0.0)
-            current_shield = 0.0
-        
-        if current_shield > 0:
-            # Shields absorb damage first
-            shield_result = dh.damage_shield_pool(target_ship_id, damage)
-            overflow_damage = shield_result['overflow_damage']
-            
-            # If there's overflow damage, apply it to the component (if exists)
-            if overflow_damage > 0:
-                if component_id is not None and isinstance(component_id, int):
-                    damage_result = dh.damage_item(component_id, overflow_damage)
-                    
-                    # If cargo was disabled, spill all items to location
-                    if damage_result['disabled'] and component_slot == 'cargo_id' and target_location is not None:
-                        _spill_cargo_to_location(target_ship_id, target_location)
-                # If no component in slot, overflow damage is wasted (shields still absorbed it)
-        else:
-            # No shields - check if component slot is empty
+        # If there's overflow damage after shields
+        if overflow_damage > 0:
+            # Check if component slot is empty (critical hit)
             if component_id is None or not isinstance(component_id, int):
                 # CRITICAL HIT: Empty component slot with shields down = 5x damage to ship HP
-                critical_damage = damage * 5.0
+                critical_damage = overflow_damage * 5.0
                 dh.damage_ship_hp(target_ship_id, critical_damage)
                 # Mark that ship took damage (disables stealth)
                 mark_ship_took_damage(target_ship_id)
             else:
-                # Normal: damage goes directly to component
-                damage_result = dh.damage_item(component_id, damage)
+                # Normal: overflow damage goes to component
+                damage_result = dh.damage_item(component_id, overflow_damage)
                 
                 # If cargo was disabled, spill all items to location
                 if damage_result['disabled'] and component_slot == 'cargo_id' and target_location is not None:
@@ -754,7 +719,7 @@ def move(ship_id: int, destination: str) -> bool:
         if engine is None:
             return False  # No engine equipped
         
-        engine_health = engine.get('health', 0.0)
+        engine_health = engine['health']
         if engine_health <= 0:
             return False  # Engine is destroyed - can't move
         
@@ -816,7 +781,7 @@ def collect(collector_id: int, item_id: int) -> bool:
         if cargo is None:
             return False  # No cargo equipped
         
-        cargo_health = cargo.get('health', 0.0)
+        cargo_health = cargo['health']
         if cargo_health <= 0:
             return False  # Cargo is destroyed - can't pick up items
         
@@ -836,7 +801,7 @@ def collect(collector_id: int, item_id: int) -> bool:
             return False
         
         # Use thread-safe transfer method
-        dh.transfer_item_location_to_ship(item_id, ship_location, collector_id)
+        dh.move_item_location_to_ship(item_id, ship_location, collector_id)
         
         return True
         
@@ -873,7 +838,7 @@ def scan_ship(scanner_id: int, target_ship_id: int) -> Optional[Dict[str, Any]]:
         if sensor is None:
             return None  # No sensor equipped
         
-        sensor_health = sensor.get('health', 0.0)
+        sensor_health = sensor['health']
         if sensor_health <= 0:
             return None  # Sensor is destroyed - can't scan
         
@@ -939,7 +904,7 @@ def scan_item(scanner_id: int, target_item_id: int) -> Optional[Dict[str, Any]]:
         if sensor is None:
             return None  # No sensor equipped
         
-        sensor_health = sensor.get('health', 0.0)
+        sensor_health = sensor['health']
         if sensor_health <= 0:
             return None  # Sensor is destroyed - can't scan
         
@@ -996,7 +961,7 @@ def scan_location(scanner_id: int, target_location_name: str) -> Optional[Dict[s
         if sensor is None:
             return None  # No sensor equipped
         
-        sensor_health = sensor.get('health', 0.0)
+        sensor_health = sensor['health']
         if sensor_health <= 0:
             return None  # Sensor is destroyed - can't scan
         
@@ -1251,7 +1216,7 @@ def process_tick() -> Dict[str, int]:
         # Submit all location processing tasks
         future_to_location = {
             executor.submit(_process_location_actions, location, actions): location
-            for location, actions in location_queues.items()
+            for location, actions in location_queues.items() # this says, execute all the actions in your action list by using the mapping handler, location.
         }
         
         # Collect results as they complete

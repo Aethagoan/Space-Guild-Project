@@ -1,14 +1,37 @@
 # Space Guild - Product Backlog
 
-**Last Updated:** 25 Feb 2026  
+**Last Updated:** 26 Feb 2026  
 **Current Sprint:** Sprint 0 Completion → Sprint 1  
 **Priority System:** P0 (Critical/Blocking) → P1 (High) → P2 (Medium) → P3 (Low)
 
 ---
 
-## SPRINT 0: Critical Blockers (Fix to Run Code) [~83% COMPLETE]
+## 🚨 URGENT BLOCKERS (Must Fix Before Anything Else)
+
+### P0 - Will Crash the Game
+
+- [ ] **CRITICAL-001:** Implement `add_location_log()` in data.py
+  - Method is called in actions.py:729 but doesn't exist
+  - Causes AttributeError when location logs are written
+  - **Blocks:** All gameplay (tick processing will crash)
+  - **Estimate:** 0.5h
+  - **Location:** data.py (needs implementation)
+
+- [ ] **CRITICAL-002:** Fix `add_ship_log()` signature mismatch
+  - Called with 4 params in actions.py but expects 3
+  - Will cause TypeError on combat/movement actions
+  - **Blocks:** Combat and movement logging
+  - **Estimate:** 0.25h
+  - **Location:** data.py:1122-1203, actions.py (multiple calls)
+
+
+---
+
+---
+
+## SPRINT 0: Critical Blockers (Fix to Run Code) [~70% COMPLETE]
 **Goal:** Make the codebase executable  
-**Estimated Effort:** 4-6 hours | **Remaining:** ~1 hour
+**Estimated Effort:** 4-6 hours | **Remaining:** ~2 hours (revised with new critical bugs)
 
 ### P0 - Blocking Issues
 
@@ -48,12 +71,22 @@
   - Ship factory exists ✅
   - TODO: Add tier-0 component loading and initialization helper
   - **Blocks:** Player spawning and gameplay
+  - **Note:** Component spawning data exists in new spawnable_components.json (uncommitted)
+
+- [ ] **PLAYER-001:** Implement player spawn system
+  - No player creation flow exists currently
+  - Need endpoint POST `/player/create` or similar
+  - Should create player + ship + starting components
+  - Spawn at Earth Orbit with basic tier-0 ship
+  - **Blocks:** Anyone playing the game
+  - **Estimate:** 3h
+  - **Epic:** Player Progression
 
 ---
 
-## SPRINT 1: Minimal Viable Backend (Week 1-2) [~42% COMPLETE]
+## SPRINT 1: Minimal Viable Backend (Week 1-2) [~35% COMPLETE]
 **Goal:** Get a runnable backend with basic state access  
-**Estimated Effort:** 20-30 hours | **Remaining:** ~15 hours
+**Estimated Effort:** 20-30 hours | **Remaining:** ~18 hours (revised after investigation)
 
 ### P0 - Critical for MVP
 
@@ -913,19 +946,38 @@
 
 ## TECHNICAL DEBT REGISTER
 
+### 🔴 Critical Issues (Feb 26, 2026 Investigation)
+1. **CRITICAL: `add_location_log()` not implemented** - Called in actions.py:729 but method doesn't exist (WILL CRASH)
+2. **CRITICAL: `add_ship_log()` signature mismatch** - Called with 4 params but expects 3 (WILL CRASH)
+3. **CRITICAL: No player spawn system** - No way to create new players currently
+4. **CRITICAL: Uncommitted changes** - 11 modified files, major refactoring not committed (setup.py 1,963→282 lines)
+5. **CRITICAL: Test suite completely broken** - 1,639 lines of tests reference old codebase architecture
+
 ### Current Known Issues
 1. ~~**Import inconsistencies**~~ - ✅ Fixed (Sprint 0)
-2. **Outdated test suite** - All tests broken and reference old code (P0, Sprint 5)
-3. **No requirements.txt** - Dependencies undocumented (P1, Sprint 0)
+2. **Outdated test suite** - All tests broken and reference old code (P0, Sprint 5) - NOW CRITICAL
+3. ~~**No requirements.txt**~~ - Dependencies undocumented (P0, now CRITICAL-003)
 4. **Magic numbers everywhere** - Formulas hardcoded in code (acceptable per scope decision)
 5. **Limited error handling** - Many functions return False without logging (P1, Sprint 1)
 6. **No input validation** - API accepts malformed data (P1, Sprint 1) - PARTIALLY FIXED (basic validation exists)
 7. **Thread safety questions** - Lock cache clearing during tick (P2, investigate)
-8. ~~**No logging infrastructure**~~ - ✅ Ship logs implemented, location logs partially done (P0, Sprint 1)
+8. ~~**No logging infrastructure**~~ - ✅ Ship logs implemented, location logs BROKEN (see Critical #1)
 9. ~~**Faction factory types**~~ - ✅ Fixed (Sprint 0)
 10. ~~**Player factory types**~~ - ✅ Fixed (Sprint 0)
-11. **Location logging incomplete** - `add_location_log()` called but not implemented in data.py (P1, Sprint 3)
+11. ~~**Location logging incomplete**~~ - NOW CRITICAL #1 (will crash game)
 12. **API endpoint inconsistencies** - Some use query params instead of path params (P1, Sprint 1)
+13. **NEW: Component health degradation formula** - May need rebalancing based on playtesting
+14. **NEW: JSON file structure refactored** - New files: npc_factions.json, resource_items.json, spawnable_components.json, spawnable_ships.json (uncommitted)
+15. **NEW: setup_data/ directory** - New directory created but not tracked in git
+
+### Recent Positive Changes (Feb 26, 2026)
+- ✅ Sophisticated action queue with node pooling implemented
+- ✅ Fine-grained field-level locking working
+- ✅ Component health/degradation system functional
+- ✅ Ship visible caching optimization added (commit 008bc8e)
+- ✅ SOL system location graph created (20 locations across 5 systems)
+- ✅ Vendor dialogue system data files created
+- ✅ Resource and component spawn data structured
 
 ---
 
@@ -933,16 +985,17 @@
 
 | Epic | Total Tasks | Est. Hours | Priority | Status |
 |------|-------------|------------|----------|--------|
-| **Critical Blockers** | 8 | 1h remain | P0 | Sprint 0 (~83% done) |
+| **🔴 URGENT BLOCKERS** | 4 | 2h | P0 | NEW (Feb 26) |
+| **Critical Blockers** | 9 | 5h remain | P0 | Sprint 0 (~70% done, revised) |
 | **Core Game Loop** | 2 | 2h → DONE | P0 | Sprint 1 (COMPLETE ✅) |
 | **State Access API** | 5 | 7h → 4.5h remain | P0 | Sprint 1 (~40% done) |
 | **SOL System Content** | 13 | 31h → 28h remain | P1 | Sprints 1-4 (1 task done) |
-| **Player Progression** | 2 | 6h | P1 | Backlog (simplified) |
+| **Player Progression** | 3 | 9h | P1 | Backlog + Sprint 0 (1 new task) |
 | **Data Management** | 2 | 7h → DONE | P1 | Sprint 1 (COMPLETE ✅) |
 | **API Robustness** | 2 | 7h → 5h remain | P1 | Sprint 1 (~30% done) |
 | **Station System** | 8 | 23h | P0 | Sprint 2 (not started) |
-| **Location Event Logging** | 5 | 9h → 6h remain | P1 | Sprint 3 (~40% done) |
-| **Testing Infrastructure** | 9 | 32h | P0 | Sprint 5 (not started) |
+| **Location Event Logging** | 5 | 9h → 6h remain | P1 | Sprint 3 (BROKEN - see CRITICAL-001) |
+| **Testing Infrastructure** | 9 | 32h | P0 | Sprint 5 (BROKEN - needs complete rewrite) |
 | **Authentication System** | 7 | 23h | P1 | Backlog |
 | **Component Systems** | 3 | 20h → 14h remain | P2 | Backlog (stealth DONE ✅) |
 | **Faction & NPC Ships** | 5 | 46h | P1 | Backlog (redesigned) |
@@ -951,7 +1004,7 @@
 | **World Events** | 3 | 14h | P3 | Backlog (simplified) |
 | **Admin Tools** | 3 | 24h | P2 | Backlog |
 | **Universe Expansion** | 20+ | 200h+ | P2 | Backlog |
-| **Frontend** | 15+ | 120h+ | P1 | Backlog |
+| **Frontend** | 15+ | 120h+ | P1 | Backlog (~5% done - placeholder only) |
 | **Deployment** | 1 | 5h | P3 | Backlog |
 
 ---
@@ -1011,8 +1064,102 @@
 **Total Estimated Work to v1.0.0:** ~500-700 hours (4-8 months solo, 2-3 months with team)  
 **Scope Reduction:** ~300 hours removed/simplified
 
-**Current Progress:** 
-- Sprint 0: ~83% complete
-- Sprint 1: ~42% complete
-- Overall to v0.1.0: ~45%
-- Overall to v1.0.0: ~22%
+**Current Progress (Updated Feb 26, 2026):**
+- Sprint 0: ~70% complete (revised down - critical bugs found)
+- Sprint 1: ~35% complete (revised down - missing player spawn)
+- Overall to v0.1.0: ~38% (revised down)
+- Overall to v1.0.0: ~20% (revised down)
+
+---
+
+## 📊 INVESTIGATION FINDINGS (Feb 26, 2026)
+
+### What's Working Well
+✅ **Core Architecture Solid**
+- Action queue system with node pooling is sophisticated and performant
+- Fine-grained field-level locking enables high concurrency
+- JSON persistence working for development needs
+- Tick processing loop functional
+
+✅ **Game Systems Implemented**
+- Component health/degradation system complete
+- Combat mechanics working (ship attacks, component targeting)
+- Movement system with location graph
+- Stealth/cloak system functional
+- Shield mechanics implemented
+
+✅ **Content Created**
+- SOL system: 20 locations across 5 systems
+- Vendor dialogue data structured
+- Resource items defined
+- Component spawn data organized
+- NPC faction data files created
+
+### Critical Blockers Found
+🔴 **Will Crash on Runtime**
+1. `add_location_log()` method missing - called but not implemented
+2. `add_ship_log()` parameter mismatch - will throw TypeError
+3. No player creation system - game can't be played
+
+🟡 **Development Friction**
+4. Test suite completely broken (1,639 lines of outdated tests)
+5. No requirements.txt (unclear dependencies)
+6. Major uncommitted changes (11 files modified, setup.py refactored 85% smaller)
+
+### Recommended Next Actions
+
+**IMMEDIATE (Do First):**
+1. Review and commit/revert uncommitted changes (1h)
+2. Fix CRITICAL-001: Implement `add_location_log()` (0.5h)
+3. Fix CRITICAL-002: Fix `add_ship_log()` signature (0.25h)
+4. Create requirements.txt (0.25h)
+5. Implement PLAYER-001: Player spawn system (3h)
+
+**SHORT TERM (This Week):**
+6. Rewrite test suite for current architecture (5-8h)
+7. Complete API endpoints for ship/location/player access (3h)
+8. Add comprehensive error handling and logging (3h)
+
+**MEDIUM TERM (Next Sprint):**
+9. Implement Station system (20-25h)
+10. Begin frontend development (starter HTML/JS)
+
+### Architecture Notes from Investigation
+- **Backend:** Python/Flask with custom DataHandler class
+- **Data Storage:** JSON files (locations.json, ships.json, etc.)
+- **Concurrency:** ThreadPoolExecutor + fine-grained locks per field
+- **Action Processing:** Doubly-linked lists with sentinel nodes
+- **Component System:** 6 slots (engine, weapons, shields, cargo, sensors, stealth)
+- **Tick Rate:** 5 seconds (configurable via time.sleep loop)
+
+### Git Status at Investigation
+```
+Modified (11 files):
+- SpaceGuildBack/actions.py
+- SpaceGuildBack/components.py
+- SpaceGuildBack/data.py
+- SpaceGuildBack/faction.py
+- SpaceGuildBack/game_data/locations.json
+- SpaceGuildBack/game_data/vendor_dialogue.json
+- SpaceGuildBack/item.py
+- SpaceGuildBack/program.py
+- SpaceGuildBack/setup.py (1,963 → 282 lines, major refactor!)
+
+Untracked (6 items):
+- SpaceGuildBack/game_data/npc_factions.json
+- SpaceGuildBack/game_data/resource_items.json
+- SpaceGuildBack/game_data/spawnable_components.json
+- SpaceGuildBack/game_data/spawnable_ships.json
+- SpaceGuildBack/setup_data/ (directory)
+- nul (file)
+```
+
+### Frontend Status
+- **Location:** SpaceGuildWeb/
+- **Status:** Placeholder only (~5% complete)
+- **Structure:** Basic HTML with terminal styling
+- **Note:** Minimal functionality, needs full development
+
+---
+
+**Backlog last investigated and updated:** 26 Feb 2026 by OpenCode AI

@@ -71,7 +71,7 @@ def test_add_item_to_cargo():
 	
 	cargo_comp = Cargo(100, 'basic cargo', 0, 10.0)
 	dh.add_item(100, cargo_comp)
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	test_item = Weapon(200, 'laser', 0, 5.0)
 	dh.add_item(200, test_item)
@@ -115,7 +115,7 @@ def test_cargo_capacity_calculation():
 	
 	cargo_comp = Cargo(100, 'basic cargo', 0, 1.0)
 	dh.add_item(100, cargo_comp)
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	capacity = components.get_ship_cargo_capacity(1)
 	assert capacity == 100.0  # 100 * (1 + 0) * 1.0
@@ -130,7 +130,7 @@ def test_weapon_damage_calculation():
 	
 	weapon = Weapon(100, 'laser', 0, 5.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	damage = components.get_ship_weapon_damage(1)
 	assert damage == 5.0
@@ -163,7 +163,7 @@ def test_move_action_execution():
 	# Add engine so ship can move
 	engine = Engine(100, 'basic engine', 0, 1.0)
 	dh.add_item(100, engine)
-	dh.update_ship_component(1, 'engine_id', 100)
+	dh.set_ship_component(1, 'engine_id', 100)
 	
 	# Queue and process move
 	actions.queue_action(1, 'move', 'mars')
@@ -182,7 +182,7 @@ def test_attack_ship_action():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 10.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target
 	ship2 = Ship(location='earth')
@@ -252,14 +252,14 @@ def test_attack_with_shields():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 25.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with shields
 	ship2 = Ship(location='earth')
 	dh.add_ship(2, 'earth', ship2)
 	shield = Shield(200, 'shield', 0, 1.0)
 	dh.add_item(200, shield)
-	dh.update_ship_component(2, 'shield_id', 200)
+	dh.set_ship_component(2, 'shield_id', 200)
 	dh.set_ship_shield_pool(2, 15.0)
 	
 	initial_hp = dh.Ships[2]['hp']
@@ -282,14 +282,14 @@ def test_attack_ship_component():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 15.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with engine
 	ship2 = Ship(location='earth')
 	dh.add_ship(2, 'earth', ship2)
 	engine = Engine(200, 'basic engine', 0, 1.0)
 	dh.add_item(200, engine)
-	dh.update_ship_component(2, 'engine_id', 200)
+	dh.set_ship_component(2, 'engine_id', 200)
 	
 	initial_health = dh.Items[200]['health']
 	
@@ -310,7 +310,7 @@ def test_collect_item():
 	dh.add_ship(1, 'earth', ship)
 	cargo = Cargo(100, 'cargo bay', 0, 10.0)
 	dh.add_item(100, cargo)
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	# Create item at location
 	item = Weapon(200, 'dropped laser', 0, 1.0)
@@ -335,7 +335,7 @@ def test_attack_item_at_location():
 	dh.add_ship(1, 'earth', ship)
 	weapon = Weapon(100, 'laser', 0, 20.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create item at location
 	target_item = Cargo(200, 'cargo container', 0, 1.0)
@@ -379,7 +379,7 @@ def test_unequip_item_from_ship():
 	# Equip weapon directly
 	weapon = Weapon(100, 'laser', 0, 5.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Unequip the weapon
 	dh.unequip_item_from_ship(1, 'weapon_id')
@@ -400,7 +400,7 @@ def test_transfer_item_location_to_ship():
 	dh.add_item_to_location('earth', 100)
 	
 	# Transfer to ship
-	dh.transfer_item_location_to_ship(100, 'earth', 1)
+	dh.move_item_location_to_ship(100, 'earth', 1)
 	
 	assert 100 not in dh.Locations['earth']['items']
 	assert 100 in dh.Ships[1]['items']
@@ -413,7 +413,7 @@ def test_component_repair():
 	weapon = Weapon(100, 'laser', 1, 2.0)
 	dh.add_item(100, weapon)
 	# Weapon tier 1 health = 50 * (1 + 1) = 100, so 50 = 50%
-	dh.set_item_health(100, 50)
+	dh.set_item_health(100, 50)  # Set to 50% health (TESTING ONLY)
 	
 	# Repair the weapon
 	result = components.repair_component(100)
@@ -449,7 +449,7 @@ def test_shield_refill():
 	# Add shield component
 	shield = Shield(100, 'basic shield', 0, 1.0)
 	dh.add_item(100, shield)
-	dh.update_ship_component(1, 'shield_id', 100)
+	dh.set_ship_component(1, 'shield_id', 100)
 	dh.set_ship_shield_pool(1, 25.0)
 	
 	# Refill shields
@@ -489,7 +489,7 @@ def test_can_fit_item_in_cargo():
 	# Add cargo with capacity 100
 	cargo = Cargo(100, 'cargo bay', 0, 1.0)
 	dh.add_item(100, cargo)
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	# Add heavy item
 	heavy_item = Engine(200, 'heavy engine', 1, 1.0)  # weight = 80
@@ -539,7 +539,7 @@ def test_shield_pool_max_calculation():
 	# Add tier 0 shield with 2.0 multiplier
 	shield = Shield(100, 'shield', 0, 2.0)
 	dh.add_item(100, shield)
-	dh.update_ship_component(1, 'shield_id', 100)
+	dh.set_ship_component(1, 'shield_id', 100)
 	
 	max_shield = components.get_ship_max_shield_pool(1)
 	# 50 * (1 + 0)^1.5 * 2.0 = 100.0
@@ -556,7 +556,7 @@ def test_multiple_ships_same_location_combat():
 		dh.add_ship(i, 'earth', ship)
 		weapon = Weapon(100 + i, 'laser', 0, 10.0)
 		dh.add_item(100 + i, weapon)
-		dh.update_ship_component(i, 'weapon_id', 100 + i)
+		dh.set_ship_component(i, 'weapon_id', 100 + i)
 	
 	# Ship 1 attacks ship 2, ship 3 attacks ship 1
 	actions.queue_action(1, 'attack_ship', 2)
@@ -580,7 +580,7 @@ def test_action_queue_replacement():
 	# Add engine component to enable movement
 	engine = Engine(100, 'basic engine', 0, 1.0)
 	dh.add_item(100, engine)
-	dh.update_ship_component(1, 'engine_id', 100)
+	dh.set_ship_component(1, 'engine_id', 100)
 	
 	# Queue move to mars
 	actions.queue_action(1, 'move', 'mars')

@@ -34,8 +34,8 @@ def test_weapon_destroyed_prevents_attack_ship():
 	dh.add_ship(1, 'earth', ship1) # add it to earth
 	weapon = Weapon(100, 'broken laser', 0, 5.0) # create weapon item
 	dh.add_item(100, weapon) # add to the item dict
-	dh.set_item_health(100, 0.0)  # set the item health to zero
-	dh.update_ship_component(1, 'weapon_id', 100) # equip the itme.
+	dh.set_item_health(100, 0.0)  # set the item health to zero (TESTING ONLY)
+	dh.set_ship_component(1, 'weapon_id', 100) # equip the itme.
 	
 	# Create target
 	ship2 = Ship(location='earth') # create it
@@ -61,15 +61,15 @@ def test_weapon_destroyed_prevents_attack_component():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'broken laser', 0, 5.0)
 	dh.add_item(100, weapon)
-	dh.set_item_health(100, 0.0)  # Destroyed weapon
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed weapon (TESTING ONLY)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with engine
 	ship2 = Ship(location='earth')
 	dh.add_ship(2, 'earth', ship2)
 	engine = Engine(200, 'engine', 0, 1.0)
 	dh.add_item(200, engine)
-	dh.update_ship_component(2, 'engine_id', 200)
+	dh.set_ship_component(2, 'engine_id', 200)
 	initial_engine_health = dh.Items[200]['health']
 	
 	# Queue and process component attack
@@ -91,8 +91,8 @@ def test_weapon_destroyed_prevents_attack_item():
 	dh.add_ship(1, 'earth', ship)
 	weapon = Weapon(100, 'broken laser', 0, 5.0)
 	dh.add_item(100, weapon)
-	dh.set_item_health(100, 0.0)  # Destroyed weapon
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed weapon (TESTING ONLY)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create item at location
 	target_item = Cargo(200, 'cargo', 0, 1.0)
@@ -148,8 +148,8 @@ def test_engine_destroyed_prevents_movement():
 	dh.add_ship(1, 'earth', ship)
 	engine = Engine(100, 'broken engine', 0, 1.0)
 	dh.add_item(100, engine)
-	dh.set_item_health(100, 0.0)  # Destroyed engine
-	dh.update_ship_component(1, 'engine_id', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed engine (TESTING ONLY)
+	dh.set_ship_component(1, 'engine_id', 100)
 	
 	# Queue and process move
 	actions.queue_action(1, 'move', 'mars')
@@ -194,8 +194,8 @@ def test_sensor_destroyed_prevents_ship_scan():
 	dh.add_ship(1, 'earth', ship1)
 	sensor = Sensor(100, 'broken sensor', 0, 1.0)
 	dh.add_item(100, sensor)
-	dh.set_item_health(100, 0.0)  # Destroyed sensor
-	dh.update_ship_component(1, 'sensor', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed sensor (TESTING ONLY)
+	dh.set_ship_component(1, 'sensor', 100)
 	
 	# Create target
 	ship2 = Ship(location='earth')
@@ -217,8 +217,8 @@ def test_sensor_destroyed_prevents_item_scan():
 	dh.add_ship(1, 'earth', ship)
 	sensor = Sensor(100, 'broken sensor', 0, 1.0)
 	dh.add_item(100, sensor)
-	dh.set_item_health(100, 0.0)  # Destroyed sensor
-	dh.update_ship_component(1, 'sensor', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed sensor (TESTING ONLY)
+	dh.set_ship_component(1, 'sensor', 100)
 	
 	# Create item at location
 	item = Weapon(200, 'laser', 0, 1.0)
@@ -241,8 +241,8 @@ def test_sensor_destroyed_prevents_location_scan():
 	dh.add_ship(1, 'earth', ship)
 	sensor = Sensor(100, 'broken sensor', 0, 1.0)
 	dh.add_item(100, sensor)
-	dh.set_item_health(100, 0.0)  # Destroyed sensor
-	dh.update_ship_component(1, 'sensor', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed sensor (TESTING ONLY)
+	dh.set_ship_component(1, 'sensor', 100)
 	
 	# Try to scan location - should return None (failed)
 	result = actions.scan_location(1, 'earth')
@@ -283,8 +283,8 @@ def test_cargo_destroyed_prevents_collection():
 	dh.add_ship(1, 'earth', ship)
 	cargo = Cargo(100, 'broken cargo', 0, 1.0)
 	dh.add_item(100, cargo)
-	dh.set_item_health(100, 0.0)  # Destroyed cargo
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_item_health(100, 0.0)  # Destroyed cargo (TESTING ONLY)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	# Create item at location
 	item = Weapon(200, 'laser', 0, 1.0)
@@ -339,7 +339,7 @@ def test_shield_destroyed_clears_pool():
 	dh.add_ship(1, 'earth', ship)
 	shield = Shield(100, 'shield', 0, 1.0)
 	dh.add_item(100, shield)
-	dh.update_ship_component(1, 'shield_id', 100)
+	dh.set_ship_component(1, 'shield_id', 100)
 	dh.set_ship_shield_pool(1, 50.0)
 	
 	# Verify shield pool is set
@@ -363,7 +363,7 @@ def test_shield_unequipped_clears_pool():
 	dh.add_ship(1, 'earth', ship)
 	shield = Shield(100, 'shield', 0, 1.0)
 	dh.add_item(100, shield)
-	dh.update_ship_component(1, 'shield_id', 100)
+	dh.set_ship_component(1, 'shield_id', 100)
 	dh.set_ship_shield_pool(1, 50.0)
 	
 	# Verify shield pool is set
@@ -391,7 +391,7 @@ def test_empty_weapon_slot_takes_critical_damage_when_shields_down():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 10.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with NO weapon and NO shields
 	ship2 = Ship(location='earth')
@@ -418,14 +418,14 @@ def test_empty_slot_with_shields_takes_normal_damage():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 10.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with NO weapon but WITH shields
 	ship2 = Ship(location='earth')
 	dh.add_ship(2, 'earth', ship2)
 	shield = Shield(200, 'shield', 0, 1.0)
 	dh.add_item(200, shield)
-	dh.update_ship_component(2, 'shield_id', 200)
+	dh.set_ship_component(2, 'shield_id', 200)
 	dh.set_ship_shield_pool(2, 100.0)
 	initial_hp = dh.Ships[2]['hp']
 	
@@ -450,7 +450,7 @@ def test_multiple_empty_slots_critical_damage():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 20.0)
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with NO components and NO shields
 	ship2 = Ship(location='earth')
@@ -488,7 +488,7 @@ def test_cargo_destroyed_spills_items_to_location():
 	dh.add_ship(1, 'earth', ship)
 	cargo = Cargo(100, 'cargo bay', 0, 1.0)
 	dh.add_item(100, cargo)
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	# Add items to cargo
 	item1 = Weapon(200, 'laser1', 0, 1.0)
@@ -530,14 +530,14 @@ def test_cargo_destroyed_in_combat_spills_items():
 	dh.add_ship(1, 'earth', ship1)
 	weapon = Weapon(100, 'laser', 0, 999.0)  # High damage
 	dh.add_item(100, weapon)
-	dh.update_ship_component(1, 'weapon_id', 100)
+	dh.set_ship_component(1, 'weapon_id', 100)
 	
 	# Create target with cargo holding items
 	ship2 = Ship(location='earth')
 	dh.add_ship(2, 'earth', ship2)
 	cargo = Cargo(200, 'cargo bay', 0, 1.0)
 	dh.add_item(200, cargo)
-	dh.update_ship_component(2, 'cargo_id', 200)
+	dh.set_ship_component(2, 'cargo_id', 200)
 	
 	# Add item to cargo
 	item = Sensor(300, 'sensor', 0, 1.0)
@@ -568,7 +568,7 @@ def test_empty_cargo_destroyed_no_spillage():
 	dh.add_ship(1, 'earth', ship)
 	cargo = Cargo(100, 'cargo bay', 0, 1.0)
 	dh.add_item(100, cargo)
-	dh.update_ship_component(1, 'cargo_id', 100)
+	dh.set_ship_component(1, 'cargo_id', 100)
 	
 	# Verify cargo is empty
 	assert len(dh.Ships[1]['items']) == 0

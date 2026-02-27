@@ -44,7 +44,7 @@ class DataHandler:
     
     """
     
-    def __init__(self, data_dir: str = "data", create_dir: bool = True):
+    def __init__(self, data_dir: str = "game_data", create_dir: bool = True):
         """Initialize the data handler with empty collections and a lock cache.
         
         Args:
@@ -71,6 +71,13 @@ class DataHandler:
         
         # Vendors use location names as keys, each location has a dict of vendor_id -> vendor data
         self.Vendors: Dict[str, Dict[str, dict]] = {}
+        
+        # Static template data (loaded from setup files, not frequently modified)
+        # These are templates/definitions that the game uses to spawn/create actual instances
+        self.ResourceItems: Dict[str, dict] = {}  # Resource item templates (e.g., "iron", "platinum")
+        self.SpawnableComponents: Dict[str, dict] = {}  # Component spawn templates (e.g., engines, weapons)
+        self.SpawnableShips: Dict[str, dict] = {}  # Ship spawn templates (e.g., "orion_enforcers")
+        self.NPCFactions: Dict[str, dict] = {}  # NPC faction definitions (e.g., "ORION", "PIRATE")
         
         # Ship logs (ephemeral, not persisted) - lazily initialized
         self.ShipLogs: Dict[int, dict] = {}
@@ -375,6 +382,43 @@ class DataHandler:
         """
         return self.Ships[ship_id]
     
+    def remove_ship(self, ship_id: int):
+        """Remove a ship from the game (thread-safe).
+        
+        This removes the ship from:
+        - The Ships collection
+        - Its current location's ship_ids list
+        - Any player references (sets player's ship_id to None)
+        
+        Args:
+            ship_id: Ship ID to remove
+            
+        Raises:
+            KeyError: If ship doesn't exist
+        """
+        ship = self.Ships[ship_id]
+        location_name = ship.get('location')
+        
+        # Acquire locks for ship, location, and any potential player updates
+        locks_to_acquire = [f"ship:{ship_id}"]
+        if location_name:
+            locks_to_acquire.append(f"location:{location_name}:ships")
+        
+        with self._acquire_locks(*locks_to_acquire):
+            # Remove from location's ship list
+            if location_name and location_name in self.Locations:
+                if ship_id in self.Locations[location_name]['ship_ids']:
+                    self.Locations[location_name]['ship_ids'].remove(ship_id)
+            
+            # Remove from Players (set any player's ship_id to None if they own this ship)
+            for player_id, player in self.Players.items():
+                if player.get('ship_id') == ship_id:
+                    with self._acquire_locks(f"player:{player_id}"):
+                        self.Players[player_id]['ship_id'] = None
+            
+            # Remove from Ships collection
+            del self.Ships[ship_id]
+    
     def get_ship_location(self, ship_id: int) -> str:
         """Get a ship's current location (O(1) lookup).
         
@@ -407,6 +451,10 @@ class DataHandler:
     def set_ship_hp(self, ship_id: int, hp: int):
         """Set a ship's HP directly (thread-safe).
         
+        ⚠️ WARNING: FOR TESTING ONLY! ⚠️
+        This method bypasses normal game mechanics and should ONLY be used in tests.
+        In production code, use damage_ship_hp() or heal_ship_hp() instead.
+        
         Args:
             ship_id: Ship ID
             hp: New HP value
@@ -422,6 +470,10 @@ class DataHandler:
     def set_ship_shield_pool(self, ship_id: int, shield_pool: float):
         """Set a ship's shield pool directly (thread-safe).
         
+        ⚠️ WARNING: FOR TESTING ONLY! ⚠️
+        This method bypasses normal game mechanics and should ONLY be used in tests.
+        In production code, use damage_shield_pool() or heal_shield_pool() instead.
+        
         Args:
             ship_id: Ship ID
             shield_pool: New shield pool value
@@ -434,8 +486,8 @@ class DataHandler:
         with self._acquire_locks(f"ship:{ship_id}:shield"):
             self.Ships[ship_id]['shield_pool'] = max(0.0, shield_pool)
     
-    def update_ship_component(self, ship_id: int, component_type: str, item_id: int):
-        """Update a ship's component (engine, weapon, shield, etc.) (thread-safe).
+    def set_ship_component(self, ship_id: int, component_type: str, item_id: int):
+        """Set a ship's component (engine, weapon, shield, etc.) directly (thread-safe).
         
         Args:
             ship_id: Ship ID
@@ -455,6 +507,56 @@ class DataHandler:
         
         with self._acquire_locks(f"ship:{ship_id}:component:{component_type}"):
             self.Ships[ship_id][component_type] = item_id
+    
+    def set_ship_to_max_hp(self, ship_id: int):
+        """Set a ship's HP to its maximum based on tier (thread-safe).
+        
+        This is used for full repairs at stations. 
+        Formula: 100 * ((1 + tier) ^ 2)
+        
+        Args:
+            ship_id: Ship ID to heal to max HP
+            
+        Raises:
+            KeyError: If ship doesn't exist
+        """
+        ship = self.Ships[ship_id]
+        tier = ship['tier']
+        max_hp = 100.0 * ((1 + tier) ** 2)
+        
+        with self._acquire_locks(f"ship:{ship_id}:hp"):
+            self.Ships[ship_id]['hp'] = max_hp
+    
+    def set_shield_to_max(self, ship_id: int):
+        """Set a ship's shield pool to its maximum capacity (thread-safe).
+        
+        This is used for refilling shields at stations.
+        The max capacity is determined by the equipped shield component.
+        Formula: 50 * ((1 + shield_tier) ^ 1.5) * shield_multiplier
+        
+        Args:
+            ship_id: Ship ID to refill shields
+            
+        Raises:
+            KeyError: If ship doesn't exist
+        """
+        ship = self.Ships[ship_id]
+        
+        # Get shield component
+        shield_id = ship.get('shield_id')
+        if shield_id is None or shield_id not in self.Items:
+            # No shield equipped, set pool to 0
+            with self._acquire_locks(f"ship:{ship_id}:shield"):
+                self.Ships[ship_id]['shield_pool'] = 0.0
+            return
+        
+        shield = self.Items[shield_id]
+        tier = shield['tier']
+        multiplier = shield['multiplier']
+        max_shield = 50.0 * ((1 + tier) ** 1.5) * multiplier
+        
+        with self._acquire_locks(f"ship:{ship_id}:shield"):
+            self.Ships[ship_id]['shield_pool'] = max_shield
     
     def add_item_to_ship_cargo(self, ship_id: int, item_id: int):
         """Add an item to a ship's cargo (thread-safe).
@@ -529,12 +631,17 @@ class DataHandler:
         """
         return self.Items[item_id]
     
-    def update_item_health(self, item_id: int, delta: int):
-        """Modify an item's health (thread-safe).
+    def remove_item(self, item_id: int):
+        """Remove an item from the game (thread-safe).
+        
+        This removes the item from:
+        - The Items collection
+        - Any ship's cargo (items list)
+        - Any ship's equipped component slots
+        - Any location's items list
         
         Args:
-            item_id: Item ID
-            delta: Amount to change health by (can be negative)
+            item_id: Item ID to remove
             
         Raises:
             KeyError: If item doesn't exist
@@ -542,23 +649,31 @@ class DataHandler:
         _ = self.Items[item_id]
         
         with self._acquire_locks(f"item:{item_id}"):
-            current = self.Items[item_id].get('health', 0)
-            self.Items[item_id]['health'] = max(0, current + delta)
-    
-    def set_item_health(self, item_id: int, health: int):
-        """Set an item's health directly (thread-safe).
-        
-        Args:
-            item_id: Item ID
-            health: New health value
+            # Remove from all ship cargo holds
+            for ship_id, ship in self.Ships.items():
+                if item_id in ship['items']:
+                    with self._acquire_locks(f"ship:{ship_id}:cargo"):
+                        ship['items'].remove(item_id)
             
-        Raises:
-            KeyError: If item doesn't exist
-        """
-        _ = self.Items[item_id]
-        
-        with self._acquire_locks(f"item:{item_id}"):
-            self.Items[item_id]['health'] = max(0, health)
+            # Remove from all ship component slots
+            component_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id']
+            for ship_id, ship in self.Ships.items():
+                for slot in component_slots:
+                    if ship.get(slot) == item_id:
+                        with self._acquire_locks(f"ship:{ship_id}:component:{slot}"):
+                            self.Ships[ship_id][slot] = None
+                            # If removing shield, clear shield pool
+                            if slot == 'shield_id':
+                                self.Ships[ship_id]['shield_pool'] = 0.0
+            
+            # Remove from all locations
+            for location_name, location in self.Locations.items():
+                if item_id in location['items']:
+                    with self._acquire_locks(f"location:{location_name}:items"):
+                        location['items'].remove(item_id)
+            
+            # Remove from Items collection
+            del self.Items[item_id]
     
     def update_item_multiplier(self, item_id: int, new_multiplier: float):
         """Update an item's multiplier (thread-safe).
@@ -574,19 +689,80 @@ class DataHandler:
         
         with self._acquire_locks(f"item:{item_id}"):
             # Clamp to min/max multiplier bounds
-            min_mult = self.Items[item_id].get('min_multiplier', 1)
-            max_mult = self.Items[item_id].get('max_multiplier', 10)
+            min_mult = self.Items[item_id]['min_multiplier']
+            max_mult = self.Items[item_id]['max_multiplier']
             self.Items[item_id]['multiplier'] = max(min_mult, min(max_mult, new_multiplier))
     
-    def repair_item_component(self, item_id: int, new_health: float, new_multiplier: float):
-        """Repair a component item by setting both health and multiplier atomically (thread-safe).
+    def set_item_to_max_health(self, item_id: int):
+        """Set an item's health to its maximum (thread-safe).
         
-        This is used by repair operations that need to update both values in a single transaction.
+        This is used for full repairs at stations. The max health is calculated
+        based on the item's type and tier using standard formulas.
         
         Args:
-            item_id: Item ID to repair
-            new_health: New health value
-            new_multiplier: New multiplier value (will be clamped to min/max bounds)
+            item_id: Item ID to heal to max
+            
+        Raises:
+            KeyError: If item doesn't exist
+            ValueError: If item type is invalid or not a component
+        """
+        item = self.Items[item_id]
+        item_type = item['type']
+        tier = item['tier']
+        
+        # Calculate max health based on type and tier
+        health_formulas = {
+            'engine': lambda t: 40.0 * (1 + t),
+            'weapon': lambda t: 50.0 * (1 + t),
+            'shield': lambda t: 25.0 * (1 + t),
+            'cargo': lambda t: 100.0 * (1 + t),
+            'sensor': lambda t: 25.0 * (1 + t),
+            'stealth_cloak': lambda t: 40.0 * (1 + t),
+        }
+        
+        if item_type not in health_formulas:
+            raise ValueError(f"Item type '{item_type}' does not have health (must be a component)")
+        
+        max_health = health_formulas[item_type](tier)
+        
+        with self._acquire_locks(f"item:{item_id}"):
+            self.Items[item_id]['health'] = max_health
+    
+    def heal_item_health(self, item_id: int, heal_amount: float):
+        """Heal an item's health (thread-safe).
+        
+        Healing is separate from damage for thread safety and clarity.
+        Health will be clamped to max_health.
+        
+        Args:
+            item_id: Item ID to heal
+            heal_amount: Amount of health to restore (must be positive)
+            
+        Raises:
+            KeyError: If item doesn't exist
+            ValueError: If heal_amount is negative
+        """
+        if heal_amount < 0:
+            raise ValueError(f"heal_amount must be positive, got {heal_amount}")
+        
+        _ = self.Items[item_id]
+        
+        with self._acquire_locks(f"item:{item_id}"):
+            current_health = self.Items[item_id]['health']
+            max_health = self.Items[item_id]['max_health']
+            new_health = min(max_health, current_health + heal_amount)
+            self.Items[item_id]['health'] = new_health
+    
+    def set_item_health(self, item_id: int, health: float):
+        """Set an item's health directly (thread-safe).
+        
+        ⚠️ WARNING: FOR TESTING ONLY! ⚠️
+        This method bypasses normal game mechanics and should ONLY be used in tests.
+        In production code, use damage_item() or heal_item_health() instead.
+        
+        Args:
+            item_id: Item ID
+            health: New health value
             
         Raises:
             KeyError: If item doesn't exist
@@ -594,13 +770,7 @@ class DataHandler:
         _ = self.Items[item_id]
         
         with self._acquire_locks(f"item:{item_id}"):
-            # Update health
-            self.Items[item_id]['health'] = max(0.0, new_health)
-            
-            # Update multiplier (clamped to bounds)
-            min_mult = self.Items[item_id].get('min_multiplier', 1.0)
-            max_mult = self.Items[item_id].get('max_multiplier', 10.0)
-            self.Items[item_id]['multiplier'] = max(min_mult, min(max_mult, new_multiplier))
+            self.Items[item_id]['health'] = max(0.0, health)
     
     def damage_item(self, item_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to an item's health (thread-safe).
@@ -625,7 +795,7 @@ class DataHandler:
         _ = self.Items[item_id]
         
         with self._acquire_locks(f"item:{item_id}"):
-            current_health = self.Items[item_id].get('health', 0.0)
+            current_health = self.Items[item_id]['health']
             
             # Apply damage
             health_damage = min(damage, current_health)
@@ -638,7 +808,7 @@ class DataHandler:
             # If disabled (health <= 0), handle special component behaviors
             if disabled:
                 # Check if this is a shield or cargo component and handle special cases
-                item_type = self.Items[item_id].get('type')
+                item_type = self.Items[item_id]['type']
                 
                 # If shield disabled, clear shield pool of the ship that has it equipped
                 if item_type == 'shield':
@@ -652,7 +822,7 @@ class DataHandler:
                     for ship_id in self.Ships:
                         if self.Ships[ship_id].get('cargo_id') == item_id:
                             # Get ship's location
-                            location_name = self.Ships[ship_id].get('location')
+                            location_name = self.Ships[ship_id]['location']
                             if location_name and location_name in self.Locations:
                                 # Transfer all items from ship to location
                                 items_to_spill = list(self.Ships[ship_id]['items'])  # Copy list
@@ -686,7 +856,7 @@ class DataHandler:
         _ = self.Ships[ship_id]
         
         with self._acquire_locks(f"ship:{ship_id}:hp"):
-            current_hp = self.Ships[ship_id].get('hp', 0.0)
+            current_hp = self.Ships[ship_id]['hp']
             
             # Apply damage
             hp_damage = min(damage, current_hp)
@@ -699,6 +869,31 @@ class DataHandler:
                 'hp_damage': hp_damage,
                 'remaining_hp': new_hp
             }
+    
+    def heal_ship_hp(self, ship_id: int, heal_amount: float):
+        """Heal a ship's HP (thread-safe).
+        
+        Healing is separate from damage for thread safety and clarity.
+        HP will be clamped to max_hp.
+        
+        Args:
+            ship_id: Ship ID to heal
+            heal_amount: Amount of HP to restore (must be positive)
+            
+        Raises:
+            KeyError: If ship doesn't exist
+            ValueError: If heal_amount is negative
+        """
+        if heal_amount < 0:
+            raise ValueError(f"heal_amount must be positive, got {heal_amount}")
+        
+        _ = self.Ships[ship_id]
+        
+        with self._acquire_locks(f"ship:{ship_id}:hp"):
+            current_hp = self.Ships[ship_id]['hp']
+            max_hp = self.Ships[ship_id]['max_hp']
+            new_hp = min(max_hp, current_hp + heal_amount)
+            self.Ships[ship_id]['hp'] = new_hp
     
     def damage_shield_pool(self, ship_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to a ship's shield pool (thread-safe).
@@ -720,7 +915,7 @@ class DataHandler:
         _ = self.Ships[ship_id]
         
         with self._acquire_locks(f"ship:{ship_id}:shield"):
-            current_shield = self.Ships[ship_id].get('shield_pool', 0.0)
+            current_shield = self.Ships[ship_id]['shield_pool']
             
             # Calculate how much damage the shield can absorb
             shield_damage = min(damage, current_shield)
@@ -735,6 +930,39 @@ class DataHandler:
                 'remaining_shield': new_shield,
                 'overflow_damage': overflow_damage
             }
+    
+    def heal_shield_pool(self, ship_id: int, heal_amount: float):
+        """Heal a ship's shield pool (thread-safe).
+        
+        Healing is separate from damage for thread safety and clarity.
+        Shield pool will be clamped to the shield's max capacity.
+        
+        Args:
+            ship_id: Ship ID to heal shields
+            heal_amount: Amount of shield to restore (must be positive)
+            
+        Raises:
+            KeyError: If ship doesn't exist
+            ValueError: If heal_amount is negative
+        """
+        if heal_amount < 0:
+            raise ValueError(f"heal_amount must be positive, got {heal_amount}")
+        
+        ship = self.Ships[ship_id]
+        
+        with self._acquire_locks(f"ship:{ship_id}:shield"):
+            # Get max shield capacity from the shield component
+            shield_id = ship.get('shield_id')
+            if shield_id is None or shield_id not in self.Items:
+                # No shield equipped, cannot heal shield pool
+                return
+            
+            shield = self.Items[shield_id]
+            max_shield_pool = shield['shield_pool']
+            
+            current_shield = ship['shield_pool']
+            new_shield = min(max_shield_pool, current_shield + heal_amount)
+            self.Ships[ship_id]['shield_pool'] = new_shield
     
     # ============================================================================
     # PLAYER METHODS
@@ -884,28 +1112,28 @@ class DataHandler:
     # COMPOSITE HELPER METHODS
     # ============================================================================
     
-    def transfer_item_location_to_ship(self, item_id: int, location_name: str, ship_id: int):
-        """Transfer an item from a location to a ship's cargo (thread-safe, atomic).
+    def move_item_location_to_ship(self, item_id: int, location_name: str, ship_id: int):
+        """Move an item from a location to a ship's cargo (thread-safe, atomic).
         
-        This is a convenience method that atomically removes an item from a location
-        and adds it to a ship's cargo in one operation with proper locking.
-        
-        TODO: Add transfer_item_ship_to_location for dropping/jettisoning items.
-              Should prevent drops at stations (stations don't allow item drops).
+        The ship must be at the specified location for the transfer to succeed.
         
         Args:
-            item_id: ID of item to transfer
+            item_id: ID of item to move
             location_name: Location the item is currently at
-            ship_id: Ship to transfer the item to
+            ship_id: Ship to move the item to (must be at location_name)
             
         Raises:
             KeyError: If item, location, or ship doesn't exist
-            ValueError: If item is not at the specified location
+            ValueError: If item is not at the specified location, or ship is not at the location
         """
         # Verify all entities exist
         _ = self.Items[item_id]
         _ = self.Locations[location_name]
-        _ = self.Ships[ship_id]
+        ship = self.Ships[ship_id]
+        
+        # Verify ship is at the location
+        if ship['location'] != location_name:
+            raise ValueError(f"Ship {ship_id} is at '{ship['location']}', not at '{location_name}'")
         
         # Acquire locks in sorted order (location items before ship cargo to prevent deadlock)
         with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
@@ -916,6 +1144,45 @@ class DataHandler:
             # Atomic transfer: remove from location, add to ship cargo
             self.Locations[location_name]['items'].remove(item_id)
             self.Ships[ship_id]['items'].append(item_id)
+    
+    def move_item_ship_to_location(self, item_id: int, ship_id: int, location_name: str):
+        """Move an item from a ship's cargo to a location (thread-safe, atomic).
+        
+        The ship must be at the specified location for the transfer to succeed.
+        Stations (location_type 'station' or 'ground_station') do not allow item drops.
+        
+        Args:
+            item_id: ID of item to move
+            ship_id: Ship the item is currently in (must be at location_name)
+            location_name: Location to move the item to
+            
+        Raises:
+            KeyError: If item, ship, or location doesn't exist
+            ValueError: If item is not in ship's cargo, ship is not at the location, or location is a station
+        """
+        # Verify all entities exist
+        _ = self.Items[item_id]
+        ship = self.Ships[ship_id]
+        location = self.Locations[location_name]
+        
+        # Verify ship is at the location
+        if ship['location'] != location_name:
+            raise ValueError(f"Ship {ship_id} is at '{ship['location']}', not at '{location_name}'")
+        
+        # Prevent drops at stations
+        location_type = location['location_type']
+        if location_type in ['station', 'ground_station']:
+            raise ValueError(f"Cannot drop items at {location_type} '{location_name}'")
+        
+        # Acquire locks in sorted order (location items before ship cargo to prevent deadlock)
+        with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
+            # Verify item is in ship's cargo
+            if item_id not in self.Ships[ship_id]['items']:
+                raise ValueError(f"Item {item_id} not in ship {ship_id}'s cargo")
+            
+            # Atomic transfer: remove from ship cargo, add to location
+            self.Ships[ship_id]['items'].remove(item_id)
+            self.Locations[location_name]['items'].append(item_id)
     
     def equip_item_to_ship(self, ship_id: int, item_id: int):
         """Equip an item from ship's cargo to the appropriate slot (thread-safe).
@@ -1015,6 +1282,96 @@ class DataHandler:
             
             # Clear the slot (set to None or int type for type consistency)
             self.Ships[ship_id][slot_name] = None
+    
+    def switch_ship_component(self, ship_id: int, slot_name: str, item_id: int):
+        """Swap a component between a ship slot and the ship's inventory (thread-safe).
+        
+        This swaps the item in the specified slot with an item from the ship's cargo.
+        If the slot is empty, this acts as an equip operation.
+        The item being equipped must be in the ship's cargo and of the correct type for the slot.
+        
+        Special handling for cargo_id:
+        - If swapping to a lower-tier cargo, checks that current cargo weight doesn't exceed new capacity
+        - This prevents data loss from items being over capacity
+        
+        Args:
+            ship_id: Ship to perform the swap on
+            slot_name: Slot to swap ('engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id')
+            item_id: Item ID from cargo to swap into the slot
+            
+        Raises:
+            KeyError: If ship or item doesn't exist
+            ValueError: If slot is invalid, item is not in cargo, item type doesn't match slot,
+                       or cargo capacity would be exceeded
+        """
+        valid_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id']
+        if slot_name not in valid_slots:
+            raise ValueError(f"Invalid slot '{slot_name}'. Must be one of {valid_slots}")
+        
+        # Verify entities exist
+        ship = self.Ships[ship_id]
+        new_item = self.Items[item_id]
+        
+        # Map slot to expected item type
+        slot_to_type = {
+            'engine_id': 'engine',
+            'weapon_id': 'weapon',
+            'shield_id': 'shield',
+            'cargo_id': 'cargo',
+            'sensor': 'sensor',
+            'stealth_cloak_id': 'stealth_cloak',
+        }
+        
+        expected_type = slot_to_type[slot_name]
+        item_type = new_item['type']
+        
+        if item_type != expected_type:
+            raise ValueError(f"Cannot equip item type '{item_type}' into slot '{slot_name}' (expected '{expected_type}')")
+        
+        # Special check for cargo swaps - validate capacity BEFORE acquiring locks
+        if slot_name == 'cargo_id':
+            # Calculate new cargo capacity: 100 * (1 + tier) * multiplier
+            new_cargo_tier = new_item['tier']
+            new_cargo_mult = new_item['multiplier']
+            new_capacity = 100.0 * (1 + new_cargo_tier) * new_cargo_mult
+            
+            # Calculate current total cargo weight (excluding the new cargo item itself)
+            total_weight = 0.0
+            for cargo_item_id in ship['items']:
+                if cargo_item_id == item_id:
+                    continue  # Skip the new cargo item we're equipping
+                if cargo_item_id in self.Items:
+                    total_weight += self.Items[cargo_item_id]['weight']
+            
+            # Check if current cargo weight exceeds new capacity
+            if total_weight > new_capacity:
+                raise ValueError(
+                    f"Cannot equip cargo (capacity {new_capacity:.1f}): "
+                    f"current cargo weight ({total_weight:.1f}) exceeds new capacity"
+                )
+        
+        # Acquire both cargo and specific component slot locks (sorted to prevent deadlock)
+        with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
+            # Verify item is in ship's cargo
+            if item_id not in self.Ships[ship_id]['items']:
+                raise ValueError(f"Item {item_id} not in ship {ship_id}'s cargo")
+            
+            # Get the currently equipped item in that slot (if any)
+            old_item_id = self.Ships[ship_id].get(slot_name)
+            
+            # Remove new item from cargo
+            self.Ships[ship_id]['items'].remove(item_id)
+            
+            # If there was an old item, move it to cargo
+            if old_item_id is not None and isinstance(old_item_id, int) and old_item_id in self.Items:
+                self.Ships[ship_id]['items'].append(old_item_id)
+            
+            # If unequipping shield, clear shield pool (if old item exists)
+            if slot_name == 'shield_id' and old_item_id is not None:
+                self.Ships[ship_id]['shield_pool'] = 0.0
+            
+            # Equip the new item
+            self.Ships[ship_id][slot_name] = item_id
     
     # ============================================================================
     # JSON PERSISTENCE METHODS
@@ -1167,23 +1524,154 @@ class DataHandler:
         """
         return self.Vendors.get(location_name, {})
     
+    # ============================================================================
+    # STATIC TEMPLATE DATA METHODS
+    # These are templates/definitions loaded once from setup files
+    # ============================================================================
+    
+    def save_resource_items(self, filename: Optional[str] = None):
+        """Save resource item templates to a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'resource_items.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "resource_items.json")
+        with open(filename, 'w') as f:
+            json.dump(self.ResourceItems, f, indent=2)
+    
+    def load_resource_items(self, filename: Optional[str] = None):
+        """Load resource item templates from a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'resource_items.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "resource_items.json")
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                self.ResourceItems = json.load(f)
+    
+    def save_spawnable_components(self, filename: Optional[str] = None):
+        """Save spawnable component templates to a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'spawnable_components.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "spawnable_components.json")
+        with open(filename, 'w') as f:
+            json.dump(self.SpawnableComponents, f, indent=2)
+    
+    def load_spawnable_components(self, filename: Optional[str] = None):
+        """Load spawnable component templates from a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'spawnable_components.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "spawnable_components.json")
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                self.SpawnableComponents = json.load(f)
+    
+    def save_spawnable_ships(self, filename: Optional[str] = None):
+        """Save spawnable ship templates to a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'spawnable_ships.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "spawnable_ships.json")
+        with open(filename, 'w') as f:
+            json.dump(self.SpawnableShips, f, indent=2)
+    
+    def load_spawnable_ships(self, filename: Optional[str] = None):
+        """Load spawnable ship templates from a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'spawnable_ships.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "spawnable_ships.json")
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                self.SpawnableShips = json.load(f)
+    
+    def save_npc_factions(self, filename: Optional[str] = None):
+        """Save NPC faction data to a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'npc_factions.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "npc_factions.json")
+        with open(filename, 'w') as f:
+            json.dump(self.NPCFactions, f, indent=2)
+    
+    def load_npc_factions(self, filename: Optional[str] = None):
+        """Load NPC faction data from a JSON file.
+        
+        Args:
+            filename: Optional custom filename (defaults to 'npc_factions.json')
+        """
+        filename = filename or os.path.join(self.data_dir, "npc_factions.json")
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                self.NPCFactions = json.load(f)
+    
+    # ============================================================================
+    # BULK SAVE/LOAD METHODS
+    # ============================================================================
+    
     def save_all(self):
-        """Save all game data to JSON files."""
+        """Save all game data to JSON files.
+        
+        This includes both dynamic game state (locations, ships, items, etc.)
+        and static template data (resource items, spawnable ships, NPC factions).
+        """
+        # Dynamic game state
         self.save_locations()
         self.save_ships()
         self.save_items()
         self.save_players()
         self.save_factions()
         self.save_vendors()
+        
+        # Static template data
+        self.save_resource_items()
+        self.save_spawnable_components()
+        self.save_spawnable_ships()
+        self.save_npc_factions()
+    
+    def save_dynamic(self):
+        """Save only dynamic game state to JSON files.
+        
+        This saves locations, ships, items, players, and factions.
+        Does NOT save static template data (resource items, spawnable ships, vendors, etc.)
+        which should only be saved during initial setup.
+        
+        Use this method during normal game operations to avoid overwriting
+        template files that may have been updated in setup_data.
+        """
+        self.save_locations()
+        self.save_ships()
+        self.save_items()
+        self.save_players()
+        self.save_factions()
     
     def load_all(self):
-        """Load all game data from JSON files."""
+        """Load all game data from JSON files.
+        
+        This includes both dynamic game state (locations, ships, items, etc.)
+        and static template data (resource items, spawnable ships, NPC factions).
+        """
+        # Dynamic game state
         self.load_locations()
         self.load_ships()
         self.load_items()
         self.load_players()
         self.load_factions()
         self.load_vendors()
+        
+        # Static template data
+        self.load_resource_items()
+        self.load_spawnable_components()
+        self.load_spawnable_ships()
+        self.load_npc_factions()
     
     # ============================================================================
     # SHIP LOG METHODS (Ephemeral - not persisted)
