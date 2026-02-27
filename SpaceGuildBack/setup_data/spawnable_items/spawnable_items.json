@@ -1,0 +1,401 @@
+{
+  "iron_t0": {
+    "name": "Iron",
+    "description": "Common metal found in asteroids throughout the system.",
+    "tier": 0,
+    "maxhealth  ": 10,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "metal"
+  },
+  "iron_t1": {
+    "name": "Iron",
+    "description": "Common metal found in asteroids throughout the system.",
+    "item_type": "resource",
+    "tier": 1,
+    "maxhealth  ": 20,
+    "weight": 4.0,
+    "multiplier": 2.0
+  },
+  "nickel": {
+    "name": "Nickel",
+    "description": "Metal commonly found alongside iron deposits.",
+    "tier": 0,
+    "maxhealth  ": 10,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "metal"
+  },
+  "platinum": {
+    "name": "Platinum",
+    "description": "Valuable precious metal used in advanced components.",
+    "tier": 1,
+    "maxhealth  ": 15,
+    "weight": 1.2,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "metal"
+  },
+  "titanium": {
+    "name": "Titanium",
+    "description": "Strong, lightweight metal used in ship hulls and components.",
+    "tier": 1,
+    "maxhealth  ": 15,
+    "weight": 0.8,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "metal"
+  },
+  "iridium": {
+    "name": "Iridium",
+    "description": "Rare and extremely dense metal used in high-end equipment.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 1.5,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "metal"
+  },
+  "carbon": {
+    "name": "Carbon",
+    "description": "Essential element used in various manufacturing processes.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 0.5,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "mineral"
+  },
+  "silicon": {
+    "name": "Silicon",
+    "description": "Semiconductor material used in electronics and computer systems.",
+    "tier": 0,
+    "maxhealth  ": 10,
+    "weight": 0.6,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "mineral"
+  },
+  "rare_minerals": {
+    "name": "Rare Minerals",
+    "description": "Uncommon mineral deposits with various specialized uses.",
+    "tier": 1,
+    "maxhealth  ": 15,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "mineral"
+  },
+  "rare_ice_samples": {
+    "name": "Rare Ice Samples",
+    "description": "Pristine ice samples from the outer system, valuable for research.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 0.8,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "methane_ice": {
+    "name": "Methane Ice",
+    "description": "Frozen methane harvested from Kuiper Belt objects.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 0.7,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "water_ice": {
+    "name": "Water Ice",
+    "description": "Frozen water, essential for life support and fuel production.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "nitrogen_ice": {
+    "name": "Nitrogen Ice",
+    "description": "Frozen nitrogen used in various industrial processes.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 0.6,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "ammonia_ice": {
+    "name": "Ammonia Ice",
+    "description": "Frozen ammonia with various chemical and fuel applications.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 0.7,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "exotic_ices": {
+    "name": "Exotic Ices",
+    "description": "Unusual ice structures with unique properties.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 0.9,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "pristine_volatiles": {
+    "name": "Pristine Volatiles",
+    "description": "Untouched volatile compounds from the edge of the system.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 0.8,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "helium_3": {
+    "name": "Helium-3",
+    "description": "Rare isotope used in advanced fusion reactors.",
+    "tier": 3,
+    "maxhealth  ": 25,
+    "weight": 0.3,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "gas"
+  },
+  "exotic_materials": {
+    "name": "Exotic Materials",
+    "description": "Strange materials with unknown properties from deep space.",
+    "tier": 3,
+    "maxhealth  ": 25,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "interstellar_dust": {
+    "name": "Interstellar Dust",
+    "description": "Dust particles from beyond the Sol System.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 0.2,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "anomalous_materials": {
+    "name": "Anomalous Materials",
+    "description": "Materials with readings that defy conventional analysis.",
+    "tier": 4,
+    "maxhealth  ": 30,
+    "weight": 1.2,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "unknown_compounds": {
+    "name": "Unknown Compounds",
+    "description": "Completely unidentified chemical compounds requiring further study.",
+    "tier": 4,
+    "maxhealth  ": 30,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "ring_materials": {
+    "name": "Ring Materials",
+    "description": "Mixed materials harvested from Saturn's rings.",
+    "tier": 0,
+    "maxhealth  ": 10,
+    "weight": 0.9,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "mineral"
+  },
+  "silicates": {
+    "name": "Silicates",
+    "description": "Rock-forming minerals common in planetary rings.",
+    "tier": 0,
+    "maxhealth  ": 10,
+    "weight": 1.1,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "mineral"
+  },
+  "metallic_dust": {
+    "name": "Metallic Dust",
+    "description": "Fine metallic particles from ring collisions.",
+    "tier": 0,
+    "maxhealth  ": 8,
+    "weight": 0.4,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "metal"
+  },
+  "organic_compounds": {
+    "name": "Organic Compounds",
+    "description": "Carbon-based compounds found in ring systems.",
+    "tier": 1,
+    "maxhealth  ": 12,
+    "weight": 0.6,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "organic"
+  },
+  "primordial_ices": {
+    "name": "Primordial Ices",
+    "description": "Ancient ice dating back to the formation of the solar system.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 0.9,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "organic_materials": {
+    "name": "Organic Materials",
+    "description": "Complex organic molecules with potential biological origins.",
+    "tier": 1,
+    "maxhealth  ": 12,
+    "weight": 0.7,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "organic"
+  },
+  "deuterium_dust": {
+    "name": "Deuterium Dust",
+    "description": "Rare hydrogen isotope in dust form, valuable for fusion research.",
+    "tier": 3,
+    "maxhealth  ": 25,
+    "weight": 0.2,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "gas"
+  },
+  "tritium_dust": {
+    "name": "Tritium Dust",
+    "description": "Radioactive hydrogen isotope essential for advanced fusion reactors.",
+    "tier": 3,
+    "maxhealth  ": 25,
+    "weight": 0.2,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "gas"
+  },
+  "ancient_ices": {
+    "name": "Ancient Ices",
+    "description": "Frozen materials from the early days of the solar system.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "primordial_materials": {
+    "name": "Primordial Materials",
+    "description": "Materials unchanged since the birth of the solar system.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 1.1,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "deep_ice_cores": {
+    "name": "Deep Ice Cores",
+    "description": "Ice samples from deep within ancient comets and planetoids.",
+    "tier": 1,
+    "maxhealth  ": 12,
+    "weight": 1.2,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "metallic_ices": {
+    "name": "Metallic Ices",
+    "description": "Frozen compounds containing metallic elements.",
+    "tier": 1,
+    "maxhealth  ": 12,
+    "weight": 1.3,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "iron_ice_compounds": {
+    "name": "Iron-Ice Compounds",
+    "description": "Unique mixture of iron and frozen volatiles.",
+    "tier": 1,
+    "maxhealth  ": 12,
+    "weight": 1.4,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "exotic_volatiles": {
+    "name": "Exotic Volatiles",
+    "description": "Rare volatile compounds with unusual properties.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 0.6,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "crystalline_ices": {
+    "name": "Crystalline Ices",
+    "description": "Perfectly formed ice crystals with unique structural properties.",
+    "tier": 1,
+    "maxhealth  ": 12,
+    "weight": 0.8,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "proto_comet_materials": {
+    "name": "Proto-Comet Materials",
+    "description": "Materials from objects that will one day become comets.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 1.0,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "primordial_volatiles": {
+    "name": "Primordial Volatiles",
+    "description": "Volatile compounds preserved since the formation of the system.",
+    "tier": 2,
+    "maxhealth  ": 20,
+    "weight": 0.7,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "ice"
+  },
+  "ultra_rare_volatiles": {
+    "name": "Ultra-Rare Volatiles",
+    "description": "Exceptionally rare volatile compounds from the edge of known space.",
+    "tier": 4,
+    "maxhealth  ": 30,
+    "weight": 0.5,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  },
+  "oort_cloud_fragments": {
+    "name": "Oort Cloud Fragments",
+    "description": "Materials from the theoretical edge of the Sol System's gravitational influence.",
+    "tier": 5,
+    "maxhealth  ": 35,
+    "weight": 0.8,
+    "multiplier": 1.0,
+    "item_type": "resource",
+    "category": "exotic"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "t1_engine": {
+    "name": "Tier One Engine",
+    "item_type": "engine",
+    "description": "A small upgrade from a base tier engine.",
+    "tier": 1
+  }
+
+}

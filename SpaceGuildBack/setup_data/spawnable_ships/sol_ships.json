@@ -1,0 +1,809 @@
+{
+  "orion_enforcers": {
+    "ship": {
+      "hp": 150.0,
+      "tier": 2,
+      "shield_pool": 50.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "ORION",
+      "behavior": "patrol_aggressive",
+      "npc_initiated_messages": [
+        "ORION PATROL: This is a routine scan. Stand by.",
+        "ORION PATROL: You are in violation of ORION space law. Power down your weapons.",
+        "ORION PATROL: Unidentified ship, state your business in this sector."
+      ],
+      "player_options": {
+        "neutral": {
+          "text": "I'm just passing through",
+          "response": "Understood. Continue on your way, citizen."
+        },
+        "help": {
+          "text": "I need assistance",
+          "response": "Nearest station is marked on your nav computer."
+        },
+        "info": {
+          "text": "What's the situation here?",
+          "response": "Sector is secure. No active threats detected."
+        }
+      }
+    }
+  },
+  "orion_patrol_ships": {
+    "ship": {
+      "hp": 120.0,
+      "tier": 1,
+      "shield_pool": 30.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "ORION",
+      "behavior": "patrol_passive",
+      "npc_initiated_messages": [
+        "ORION PATROL: We're keeping the peace out here. Move safe.",
+        "ORION PATROL: Report any suspicious activity to the nearest station.",
+        "ORION PATROL: This sector is under ORION protection."
+      ],
+      "player_options": {
+        "trouble": {
+          "text": "Any trouble in the area?",
+          "response": "All quiet for now. Stay vigilant."
+        },
+        "help_offer": {
+          "text": "Need any help?",
+          "response": "Negative. Patrol operations are nominal."
+        },
+        "looking": {
+          "text": "I'm looking for something",
+          "response": "Check the nearest station's information broker."
+        }
+      }
+    }
+  },
+  "trade_vessels": {
+    "ship": {
+      "hp": 80.0,
+      "tier": 1,
+      "shield_pool": 20.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "trade_route",
+      "player_options": {
+        "cargo": {
+          "text": "What are you hauling?",
+          "response": "Mixed cargo. Nothing special."
+        },
+        "destination": {
+          "text": "Where are you headed?",
+          "response": "Making rounds between the major stations."
+        }
+      }
+    }
+  },
+  "tourist_vessels": {
+    "ship": {
+      "hp": 60.0,
+      "tier": 0,
+      "shield_pool": 10.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "sightseeing",
+      "player_options": {
+        "enjoying": {
+          "text": "Enjoying the view?",
+          "response": "It's beautiful out here! First time seeing the Moon up close."
+        },
+        "first_time": {
+          "text": "First time out here?",
+          "response": "Yes! This is amazing. Never thought I'd actually make it to space."
+        }
+      }
+    }
+  },
+  "solar_research_vessels": {
+    "ship": {
+      "hp": 100.0,
+      "tier": 2,
+      "shield_pool": 40.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "ORION",
+      "behavior": "research",
+      "npc_initiated_messages": [
+        "RESEARCH VESSEL: We're detecting unusual readings. Please maintain distance.",
+        "RESEARCH VESSEL: Our sensors indicate anomalous activity in this sector."
+      ],
+      "player_options": {
+        "researching": {
+          "text": "What are you researching?",
+          "response": "Solar radiation patterns and coronal mass ejections."
+        },
+        "assistance": {
+          "text": "Need any assistance?",
+          "response": "Negative. Our work requires precise conditions."
+        }
+      }
+    }
+  },
+  "customs_inspectors": {
+    "ship": {
+      "hp": 110.0,
+      "tier": 1,
+      "shield_pool": 25.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "ORION",
+      "behavior": "inspection",
+      "npc_initiated_messages": [
+        "SOL CUSTOMS: Prepare for inspection. Transmit your cargo manifest.",
+        "SOL CUSTOMS: Welcome to Sol System. Please declare any restricted items.",
+        "SOL CUSTOMS: Routine customs check. This will only take a moment."
+      ],
+      "player_options": {
+        "manifest": {
+          "text": "Here's my manifest",
+          "response": "Thank you. Inspection complete. You're clear to proceed."
+        },
+        "nothing": {
+          "text": "I have nothing to declare",
+          "response": "Quick scan confirms. Safe travels."
+        }
+      }
+    }
+  },
+  "mining_transports": {
+    "ship": {
+      "hp": 90.0,
+      "tier": 1,
+      "shield_pool": 15.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "mining_route",
+      "player_options": {
+        "cargo": {
+          "text": "What are you hauling?",
+          "response": "Heat-resistant metals from Mercury's surface operations."
+        },
+        "destination": {
+          "text": "Where are you headed?",
+          "response": "Delivering to the Mars shipyards."
+        }
+      }
+    }
+  },
+  "military_transports": {
+    "ship": {
+      "hp": 180.0,
+      "tier": 2,
+      "shield_pool": 60.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "ORION",
+      "behavior": "military_convoy",
+      "npc_initiated_messages": [
+        "ORION MILITARY: Maintain distance. This is a restricted convoy.",
+        "ORION MILITARY: Unidentified vessel, state your clearance level."
+      ],
+      "player_options": {
+        "passing": {
+          "text": "Just passing through",
+          "response": "Acknowledged. Keep your distance."
+        }
+      }
+    }
+  },
+  "colonial_vessels": {
+    "ship": {
+      "hp": 100.0,
+      "tier": 1,
+      "shield_pool": 20.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "colony_route",
+      "player_options": {
+        "settling": {
+          "text": "Where are you settling?",
+          "response": "Establishing a new outpost on one of Saturn's moons."
+        },
+        "life": {
+          "text": "How's the colony life?",
+          "response": "Hard work, but we're building something new out here."
+        }
+      }
+    }
+  },
+  "mining_drones": {
+    "ship": {
+      "hp": 40.0,
+      "tier": 0,
+      "shield_pool": 0.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "ORION",
+      "behavior": "mining_automated",
+      "player_options": {
+        "query": {
+          "text": "System query",
+          "response": "[AUTOMATED RESPONSE] Operational status: NOMINAL. Current yield: 78%."
+        }
+      }
+    }
+  },
+  "independent_miners": {
+    "ship": {
+      "hp": 70.0,
+      "tier": 1,
+      "shield_pool": 15.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "independent_mining",
+      "player_options": {
+        "mining": {
+          "text": "How's the mining?",
+          "response": "Not bad. Found a decent iron vein this cycle."
+        },
+        "unusual": {
+          "text": "Seen anything unusual?",
+          "response": "Just the usual rocks and dust. Nothing exciting."
+        },
+        "trade": {
+          "text": "Want to trade?",
+          "response": "Maybe. What've you got?"
+        }
+      }
+    }
+  },
+  "salvage_vessels": {
+    "ship": {
+      "hp": 75.0,
+      "tier": 1,
+      "shield_pool": 10.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "salvaging",
+      "player_options": {
+        "salvaging": {
+          "text": "What are you salvaging?",
+          "response": "Old debris from mining operations. Pays decent."
+        },
+        "wrecks": {
+          "text": "Seen any wrecks?",
+          "response": "Nothing recent. Most of this is just old equipment."
+        }
+      }
+    }
+  },
+  "gas_haulers": {
+    "ship": {
+      "hp": 95.0,
+      "tier": 1,
+      "shield_pool": 20.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "gas_route",
+      "player_options": {
+        "cargo": {
+          "text": "What are you hauling?",
+          "response": "Helium-3 from Jupiter's atmosphere."
+        },
+        "destination": {
+          "text": "Where are you headed?",
+          "response": "Fusion plant at Mars Orbital Station."
+        },
+        "news": {
+          "text": "Any news from the stations?",
+          "response": "Heard ORION's tightening security at the warp gates."
+        }
+      }
+    }
+  },
+  "research_vessels": {
+    "ship": {
+      "hp": 100.0,
+      "tier": 2,
+      "shield_pool": 35.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "ORION",
+      "behavior": "research",
+      "npc_initiated_messages": [
+        "RESEARCH VESSEL: We're detecting unusual readings. Please maintain distance.",
+        "RESEARCH VESSEL: Our sensors indicate anomalous activity in this sector."
+      ],
+      "player_options": {
+        "researching": {
+          "text": "What are you researching?",
+          "response": "Studying ring particle dynamics and orbital mechanics."
+        },
+        "assistance": {
+          "text": "Need any assistance?",
+          "response": "We could use data samples from nearby sectors."
+        },
+        "interesting": {
+          "text": "Seen anything interesting?",
+          "response": "We've detected some unusual electromagnetic signatures."
+        }
+      }
+    }
+  },
+  "ring_miners": {
+    "ship": {
+      "hp": 70.0,
+      "tier": 1,
+      "shield_pool": 15.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "ring_mining",
+      "player_options": {
+        "harvest": {
+          "text": "How's the harvest?",
+          "response": "Good haul today. Lots of silicates and some metallic dust."
+        },
+        "dangerous": {
+          "text": "Dangerous work?",
+          "response": "Ring particles can shred your hull if you're not careful."
+        },
+        "trade": {
+          "text": "Want to trade?",
+          "response": "I've got some ring materials if you're buying."
+        }
+      }
+    }
+  },
+  "ice_prospectors": {
+    "ship": {
+      "hp": 65.0,
+      "tier": 1,
+      "shield_pool": 10.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "prospecting",
+      "player_options": {
+        "found": {
+          "text": "Found anything good?",
+          "response": "Some decent methane ice deposits in the last cluster."
+        },
+        "dangerous": {
+          "text": "Any dangerous spots?",
+          "response": "Watch out for pirates in Region 2. They're getting bold."
+        },
+        "trade": {
+          "text": "Want to trade?",
+          "response": "I might part with some ice samples for the right price."
+        }
+      }
+    }
+  },
+  "frontier_transports": {
+    "ship": {
+      "hp": 85.0,
+      "tier": 1,
+      "shield_pool": 20.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "frontier_route",
+      "player_options": {
+        "kuiper": {
+          "text": "Heading to the Kuiper Belt?",
+          "response": "Yeah, resupplying the outer stations. Long haul."
+        },
+        "news": {
+          "text": "Any news from the inner system?",
+          "response": "ORION's cracking down on smuggling through Venus."
+        }
+      }
+    }
+  },
+  "exploration_drones": {
+    "ship": {
+      "hp": 30.0,
+      "tier": 0,
+      "shield_pool": 0.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "ORION",
+      "behavior": "exploration_automated",
+      "player_options": {
+        "query": {
+          "text": "System query",
+          "response": "[AUTOMATED RESPONSE] Exploration data: Sector mapped 45%. No anomalies detected."
+        }
+      }
+    }
+  },
+  "ice_pirates": {
+    "ship": {
+      "hp": 130.0,
+      "tier": 2,
+      "shield_pool": 40.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "PIRATE",
+      "behavior": "pirate_aggressive",
+      "npc_initiated_messages": [
+        "Cut your engines and dump your cargo. You won't be harmed.",
+        "This is our territory. Pay the toll or suffer the consequences.",
+        "Nice ship you've got there. It'd be a shame if something happened to it."
+      ],
+      "player_options": {
+        "nothing": {
+          "text": "I don't have anything valuable",
+          "response": "We'll be the judge of that. Stand down."
+        },
+        "threat": {
+          "text": "You don't want to do this",
+          "response": "Oh, but I do. Last chance."
+        },
+        "pay": {
+          "text": "Fine, here's your cut",
+          "response": "Smart choice. Now get lost."
+        },
+        "fight": {
+          "text": "Come and take it",
+          "response": "Your funeral. All ships, engage!"
+        }
+      }
+    }
+  },
+  "pirate_scouts": {
+    "ship": {
+      "hp": 90.0,
+      "tier": 1,
+      "shield_pool": 20.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "PIRATE",
+      "behavior": "pirate_scout",
+      "npc_initiated_messages": [
+        "Well, well... what do we have here?",
+        "You're a long way from ORION protection, friend."
+      ],
+      "player_options": {
+        "move": {
+          "text": "Keep moving",
+          "response": "Maybe I will... maybe I won't."
+        },
+        "hostile": {
+          "text": "I'm not your friend",
+          "response": "Feisty one, aren't you? We'll see about that."
+        }
+      }
+    }
+  },
+  "pirate_fleets": {
+    "ship": {
+      "hp": 200.0,
+      "tier": 3,
+      "shield_pool": 80.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "PIRATE",
+      "behavior": "pirate_fleet",
+      "npc_initiated_messages": [
+        "FLEET LEADER: You've entered our space. Tribute is required.",
+        "FLEET LEADER: Surrender your ship and you may live.",
+        "FLEET LEADER: Join us or join the debris field."
+      ],
+      "player_options": {
+        "tribute": {
+          "text": "How much?",
+          "response": "50,000 credits. Non-negotiable."
+        },
+        "join": {
+          "text": "I want to join your fleet",
+          "response": "Interesting. Prove yourself and we'll talk."
+        },
+        "fight": {
+          "text": "I'll take my chances",
+          "response": "Brave, but foolish. All ships, attack formation!"
+        }
+      }
+    }
+  },
+  "rogue_prospectors": {
+    "ship": {
+      "hp": 55.0,
+      "tier": 1,
+      "shield_pool": 5.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "INDEPENDENT",
+      "behavior": "desperate_mining",
+      "player_options": {
+        "going": {
+          "text": "How's it going out here?",
+          "response": "Rough. Haven't had a good find in weeks."
+        },
+        "supplies": {
+          "text": "Need supplies?",
+          "response": "Desperately. What've you got and how much?"
+        }
+      }
+    }
+  },
+  "rogue_miners": {
+    "ship": {
+      "hp": 70.0,
+      "tier": 1,
+      "shield_pool": 10.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": false,
+      "faction": "OUTLAW",
+      "behavior": "outlaw_mining",
+      "player_options": {
+        "mining": {
+          "text": "What are you mining?",
+          "response": "None of your business."
+        },
+        "trade": {
+          "text": "Want to trade?",
+          "response": "Depends. You ORION?"
+        }
+      }
+    }
+  },
+  "outlaws": {
+    "ship": {
+      "hp": 110.0,
+      "tier": 2,
+      "shield_pool": 30.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "OUTLAW",
+      "behavior": "unpredictable",
+      "npc_initiated_messages": [
+        "Turn around. Nothing for you out here.",
+        "You see me, you saw nothing. Understand?"
+      ],
+      "player_options": {
+        "nothing": {
+          "text": "I didn't see anything",
+          "response": "Good. Keep it that way."
+        },
+        "running": {
+          "text": "What are you running from?",
+          "response": "Everyone. Everything. Mind your own business."
+        }
+      }
+    }
+  },
+  "unknown_entities": {
+    "ship": {
+      "hp": 250.0,
+      "tier": 4,
+      "shield_pool": 100.0,
+      "engine_id": null,
+      "weapon_id": null,
+      "shield_id": null,
+      "cargo_id": null,
+      "sensor": null,
+      "stealth_cloak_id": null,
+      "items": []
+    },
+    "dialogue": {
+      "can_initiate": true,
+      "faction": "UNKNOWN",
+      "behavior": "mysterious",
+      "npc_initiated_messages": [
+        "...",
+        "[SIGNAL CORRUPTED]",
+        "Why are you here?"
+      ],
+      "player_options": {
+        "who": {
+          "text": "Who are you?",
+          "response": "[GARBLED TRANSMISSION]"
+        },
+        "want": {
+          "text": "What do you want?",
+          "response": "..."
+        },
+        "peace": {
+          "text": "I come in peace",
+          "response": "[NO RESPONSE]"
+        }
+      }
+    }
+  }
+}
