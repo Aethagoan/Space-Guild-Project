@@ -365,42 +365,6 @@ def _calculate_multiplier_reduction(health_percent: float) -> float:
         return 0.10
 
 
-def get_component_max_health(item_type: str, tier: int) -> float:
-    """Get the maximum health for a component based on its type and tier.
-    
-    Formulas:
-    - Engine: 40 * (1 + tier)
-    - Weapon: 50 * (1 + tier)
-    - Shield: 25 * (1 + tier)
-    - Cargo: 100 * (1 + tier)
-    - Sensor: 25 * (1 + tier)
-    - StealthCloak: 40 * (1 + tier)
-    
-    Args:
-        item_type: Type of component ('engine', 'weapon', 'shield', 'cargo', 'sensor', 'stealth_cloak')
-        tier: Component tier
-        
-    Returns:
-        Maximum health as a float
-        
-    Raises:
-        ValueError: If item_type is invalid
-    """
-    health_formulas = {
-        'engine': lambda t: 40.0 * (1 + t),
-        'weapon': lambda t: 50.0 * (1 + t),
-        'shield': lambda t: 25.0 * (1 + t),
-        'cargo': lambda t: 100.0 * (1 + t),
-        'sensor': lambda t: 25.0 * (1 + t),
-        'stealth_cloak': lambda t: 40.0 * (1 + t),
-    }
-    
-    if item_type not in health_formulas:
-        raise ValueError(f"Invalid item type '{item_type}'. Must be one of {list(health_formulas.keys())}")
-    
-    return health_formulas[item_type](tier)
-
-
 def repair_component(item_id: int) -> Dict[str, float]:
     """Repair a component by restoring its health to max and applying multiplier reduction.
     
@@ -442,12 +406,11 @@ def repair_component(item_id: int) -> Dict[str, float]:
     
     # Get current values
     current_health = component['health']
-    tier = component['tier']
     current_mult = component['multiplier']
     min_mult = component['min_multiplier']
     
-    # Calculate max health based on type and tier
-    max_health = get_component_max_health(item_type, tier)
+    # Get max health from the item's maxhealth field
+    max_health = component['maxhealth']
     
     # Calculate health percentage
     health_percent = (current_health / max_health * 100.0) if max_health > 0 else 100.0
@@ -574,7 +537,6 @@ __all__ = [
     'repair_ship_hp',
     'refill_shield_pool',
     'repair_component',
-    'get_component_max_health',
     
     # Utilities
     'can_equip_item',

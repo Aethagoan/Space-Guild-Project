@@ -6,7 +6,7 @@ All data is kept in memory only.
 
 from data import DataHandler
 from actions import _set_data_handler, is_safe_zone
-from setup import create_world_locations, create_world_links
+from setup import load_system_setup
 
 
 def setup_test_world():
@@ -18,9 +18,12 @@ def setup_test_world():
     # Create DataHandler with no directory creation
     dh = DataHandler(data_dir="__test_data__", create_dir=False)
     
-    # Get location data from setup functions
-    location_metadata = create_world_locations()
-    bidirectional_links, single_links = create_world_links()
+    # Load system data from JSON
+    system_data = load_system_setup('sol_setup.json')
+    
+    location_metadata = system_data['locations']
+    bidirectional_links = system_data['bidirectional_links']
+    single_links = system_data.get('single_directional_links', [])
     
     # Create all locations in memory
     for location_name, metadata in location_metadata.items():
@@ -30,8 +33,8 @@ def setup_test_world():
             controlled_by=metadata.get('controlled_by', 'ORION'),
             description=metadata.get('description', ''),
             tags=metadata.get('tags', []),
-            spawnable_ids=metadata.get('spawnable_ids', []),
-            resource_node_ids=metadata.get('resource_node_ids', [])
+            spawnable_ships=metadata.get('spawnable_ships', []),
+            spawnable_resources=metadata.get('spawnable_resources', [])
         )
     
     # Create bidirectional links
@@ -78,9 +81,9 @@ def run_tests():
     assert is_dangerous == False, f"Expected KR1_Resource_1 to NOT be a safe zone! Got {is_dangerous}"
     
     # Test enforced zone (should NOT be safe - only 'Safe' tag disables weapons)
-    is_enforced = is_safe_zone('Sun_Orbit')
-    print(f'[TEST 4] Sun_Orbit (Enforced) is safe zone: {is_enforced}')
-    assert is_enforced == False, f"Expected Sun_Orbit (Enforced) to NOT be a safe zone! Got {is_enforced}"
+    is_enforced = is_safe_zone('Sol_Orbit')
+    print(f'[TEST 4] Sol_Orbit (Enforced) is safe zone: {is_enforced}')
+    assert is_enforced == False, f"Expected Sol_Orbit (Enforced) to NOT be a safe zone! Got {is_enforced}"
     
     # Test patrolled zone (should NOT be safe)
     is_patrolled = is_safe_zone('Asteroid_Belt_Region_1')
@@ -96,7 +99,7 @@ def run_tests():
     print(f'\n[*] Sample location data verification:')
     loc = dh.get_location('Earth_Orbital_Station_Zero')
     print(f'  Safe location: {loc.get("name")} - Tags: {loc.get("tags")}')
-    loc2 = dh.get_location('Sun_Orbit')
+    loc2 = dh.get_location('Sol_Orbit')
     print(f'  Enforced location: {loc2.get("name")} - Tags: {loc2.get("tags")}')
     loc3 = dh.get_location('KR1_Resource_1')
     print(f'  Dangerous location: {loc3.get("name")} - Tags: {loc3.get("tags")}')

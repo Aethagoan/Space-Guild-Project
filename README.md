@@ -169,6 +169,268 @@ Multiple systems are planned or in development, including Zealot, Empire, Dryad,
 
 ---
 
+## Game Mechanics
+
+This section explains the core systems that power Space Guild's gameplay. Understanding these mechanics will help you make strategic decisions about ship upgrades, combat tactics, and resource management.
+
+### Ships & Tiers
+
+Every ship has a **tier** (0-6) that determines its maximum HP and component restrictions.
+
+**Ship HP Formula**: `100 × (1 + tier)²`
+
+| Tier | Max HP | Description |
+|------|--------|-------------|
+| 0 | 100 HP | Starter ships (everyone begins here) |
+| 1 | 400 HP | Early upgrades (easy to obtain) |
+| 2 | 900 HP | Mid-game progression |
+| 3 | 1600 HP | Advanced ships |
+| 4 | 2500 HP | High-tier ships |
+| 5 | 3600 HP | Elite ships (faction boss drops) |
+| 6 | 4900 HP | Endgame ships (world boss drops) |
+
+**Component Restrictions**: Ships can only equip components with `item_tier ≤ ship_tier + 2`
+- Example: A Tier 0 ship can equip up to Tier 2 components
+- Example: A Tier 3 ship can equip up to Tier 5 components
+
+Ship tier upgrades are obtained through **station quests** and automatically restore the ship to its new maximum HP.
+
+### Components & Multipliers
+
+Ships have 6 component slots:
+- **Engine**: Enables movement between locations
+- **Weapon**: Determines attack damage
+- **Shield**: Absorbs incoming damage
+- **Cargo**: Determines inventory capacity
+- **Sensor**: Controls scan range and detail
+- **Stealth Cloak**: Provides temporary invisibility
+
+#### Multiplier System
+
+Every component has three multiplier values:
+- **Current multiplier**: Current effectiveness
+- **Min multiplier**: Minimum allowed (tier-dependent)
+- **Max multiplier**: Maximum allowed (tier-dependent)
+
+**Multiplier Ranges by Tier**:
+```
+Tier 0: min=0.5,  max=1.0
+Tier 1: min=0.8,  max=2.0
+Tier 2: min=1.5,  max=3.0
+Tier 3: min=2.0,  max=4.0
+Tier 4: min=3.0,  max=6.0
+Tier 5: min=5.0,  max=8.0
+Tier 6: min=6.0,  max=10.0
+```
+
+**How Multipliers Affect Stats**:
+
+- **Weapons**: Damage = multiplier (direct value)
+  - T0 weapon (mult=1.0) → 1.0 damage
+  - T3 weapon (mult=4.0) → 4.0 damage
+  - T6 weapon (mult=10.0) → 10.0 damage (max possible)
+
+- **Cargo**: Capacity = `100 × (1 + tier) × multiplier`
+  - T0 cargo (mult=1.0) → 100 capacity
+  - T2 cargo (mult=2.5) → 750 capacity
+
+- **Shields**: Max Pool = `50 × (1 + tier)^1.5 × multiplier`
+  - T0 shield (mult=1.0) → 50 pool
+  - T2 shield (mult=3.0) → ~779 pool
+  - T3 shield (mult=4.0) → 1600 pool
+
+- **Stealth Cloak**: Duration = `floor(5 × (1 + tier) × multiplier)` ticks
+  - T0 cloak (mult=1.0) → 5 ticks (25 seconds)
+  - T3 cloak (mult=4.0) → 80 ticks (400 seconds)
+
+#### Component Health
+
+Each component type has different base health:
+
+| Component | Health Formula | T0 Health | T3 Health |
+|-----------|---------------|-----------|-----------|
+| Engine | 40 × (1 + tier) | 40 | 160 |
+| Weapon | 50 × (1 + tier) | 50 | 200 |
+| Shield | 25 × (1 + tier) | 25 | 100 |
+| Cargo | 100 × (1 + tier) | 100 | 400 |
+| Sensor | 25 × (1 + tier) | 25 | 100 |
+| Stealth Cloak | 40 × (1 + tier) | 40 | 160 |
+
+**When a component reaches 0 health, it becomes disabled**:
+- **Weapons**: Deal 0 damage
+- **Engines**: Cannot move
+- **Cargo**: All items spill to current location
+- **Shields**: Shield pool drops to 0
+- **Sensors**: Cannot scan
+- **Stealth Cloaks**: Cannot activate stealth
+
+Components are **not destroyed** at 0 health—they can be repaired at stations.
+
+#### Repair & Degradation System
+
+Repairing components has a **permanent cost**: the multiplier is reduced based on how damaged the component was.
+
+**Multiplier Reduction Table**:
+```
+Health %    → Multiplier Penalty
+0-9%        → -0.10
+10-19%      → -0.09
+20-29%      → -0.08
+30-39%      → -0.07
+40-49%      → -0.06
+50-59%      → -0.05
+60-69%      → -0.04
+70-79%      → -0.03
+80-89%      → -0.02
+90-99%      → -0.01
+100%        → -0.00 (no penalty)
+```
+
+**Example**:
+- T2 weapon with mult=3.0 takes damage down to 15% health
+- Repair restores health to max but reduces mult by 0.09
+- New multiplier: 3.0 - 0.09 = 2.91
+- Multiplier cannot drop below `min_multiplier` for that tier (1.5 for T2)
+
+This creates a **maintenance economy**: components degrade with use, forcing players to eventually replace them or accept reduced effectiveness.
+
+### Combat System
+
+#### Shield Mechanics
+
+Shields provide a **shield pool** that absorbs damage before HP or components take hits.
+
+**Shield Absorption Rules** (no overflow damage):
+1. **If shield_pool > 0**: Shields absorb **ALL damage** (even if damage exceeds pool)
+   - No overflow damage to ship HP
+   - Shield pool reduced by damage amount (minimum 0)
+2. **If shield_pool = 0**: Damage goes directly to ship HP or components
+
+**Example Combat Scenario**:
+```
+Ship has 30 shield pool, 400 HP
+Attacker deals 100 damage
+Result: Shield pool → 0, Ship HP → 400 (shields blocked everything!)
+Next attack: Damage goes to HP (shields depleted)
+```
+
+This makes shields **very valuable** for protection—while they're up, you're invincible. Once they break, you're vulnerable.
+
+Shields refill at stations with **no penalty** (unlike component repairs).
+
+#### Attack Types
+
+**1. Attack Ship HP**
+- Damage goes to shields first (if pool > 0)
+- If shields depleted, damage goes to ship HP
+- Attacker's stealth deactivates
+
+**2. Attack Ship Component** (targeted attacks)
+- Damage goes to shields first (if pool > 0)
+- If shields depleted:
+  - If component exists → damage the component
+  - If slot is empty → **CRITICAL HIT**: 5x damage to ship HP!
+- Example: 4.0 damage weapon hits empty slot = 20.0 HP damage
+
+**3. Attack Item** (destroy loot at locations)
+- Items at locations have no shields
+- Damage goes directly to item health
+- When health → 0, item is destroyed (unusable)
+
+#### Safe Zones
+
+Locations tagged `'Safe'` disable all weapons—attacks will fail if attempted in safe zones. This protects station areas and Orion-controlled space from PvP combat.
+
+### Movement System
+
+**Movement Requirements**:
+1. Engine must be equipped
+2. Engine health > 0
+3. Destination must be linked to current location
+
+Movement is **instant** (completes in 1 tick). Engine tier/multiplier **does not affect speed**—engines provide binary functionality (works or doesn't work).
+
+**Movement & Stealth**:
+- Stealthed ships leave "energy signature" logs when moving
+- Entering stations/starports auto-deactivates stealth
+
+### Stealth System
+
+**Stealth Duration Formula**: `floor(5 × (1 + tier) × multiplier)` ticks
+
+**Examples**:
+- T0 cloak (mult=1.0): 5 ticks (25 seconds)
+- T1 cloak (mult=2.0): 20 ticks (100 seconds)
+- T3 cloak (mult=4.0): 80 ticks (400 seconds)
+
+**Requirements**:
+- Stealth cloak equipped with health > 0
+- Ship has NOT taken damage this tick
+- Ship is NOT already stealthed
+
+**While Stealthed**:
+- Hidden from scans
+- Hidden from location ship lists
+- Can still move (leaves energy signature logs)
+
+**Automatic Deactivation**:
+- Taking damage (immediate)
+- Performing attacks
+- Entering stations/starports
+- Timer expires
+
+### Cargo System
+
+**Cargo Capacity Formula**: `100 × (1 + tier) × multiplier`
+
+**Item Weights** (base × (1 + tier)):
+```
+Engine:        40 × (1 + tier)
+Weapon:        10 × (1 + tier)
+Shield:        40 × (1 + tier)
+Cargo:         40 × (1 + tier)
+Sensor:        20 × (1 + tier)
+Stealth Cloak: 20 × (1 + tier)
+```
+
+**Cargo Rules**:
+- Total weight of items in cargo cannot exceed capacity
+- Need cargo with health > 0 to collect items
+- When cargo health → 0, all items spill to ship's location
+
+**Example**:
+```
+T1 cargo (mult=2.0): capacity = 400
+Contains:
+  - T2 engine: 120 weight
+  - T1 weapon: 20 weight
+  - T0 shield: 40 weight
+Total: 180/400 (220 remaining)
+```
+
+### Tick-Based Action Queue
+
+The game operates on a **5-second tick** system where all players queue actions simultaneously.
+
+**Action Execution Order per Location**:
+```
+Phase 0: All scans (ship, item, location)
+Phase 1: All attacks (ship HP, components, items)
+Phase 2: All moves
+Phase 3: All collects
+Phase 4: Stealth deactivation
+Phase 5: Stealth activation
+```
+
+**Concurrent Processing**:
+- Each location processes in its own thread
+- Multiple locations process concurrently (up to 32 threads)
+- Ships at Earth don't block ships fighting at Mars
+
+This creates strategic "plan your move" gameplay where positioning and timing matter more than reflexes.
+
+---
+
 ## Backend Architecture
 
 The backend is built in Python with Flask, using JSON for data storage instead of SQL. Here's why:
@@ -364,7 +626,6 @@ Additional planned pages:
 - **Forum**: Player community with faction-specific sections
 
 ---
-
 ## Current Progress
 
 ### Implemented

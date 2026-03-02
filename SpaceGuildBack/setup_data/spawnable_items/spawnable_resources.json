@@ -1,0 +1,268 @@
+{
+  "iron": {
+    "name": "Iron",
+    "description": "Common metal found in asteroids throughout the system.",
+    "item_type": "resource",
+    "maxhealth": 10,
+    "weight": 1.0
+  },
+  "nickel": {
+    "name": "Nickel",
+    "description": "Metal commonly found alongside iron deposits.",
+    "item_type": "resource",
+    "maxhealth": 10,
+    "weight": 1.0
+  },
+  "platinum": {
+    "name": "Platinum",
+    "description": "Valuable precious metal used in advanced components.",
+    "item_type": "resource",
+    "maxhealth": 15,
+    "weight": 1.2
+  },
+  "titanium": {
+    "name": "Titanium",
+    "description": "Strong, lightweight metal used in ship hulls and components.",
+    "item_type": "resource",
+    "maxhealth": 15,
+    "weight": 0.8
+  },
+  "iridium": {
+    "name": "Iridium",
+    "description": "Rare and extremely dense metal used in high-end equipment.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 1.5
+  },
+  "carbon": {
+    "name": "Carbon",
+    "description": "Essential element used in various manufacturing processes.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 0.5
+  },
+  "silicon": {
+    "name": "Silicon",
+    "description": "Semiconductor material used in electronics and computer systems.",
+    "item_type": "resource",
+    "maxhealth": 10,
+    "weight": 0.6
+  },
+  "rare_mineral": {
+    "name": "Rare Mineral",
+    "description": "Uncommon mineral deposits with various specialized uses.",
+    "item_type": "resource",
+    "maxhealth": 15,
+    "weight": 1.0
+  },
+  "rare_ice_sample": {
+    "name": "Rare Ice Sample",
+    "description": "Pristine ice sample from the outer system, valuable for research.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 0.8
+  },
+  "methane_ice": {
+    "name": "Methane Ice",
+    "description": "Frozen methane harvested from Kuiper Belt objects.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 0.7
+  },
+  "water_ice": {
+    "name": "Water Ice",
+    "description": "Frozen water, essential for life support and fuel production.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 1.0
+  },
+  "nitrogen_ice": {
+    "name": "Nitrogen Ice",
+    "description": "Frozen nitrogen used in various industrial processes.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 0.6
+  },
+  "ammonia_ice": {
+    "name": "Ammonia Ice",
+    "description": "Frozen ammonia with various chemical and fuel applications.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 0.7
+  },
+  "exotic_ice": {
+    "name": "Exotic Ice",
+    "description": "Unusual ice structures with unique properties.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 0.9
+  },
+  "pristine_volatile": {
+    "name": "Pristine Volatile",
+    "description": "Untouched volatile compounds from the edge of the system.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 0.8
+  },
+  "exotic_material": {
+    "name": "Exotic Material",
+    "description": "Strange materials with unknown properties from deep space.",
+    "item_type": "resource",
+    "maxhealth": 25,
+    "weight": 1.0
+  },
+  "interstellar_dust": {
+    "name": "Interstellar Dust",
+    "description": "Dust particles from beyond the Sol System.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 0.2
+  },
+  "anomalous_material": {
+    "name": "Anomalous Material",
+    "description": "Material with readings that defy conventional analysis.",
+    "item_type": "resource",
+    "maxhealth": 30,
+    "weight": 1.2
+  },
+  "ring_material": {
+    "name": "Ring Material",
+    "description": "Mixed materials harvested from Saturn's rings.",
+    "item_type": "resource",
+    "maxhealth": 10,
+    "weight": 0.9
+  },
+  "silicate": {
+    "name": "Silicate",
+    "description": "Rock-forming minerals common in planetary rings.",
+    "item_type": "resource",
+    "maxhealth": 10,
+    "weight": 1.1
+  },
+  "metallic_dust": {
+    "name": "Metallic Dust",
+    "description": "Fine metallic particles from ring collisions.",
+    "item_type": "resource",
+    "maxhealth": 8,
+    "weight": 0.4
+  },
+  "organic_compound": {
+    "name": "Organic Compound",
+    "description": "Carbon-based compounds found in ring systems.",
+    "item_type": "resource",
+    "maxhealth": 12,
+    "weight": 0.6
+  },
+  "primordial_ice": {
+    "name": "Primordial Ice",
+    "description": "Ancient ice dating back to the formation of the solar system.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 0.9
+  },
+  "organic_sample": {
+    "name": "Organic Sample",
+    "description": "Complex organic molecules with potential biological origins from deep space.",
+    "item_type": "resource",
+    "maxhealth": 12,
+    "weight": 0.7
+  },
+  "deuterium_dust": {
+    "name": "Deuterium Dust",
+    "description": "Rare hydrogen isotope in dust form, valuable for fusion research.",
+    "item_type": "resource",
+    "maxhealth": 25,
+    "weight": 0.2
+  },
+  "tritium_dust": {
+    "name": "Tritium Dust",
+    "description": "Radioactive hydrogen isotope essential for advanced fusion reactors.",
+    "item_type": "resource",
+    "maxhealth": 25,
+    "weight": 0.2
+  },
+  "ancient_ice": {
+    "name": "Ancient Ice",
+    "description": "Frozen materials from the early days of the solar system.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 1.0
+  },
+  "primordial_material": {
+    "name": "Primordial Material",
+    "description": "Materials unchanged since the birth of the solar system.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 1.1
+  },
+  "deep_ice_core": {
+    "name": "Deep Ice Core",
+    "description": "Ice samples from deep within ancient comets and planetoids.",
+    "item_type": "resource",
+    "maxhealth": 12,
+    "weight": 1.2
+  },
+  "metallic_ice": {
+    "name": "Metallic Ice",
+    "description": "Frozen compounds containing metallic elements.",
+    "item_type": "resource",
+    "maxhealth": 12,
+    "weight": 1.3
+  },
+  "iron_ice_compound": {
+    "name": "Iron-Ice Compound",
+    "description": "Unique mixture of iron and frozen volatiles.",
+    "item_type": "resource",
+    "maxhealth": 12,
+    "weight": 1.4
+  },
+  "exotic_volatile": {
+    "name": "Exotic Volatile",
+    "description": "Rare volatile compounds with unusual properties.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 0.6
+  },
+  "crystalline_ice": {
+    "name": "Crystalline Ice",
+    "description": "Perfectly formed ice crystals with unique structural properties.",
+    "item_type": "resource",
+    "maxhealth": 12,
+    "weight": 0.8
+  },
+  "proto_comet_material": {
+    "name": "Proto-Comet Material",
+    "description": "Materials from objects that will one day become comets.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 1.0
+  },
+  "primordial_volatile": {
+    "name": "Primordial Volatile",
+    "description": "Volatile compounds preserved since the formation of the system.",
+    "item_type": "resource",
+    "maxhealth": 20,
+    "weight": 0.7
+  },
+  "ultra_rare_volatile": {
+    "name": "Ultra-Rare Volatile",
+    "description": "Exceptionally rare volatile compounds from the edge of known space.",
+    "item_type": "resource",
+    "maxhealth": 30,
+    "weight": 0.5
+  },
+  "oort_cloud_fragment": {
+    "name": "Oort Cloud Fragment",
+    "description": "Material from the edge of the Sol System's gravitational influence.",
+    "item_type": "resource",
+    "maxhealth": 35,
+    "weight": 0.8
+  },
+  "dust_sample": {
+    "name": "Dust Sample",
+    "description": "Fine particles of ice and rock from the outer Kuiper Belt.",
+    "item_type": "resource",
+    "maxhealth": 5,
+    "weight": 0.1
+  }
+}

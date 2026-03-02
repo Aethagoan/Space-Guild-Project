@@ -19,9 +19,10 @@ import os
 # -
 from location import Location
 from player import Player
-from ship import Ship
+from ship import Ship, get_ship_tier_hp
 from item import Item
 from faction import Faction
+from id_generator import IDGenerator
 
 
 # Ship log message types
@@ -75,6 +76,8 @@ class DataHandler:
         # Static template data (loaded from setup files, not frequently modified)
         # These are templates/definitions that the game uses to spawn/create actual instances
         self.ResourceItems: Dict[str, dict] = {}  # Resource item templates (e.g., "iron", "platinum")
+        self.DeliverableItems: Dict[str, dict] = {}  # Deliverable item templates (mission/scan items from stations)
+        self.InteractableItems: Dict[str, dict] = {}  # Interactable item templates (special items with unique behaviors)
         self.SpawnableComponents: Dict[str, dict] = {}  # Component spawn templates (e.g., engines, weapons)
         self.SpawnableShips: Dict[str, dict] = {}  # Ship spawn templates (e.g., "orion_enforcers")
         self.NPCFactions: Dict[str, dict] = {}  # NPC faction definitions (e.g., "ORION", "PIRATE")
@@ -82,6 +85,10 @@ class DataHandler:
         # Ship logs (ephemeral, not persisted) - lazily initialized
         self.ShipLogs: Dict[int, dict] = {}
         self.MAX_LOG_ENTRIES = 50
+        
+        # ID Generator - will be initialized after loading existing data
+        # This prevents duplicate IDs by analyzing existing entities
+        self.id_generator: Optional[IDGenerator] = None
     
     def clear_locks(self):
         """Clear the lock cache. Should be called each game tick.
@@ -124,8 +131,8 @@ class DataHandler:
         controlled_by: str = 'ORION',
         description: str = '',
         tags: Optional[List[str]] = None,
-        spawnable_ids: Optional[List[str]] = None,
-        resource_node_ids: Optional[List[str]] = None,
+        spawnable_ships: Optional[List[str]] = None,
+        spawnable_resources: Optional[List[str]] = None,
     ) -> dict:
         """Add a new location to the game.
         
@@ -135,8 +142,8 @@ class DataHandler:
             controlled_by: Faction controlling this location (default 'ORION')
             description: Descriptive text about the location
             tags: Safety/danger tags ['Safe', 'Enforced', 'Patrolled', 'Dangerous']
-            spawnable_ids: List of IDs for NPCs/ships that can spawn here
-            resource_node_ids: List of IDs for resources that can be gathered here
+            spawnable_ships: List of IDs for NPCs/ships that can spawn here
+            spawnable_resources: List of IDs for resources that can be gathered here
             
         Returns:
             The newly created location dict
@@ -154,8 +161,8 @@ class DataHandler:
                 controlled_by=controlled_by,
                 description=description,
                 tags=tags,
-                spawnable_ids=spawnable_ids,
-                resource_node_ids=resource_node_ids,
+                spawnable_ships=spawnable_ships,
+                spawnable_resources=spawnable_resources,
             )
             self.Locations[name] = location
             return location
@@ -368,6 +375,37 @@ class DataHandler:
             
             return ship
     
+    def spawn_ship(self, location_name: str, ship_data: Optional[dict] = None) -> dict:
+        """Spawn a new ship with an auto-generated unique ID.
+        
+        This is the preferred method for creating new ships during gameplay.
+        It automatically assigns a unique ID using the IDGenerator.
+        
+        Args:
+            location_name: Starting location for the ship
+            ship_data: Optional ship dict (will create default if None)
+            
+        Returns:
+            The newly created ship dict (includes 'id' field)
+            
+        Raises:
+            RuntimeError: If ID generator is not initialized
+            KeyError: If location doesn't exist
+        """
+        if self.id_generator is None:
+            raise RuntimeError("ID generator not initialized. Call initialize_id_generator() first.")
+        
+        # Generate a unique ship ID
+        ship_id = self.id_generator.next_ship_id()
+        
+        # Use the existing add_ship method
+        ship = self.add_ship(ship_id, location_name, ship_data)
+        
+        # Add the ID to the ship dict for convenience
+        ship['id'] = ship_id
+        
+        return ship
+    
     def get_ship(self, ship_id: int) -> dict:
         """Get a ship by ID (read-only, no lock).
         
@@ -522,10 +560,47 @@ class DataHandler:
         """
         ship = self.Ships[ship_id]
         tier = ship['tier']
-        max_hp = 100.0 * ((1 + tier) ** 2)
+        max_hp = get_ship_tier_hp(tier)
         
         with self._acquire_locks(f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['hp'] = max_hp
+    
+    def upgrade_ship_tier(self, ship_id: int):
+        """Upgrade a ship's tier by 1 and set HP to new max (thread-safe).
+        
+        This increases the ship's tier by 1 and automatically sets the HP to the
+        new maximum based on the upgraded tier. Used for quest rewards or station
+        upgrades.
+        
+        Formula: 100 * ((1 + tier) ^ 2)
+        Example tier progression:
+            tier 0 -> tier 1: 100 HP -> 400 HP
+            tier 1 -> tier 2: 400 HP -> 900 HP
+            tier 2 -> tier 3: 900 HP -> 1600 HP
+            tier 3 -> tier 4: 1600 HP -> 2500 HP
+            tier 4 -> tier 5: 2500 HP -> 3600 HP
+            tier 5 -> tier 6: 3600 HP -> 4900 HP
+        
+        Args:
+            ship_id: Ship ID to upgrade
+            
+        Raises:
+            KeyError: If ship doesn't exist
+            ValueError: If ship is already at max tier (6)
+        """
+        ship = self.Ships[ship_id]
+        current_tier = ship['tier']
+        
+        # Check if already at max tier
+        if current_tier >= 6:
+            raise ValueError(f"Ship {ship_id} is already at max tier (6)")
+        
+        new_tier = current_tier + 1
+        new_max_hp = get_ship_tier_hp(new_tier)
+        
+        with self._acquire_locks(f"ship:{ship_id}:tier", f"ship:{ship_id}:hp"):
+            self.Ships[ship_id]['tier'] = new_tier
+            self.Ships[ship_id]['hp'] = new_max_hp
     
     def set_shield_to_max(self, ship_id: int):
         """Set a ship's shield pool to its maximum capacity (thread-safe).
@@ -617,6 +692,35 @@ class DataHandler:
             self.Items[item_id] = item_data
             return item_data
     
+    def spawn_item(self, item_data: dict) -> dict:
+        """Spawn a new item with an auto-generated unique ID.
+        
+        This is the preferred method for creating new items during gameplay.
+        It automatically assigns a unique ID using the IDGenerator.
+        
+        Args:
+            item_data: Item dict (must be provided, use item.py creators)
+            
+        Returns:
+            The newly created item dict (includes 'id' field)
+            
+        Raises:
+            RuntimeError: If ID generator is not initialized
+        """
+        if self.id_generator is None:
+            raise RuntimeError("ID generator not initialized. Call initialize_id_generator() first.")
+        
+        # Generate a unique item ID
+        item_id = self.id_generator.next_item_id()
+        
+        # Use the existing add_item method
+        item = self.add_item(item_id, item_data)
+        
+        # Add the ID to the item dict for convenience
+        item['id'] = item_id
+        
+        return item
+    
     def get_item(self, item_id: int) -> dict:
         """Get an item by ID (read-only, no lock).
         
@@ -696,34 +800,16 @@ class DataHandler:
     def set_item_to_max_health(self, item_id: int):
         """Set an item's health to its maximum (thread-safe).
         
-        This is used for full repairs at stations. The max health is calculated
-        based on the item's type and tier using standard formulas.
+        This is used for full repairs at stations. Uses the item's maxhealth field.
         
         Args:
             item_id: Item ID to heal to max
             
         Raises:
             KeyError: If item doesn't exist
-            ValueError: If item type is invalid or not a component
         """
         item = self.Items[item_id]
-        item_type = item['type']
-        tier = item['tier']
-        
-        # Calculate max health based on type and tier
-        health_formulas = {
-            'engine': lambda t: 40.0 * (1 + t),
-            'weapon': lambda t: 50.0 * (1 + t),
-            'shield': lambda t: 25.0 * (1 + t),
-            'cargo': lambda t: 100.0 * (1 + t),
-            'sensor': lambda t: 25.0 * (1 + t),
-            'stealth_cloak': lambda t: 40.0 * (1 + t),
-        }
-        
-        if item_type not in health_formulas:
-            raise ValueError(f"Item type '{item_type}' does not have health (must be a component)")
-        
-        max_health = health_formulas[item_type](tier)
+        max_health = item['maxhealth']
         
         with self._acquire_locks(f"item:{item_id}"):
             self.Items[item_id]['health'] = max_health
@@ -780,7 +866,7 @@ class DataHandler:
         
         Args:
             item_id: Item ID to damage
-            damage: Amount of damage to apply
+            damage: Amount of damage to apply (must be positive)
             
         Returns:
             Dict with damage results: {
@@ -791,7 +877,11 @@ class DataHandler:
             
         Raises:
             KeyError: If item doesn't exist
+            ValueError: If damage is negative
         """
+        if damage < 0:
+            raise ValueError(f"damage must be positive, got {damage}")
+        
         _ = self.Items[item_id]
         
         with self._acquire_locks(f"item:{item_id}"):
@@ -898,6 +988,9 @@ class DataHandler:
     def damage_shield_pool(self, ship_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to a ship's shield pool (thread-safe).
         
+        Shields absorb all damage without carry-over for balance reasons.
+        Even if damage exceeds the shield pool, no overflow occurs.
+        
         Args:
             ship_id: Ship ID to damage shields
             damage: Amount of damage to apply
@@ -905,8 +998,7 @@ class DataHandler:
         Returns:
             Dict with damage results: {
                 'shield_damage': float,
-                'remaining_shield': float,
-                'overflow_damage': float  # Damage that exceeded shield pool
+                'remaining_shield': float
             }
             
         Raises:
@@ -917,9 +1009,8 @@ class DataHandler:
         with self._acquire_locks(f"ship:{ship_id}:shield"):
             current_shield = self.Ships[ship_id]['shield_pool']
             
-            # Calculate how much damage the shield can absorb
+            # Shield absorbs what it can, no overflow damage
             shield_damage = min(damage, current_shield)
-            overflow_damage = max(0.0, damage - current_shield)
             new_shield = max(0.0, current_shield - damage)
             
             # Update shield pool
@@ -927,8 +1018,7 @@ class DataHandler:
             
             return {
                 'shield_damage': shield_damage,
-                'remaining_shield': new_shield,
-                'overflow_damage': overflow_damage
+                'remaining_shield': new_shield
             }
     
     def heal_shield_pool(self, ship_id: int, heal_amount: float):
@@ -1672,6 +1762,31 @@ class DataHandler:
         self.load_spawnable_components()
         self.load_spawnable_ships()
         self.load_npc_factions()
+        
+        # Initialize ID generator after loading all existing entities
+        # This ensures no duplicate IDs by analyzing existing data
+        self.initialize_id_generator()
+    
+    def initialize_id_generator(self):
+        """Initialize the ID generator with existing entity IDs.
+        
+        This should be called after loading all entities to prevent duplicate IDs.
+        If called multiple times, it will reinitialize with current entity state.
+        """
+        # Collect all existing IDs from all entity types
+        existing_ids = []
+        existing_ids.extend(self.Ships.keys())
+        existing_ids.extend(self.Items.keys())
+        existing_ids.extend(self.Players.keys())
+        existing_ids.extend(self.Factions.keys())
+        
+        # Initialize or reinitialize the ID generator
+        self.id_generator = IDGenerator(existing_ids=existing_ids if existing_ids else None)
+        
+        if existing_ids:
+            print(f"[DataHandler] Initialized ID generator with {len(existing_ids)} existing IDs")
+        else:
+            print(f"[DataHandler] Initialized ID generator (no existing IDs)")
     
     # ============================================================================
     # SHIP LOG METHODS (Ephemeral - not persisted)

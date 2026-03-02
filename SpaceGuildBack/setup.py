@@ -68,7 +68,7 @@ def load_system_setup(file_name: str) -> dict:
         return json.load(f)
 
 
-def load_spawnable_items(file_name: str) -> dict:
+def load_spawnable_resources(file_name: str) -> dict:
     """Load resource item definitions from setup data.
     
     Returns:
@@ -77,7 +77,35 @@ def load_spawnable_items(file_name: str) -> dict:
     setup_file = os.path.join('setup_data/spawnable_items', file_name)
     
     if not os.path.exists(setup_file):
-        raise FileNotFoundError(f"items file not found: {setup_file}")
+        raise FileNotFoundError(f"resources file not found: {setup_file}")
+    
+    with open(setup_file, 'r') as f:
+        return json.load(f)
+
+def load_spawnable_deliverables(file_name: str) -> dict:
+    """Load deliverable item definitions from setup data.
+    
+    Returns:
+        Dict containing deliverable item templates
+    """
+    setup_file = os.path.join('setup_data/spawnable_items', file_name)
+    
+    if not os.path.exists(setup_file):
+        raise FileNotFoundError(f"deliverables file not found: {setup_file}")
+    
+    with open(setup_file, 'r') as f:
+        return json.load(f)
+
+def load_spawnable_interactables(file_name: str) -> dict:
+    """Load interactable item definitions from setup data.
+    
+    Returns:
+        Dict containing interactable item templates
+    """
+    setup_file = os.path.join('setup_data/spawnable_items', file_name)
+    
+    if not os.path.exists(setup_file):
+        raise FileNotFoundError(f"interactables file not found: {setup_file}")
     
     with open(setup_file, 'r') as f:
         return json.load(f)
@@ -129,7 +157,9 @@ def load_npc_factions(file_name: str) -> dict:
 
 def setup_world(data_dir: str = "game_data", 
     systems: list[str] | None = None, 
-    items: list[str] | None = None, 
+    resources: list[str] | None = None,
+    deliverables: list[str] | None = None,
+    interactables: list[str] | None = None,
     components: list[str] | None = None, 
     factions: list[str] | None = None,
     ships: list[str] | None = None):
@@ -185,8 +215,8 @@ def setup_world(data_dir: str = "game_data",
             controlled_by=metadata.get('controlled_by', 'ORION'),
             description=metadata.get('description', ''),
             tags=metadata.get('tags', []),
-            spawnable_ids=metadata.get('spawnable_ids', []),
-            resource_node_ids=metadata.get('resource_node_ids', [])
+            spawnable_ships=metadata.get('spawnable_ships', []),
+            spawnable_resources=metadata.get('spawnable_resources', [])
         )
         print(f"  [+] Created: {location_name} ({metadata.get('type', 'space')})")
     
@@ -214,12 +244,28 @@ def setup_world(data_dir: str = "game_data",
     print(f"  [+] Created {total_vendors} vendors across {len(all_vendors)} stations")
     
     # Load and save resource items
-    if items:
+    if resources:
         print(f"\n[*] Loading resource item definitions...")
-        for item_file in items:
-            resource_items = load_spawnable_items(item_file)
+        for resource_file in resources:
+            resource_items = load_spawnable_resources(resource_file)
             data_handler.ResourceItems.update(resource_items)
         print(f"  [+] Loaded {len(data_handler.ResourceItems)} resource types")
+    
+    # Load and save deliverable items
+    if deliverables:
+        print(f"\n[*] Loading deliverable item definitions...")
+        for deliverable_file in deliverables:
+            deliverable_items = load_spawnable_deliverables(deliverable_file)
+            data_handler.DeliverableItems.update(deliverable_items)
+        print(f"  [+] Loaded {len(data_handler.DeliverableItems)} deliverable types")
+    
+    # Load and save interactable items
+    if interactables:
+        print(f"\n[*] Loading interactable item definitions...")
+        for interactable_file in interactables:
+            interactable_items = load_spawnable_interactables(interactable_file)
+            data_handler.InteractableItems.update(interactable_items)
+        print(f"  [+] Loaded {len(data_handler.InteractableItems)} interactable types")
     
     # Load and save spawnable components
     if components:
@@ -266,7 +312,9 @@ if __name__ == '__main__':
     
     # Parse command line arguments
     systems_setup_files = ['sol_setup.json',]
-    items_setup_files = ['spawnable_items.json',]
+    resources_setup_files = ['spawnable_resources.json',]
+    deliverables_setup_files = ['spawnable_deliverables.json',]
+    interactables_setup_files = ['spawnable_interactables.json',]
     components_setup_files = ['spawnable_components.json',]
     factions_setup_files = ['npc_factions.json',]
     ships_setup_files = ['sol_ships.json',]
@@ -274,7 +322,9 @@ if __name__ == '__main__':
     # Run setup
     setup_world(
         systems=systems_setup_files,
-        items=items_setup_files,
+        resources=resources_setup_files,
+        deliverables=deliverables_setup_files,
+        interactables=interactables_setup_files,
         components=components_setup_files,
         factions=factions_setup_files,
         ships=ships_setup_files

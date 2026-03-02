@@ -1,0 +1,9 @@
+{
+  "example_scan_data": {
+    "name": "Scan Data",
+    "description": "Example deliverable item - sensor scan data collected from orbit.",
+    "item_type": "deliverable",
+    "maxhealth": 10,
+    "weight": 0.1
+  }
+}

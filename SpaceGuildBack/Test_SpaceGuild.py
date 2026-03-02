@@ -225,7 +225,6 @@ def test_shield_pool_damage():
 	
 	assert result['shield_damage'] == 30.0
 	assert result['remaining_shield'] == 20.0
-	assert result['overflow_damage'] == 0.0
 	assert dh.Ships[1]['shield_pool'] == 20.0
 
 def test_shield_pool_overflow():
@@ -238,9 +237,9 @@ def test_shield_pool_overflow():
 	
 	result = dh.damage_shield_pool(1, 30.0)
 	
+	# Shields absorb all damage they can, no overflow
 	assert result['shield_damage'] == 20.0
 	assert result['remaining_shield'] == 0.0
-	assert result['overflow_damage'] == 10.0
 
 def test_attack_with_shields():
 	dh = DataHandler(data_dir="test_data")
@@ -264,13 +263,20 @@ def test_attack_with_shields():
 	
 	initial_hp = dh.Ships[2]['hp']
 	
-	# Attack should hit shields first, overflow to HP
+	# Attack hits shields - shields absorb ALL damage (no overflow to HP)
 	actions.queue_action(1, 'attack_ship', 2)
 	stats = actions.process_tick()
 	
 	assert stats['attack_ship'] == 1
-	assert dh.Ships[2]['shield_pool'] == 0.0
-	assert dh.Ships[2]['hp'] == initial_hp - 10.0  # 25 damage - 15 shield = 10 hp damage
+	assert dh.Ships[2]['shield_pool'] == 0.0  # Shield depleted (15 damage absorbed)
+	assert dh.Ships[2]['hp'] == initial_hp  # HP unchanged - shields blocked all damage
+	
+	# Second attack should now hit HP since shields are down
+	actions.queue_action(1, 'attack_ship', 2)
+	stats = actions.process_tick()
+	
+	assert stats['attack_ship'] == 1
+	assert dh.Ships[2]['hp'] == initial_hp - 25.0  # Full weapon damage to HP
 
 def test_attack_ship_component():
 	dh = DataHandler(data_dir="test_data")
@@ -412,15 +418,15 @@ def test_component_repair():
 	# Create damaged weapon - use tier 1 so multiplier can vary (min=1, max=2)
 	weapon = Weapon(100, 'laser', 1, 2.0)
 	dh.add_item(100, weapon)
-	# Weapon tier 1 health = 50 * (1 + 1) = 100, so 50 = 50%
-	dh.set_item_health(100, 50)  # Set to 50% health (TESTING ONLY)
+	# Weapon tier 1 health = 25 * (1 + 1) = 50, so 25 = 50%
+	dh.set_item_health(100, 25)  # Set to 50% health (TESTING ONLY)
 	
 	# Repair the weapon
 	result = components.repair_component(100)
 	
-	assert result['health_restored'] == 50.0
+	assert result['health_restored'] == 25.0
 	assert result['multiplier_reduction'] == 0.05  # 50% health = 0.05 reduction
-	assert dh.Items[100]['health'] == 100.0
+	assert dh.Items[100]['health'] == 50.0
 	assert dh.Items[100]['multiplier'] == 2.0 - 0.05
 
 def test_ship_hp_repair():

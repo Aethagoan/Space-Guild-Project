@@ -534,17 +534,16 @@ def attack_ship(attacker_id: int, target_ship_id: int) -> bool:
         # Attacking deactivates stealth
         deactivate_stealth(attacker_id)
         
-        # Apply damage - shields absorb first, overflow goes to HP
-        shield_result = dh.damage_shield_pool(target_ship_id, damage)
-        overflow_damage = shield_result['overflow_damage']
-        
-        # If there's overflow damage, apply it to ship HP
-        if overflow_damage > 0:
-            dh.damage_ship_hp(target_ship_id, overflow_damage)
-            # Mark that ship took damage (disables stealth)
+        # Apply damage - shields absorb all damage if present (no overflow)
+        # If shields are at 0, damage goes to HP
+        target_ship = dh.get_ship(target_ship_id)
+        if target_ship['shield_pool'] > 0:
+            # Shields are up - they absorb ALL damage (even if damage exceeds shield pool)
+            shield_result = dh.damage_shield_pool(target_ship_id, damage)
             mark_ship_took_damage(target_ship_id)
-        elif shield_result['shield_damage'] > 0:
-            # Shields absorbed some/all damage but didn't break - still counts as taking damage
+        else:
+            # No shields - damage goes directly to HP
+            dh.damage_ship_hp(target_ship_id, damage)
             mark_ship_took_damage(target_ship_id)
         
         return True
@@ -612,22 +611,24 @@ def attack_ship_component(attacker_id: int, target_ship_id: int, component_slot:
         # Attacking deactivates stealth
         deactivate_stealth(attacker_id)
         
-        # Apply damage - shields absorb first, overflow goes to component or HP
-        shield_result = dh.damage_shield_pool(target_ship_id, damage)
-        overflow_damage = shield_result['overflow_damage']
-        
-        # If there's overflow damage after shields
-        if overflow_damage > 0:
+        # Apply damage - shields absorb all damage if present (no overflow)
+        # If shields are at 0, damage goes to component or HP
+        if target_ship['shield_pool'] > 0:
+            # Shields are up - they absorb ALL damage (even if damage exceeds shield pool)
+            dh.damage_shield_pool(target_ship_id, damage)
+            mark_ship_took_damage(target_ship_id)
+        else:
+            # No shields - damage goes to component or HP
             # Check if component slot is empty (critical hit)
             if component_id is None or not isinstance(component_id, int):
                 # CRITICAL HIT: Empty component slot with shields down = 5x damage to ship HP
-                critical_damage = overflow_damage * 5.0
+                critical_damage = damage * 5.0
                 dh.damage_ship_hp(target_ship_id, critical_damage)
-                # Mark that ship took damage (disables stealth)
                 mark_ship_took_damage(target_ship_id)
             else:
-                # Normal: overflow damage goes to component
-                damage_result = dh.damage_item(component_id, overflow_damage)
+                # Normal: damage goes to component
+                damage_result = dh.damage_item(component_id, damage)
+                mark_ship_took_damage(target_ship_id)
                 
                 # If cargo was disabled, spill all items to location
                 if damage_result['disabled'] and component_slot == 'cargo_id' and target_location is not None:
@@ -875,7 +876,7 @@ def scan_ship(scanner_id: int, target_ship_id: int) -> Optional[Dict[str, Any]]:
         
     except (KeyError, ValueError):
         return None
-
+ 
 
 def scan_item(scanner_id: int, target_item_id: int) -> Optional[Dict[str, Any]]:
     """Scan an item at a location to reveal all its information.

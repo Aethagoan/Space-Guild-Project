@@ -1,0 +1,9 @@
+{
+  "example_mining_charge": {
+    "name": "Mining Charge",
+    "description": "Example interactable item - explosive charge that can be used at resource nodes to increase yield.",
+    "item_type": "interactable",
+    "maxhealth": 15,
+    "weight": 5.0
+  }
+}
