@@ -107,7 +107,7 @@
   - **Estimate:** 4h
 
 #### Basic API Expansion
-- [~] **API-001:** Add GET `/ship/<id>` endpoint (PARTIALLY DONE)
+- [x] **API-001:** Add GET `/ship/<id>` endpoint (PARTIALLY DONE)
   - Return complete ship state (HP, location, components, items) ✅
   - Include equipped component details ✅
   - TODO: Change from query param `?player_id=X` to path param `/ship/<id>`
@@ -115,7 +115,7 @@
   - **Estimate:** 2h → 0.5h remaining
   - **Location:** api.py:306-354
 
-- [~] **API-002:** Add GET `/location/<id>` endpoint (PARTIALLY DONE)
+- [x] **API-002:** Add GET `/location/<id>` endpoint (PARTIALLY DONE)
   - Return location name, links, ships present, items present ✅
   - Include last tick events if logging implemented ✅
   - TODO: Support arbitrary location ID lookup (currently returns player's location)

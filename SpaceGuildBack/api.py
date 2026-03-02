@@ -5,13 +5,35 @@
 
 from flask import Flask, request, jsonify
 from typing import Optional, Dict, Any
+from threading import Event, Lock
 import os
 import hashlib
 import actions
 import components
-from program import data_handler
+from program import data_handler, tick_completion_event
 
 app = Flask(__name__)
+
+# Pending updates registry: ship_id -> Event for O(1) cancellation
+# When a new /updates request comes in, we cancel the old one and create a new event
+pending_updates: Dict[int, Event] = {}
+pending_updates_lock = Lock()
+
+
+def trigger_ship_update(ship_id: int):
+    """Trigger immediate update for a ship (used for out-of-tick messages).
+    
+    This function is called when a message is added to a ship's log outside of
+    tick processing (e.g., private messages, admin broadcasts). It signals any
+    waiting /updates request for this ship to return immediately.
+    
+    Args:
+        ship_id: Ship ID to trigger update for
+    """
+    with pending_updates_lock:
+        if ship_id in pending_updates:
+            # Signal the waiting request to return
+            pending_updates[ship_id].set()
 
 
 def check_world_initialized(data_dir: str = "game_data") -> bool:
@@ -99,113 +121,6 @@ def queue_action_endpoint():
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 
-@app.route('/stealth/activate', methods=['POST'])
-def activate_stealth_endpoint():
-    """Activate stealth cloak for a player's ship.
-    
-    Request JSON format:
-    {
-        "player_id": int
-    }
-    
-    Returns:
-        {"status": "success"} or {"error": "message"}
-    
-    Note: Stealth is queued as an action and activates at the end of the tick.
-          Ships cannot activate stealth if they took damage on the same tick.
-    """
-    try:
-        data = request.json
-        player_id = data.get('player_id')
-        
-        if player_id is None:
-            return jsonify({'error': 'Missing required field: player_id'}), 400
-        
-        # Get ship_id from player_id
-        ship_id = get_ship_id_from_player_id(player_id)
-        if ship_id is None:
-            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
-        
-        # Queue stealth activation action
-        success = actions.queue_action(ship_id, 'activate_stealth', ship_id, None, None)
-        
-        if success:
-            return jsonify({'status': 'success', 'message': 'Stealth activation queued'}), 200
-        else:
-            return jsonify({'error': 'Failed to queue stealth activation'}), 400
-            
-    except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
-
-
-@app.route('/stealth/deactivate', methods=['POST'])
-def deactivate_stealth_endpoint():
-    """Deactivate stealth cloak for a player's ship.
-    
-    Request JSON format:
-    {
-        "player_id": int
-    }
-    
-    Returns:
-        {"status": "success"} or {"error": "message"}
-    
-    Note: Stealth deactivation is queued as an action and processes before stealth activations.
-    """
-    try:
-        data = request.json
-        player_id = data.get('player_id')
-        
-        if player_id is None:
-            return jsonify({'error': 'Missing required field: player_id'}), 400
-        
-        # Get ship_id from player_id
-        ship_id = get_ship_id_from_player_id(player_id)
-        if ship_id is None:
-            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
-        
-        # Queue stealth deactivation action
-        success = actions.queue_action(ship_id, 'deactivate_stealth', ship_id, None, None)
-        
-        if success:
-            return jsonify({'status': 'success', 'message': 'Stealth deactivation queued'}), 200
-        else:
-            return jsonify({'error': 'Failed to queue stealth deactivation'}), 400
-            
-    except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
-
-
-@app.route('/stealth/status', methods=['GET'])
-def stealth_status_endpoint():
-    """Check if a player's ship currently has active stealth.
-    
-    Query parameters:
-        player_id: int - Player ID
-    
-    Returns:
-        {"stealthed": bool} or {"error": "message"}
-    """
-    try:
-        player_id = request.args.get('player_id', type=int)
-        
-        if player_id is None:
-            return jsonify({'error': 'Missing required parameter: player_id'}), 400
-        
-        # Get ship_id from player_id
-        ship_id = get_ship_id_from_player_id(player_id)
-        if ship_id is None:
-            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
-        
-        # Check stealth status
-        is_stealthed = actions.is_ship_stealthed(ship_id)
-        
-        return jsonify({'stealthed': is_stealthed}), 200
-        
-    except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
-
-
 @app.route('/repair/component', methods=['POST'])
 def repair_component_endpoint():
     """Repair a component by restoring health and applying multiplier reduction.
@@ -260,49 +175,6 @@ def health_check():
     return jsonify({'status': 'healthy'}), 200
 
 
-@app.route('/ship/log', methods=['GET'])
-def get_ship_log_endpoint():
-    """Get ephemeral log entries for a player's ship.
-    
-    Query parameters:
-        player_id: int - Player ID
-    
-    Returns:
-        {
-            "entries": [
-                {
-                    "type": str,  # Message type (combat, action, ship_message, computer, environment)
-                    "content": str,  # The log message
-                    "source": str (optional)  # Source identifier (e.g., "ship:123", "location:Sol", "item:456")
-                },
-                ...
-            ]
-        } or {"error": "message"}
-        
-    Note: The "source" field allows the frontend to route clicks to the appropriate detail view.
-          Format is "entity_type:entity_id" where entity_type is ship/location/item/faction/player.
-          The frontend is responsible for calling the appropriate endpoint based on entity_type.
-    """
-    try:
-        player_id = request.args.get('player_id', type=int)
-        
-        if player_id is None:
-            return jsonify({'error': 'Missing required parameter: player_id'}), 400
-        
-        # Get ship_id from player_id
-        ship_id = get_ship_id_from_player_id(player_id)
-        if ship_id is None:
-            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
-        
-        # Get ship logs
-        entries = data_handler.get_ship_log(ship_id)
-        
-        return jsonify({'entries': entries}), 200
-        
-    except Exception as e:
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
-
-
 @app.route('/ship', methods=['GET'])
 def get_ship_endpoint():
     """Get the player's ship information.
@@ -315,6 +187,7 @@ def get_ship_endpoint():
     Returns:
         {
             "ship_id": int,
+            "is_stealthed": bool,
             "hp": float,
             "tier": int,
             "location": str,
@@ -342,9 +215,10 @@ def get_ship_endpoint():
         # Get ship data
         ship = data_handler.get_ship(ship_id)
         
-        # Return ship data with ship_id included
+        # Return ship data with ship_id and stealth status included
         return jsonify({
             'ship_id': ship_id,
+            'is_stealthed': actions.is_ship_stealthed(ship_id),
             **ship
         }), 200
         
@@ -375,11 +249,24 @@ def get_location_endpoint():
             "name": str,
             "description": str,
             "links": [str],
-            "ship_symbols": [int],  # Ship IDs (visible ships only, pre-filtered by tick processing)
-            "items": [int]  # Item IDs at this location
+            "ships": [
+                {
+                    "ship_id": int,
+                    "name": str,
+                    "player_name": str,
+                    "symbol": str
+                }
+            ],
+            "items": [
+                {
+                    "item_id": int,
+                    "name": str
+                }
+            ]
         } or {"error": "message"}
         
-    Note: Ship data is NOT included - only ship IDs (symbols). Use scan action to get ship details.
+    Note: Only ship IDs, names, player names, and symbols are returned. 
+          Use scan action to get full ship details.
     """
     try:
         player_id = request.args.get('player_id', type=int)
@@ -406,12 +293,49 @@ def get_location_endpoint():
         # If visible_ship_ids doesn't exist (old save file), fall back to ship_ids
         visible_ship_ids = location.get('visible_ship_ids', location.get('ship_ids', []))
         
+        # Get ship names and player names for visible ships
+        ships_info = []
+        for visible_ship_id in visible_ship_ids:
+            try:
+                vis_ship = data_handler.get_ship(visible_ship_id)
+                # Get player name if ship has an owner
+                player_name = "NPC"
+                if 'owner_id' in vis_ship and vis_ship['owner_id'] is not None:
+                    try:
+                        player = data_handler.get_player(vis_ship['owner_id'])
+                        player_name = player.get('name', 'Unknown')
+                    except KeyError:
+                        pass
+                
+                ships_info.append({
+                    'ship_id': visible_ship_id,
+                    'name': vis_ship.get('name', 'Unknown Ship'),
+                    'player_name': player_name,
+                    'symbol': vis_ship.get('symbol', '?')
+                })
+            except KeyError:
+                # Ship doesn't exist anymore, skip
+                pass
+        
+        # Get item names for items at location
+        items_info = []
+        for item_id in location.get('items', []):
+            try:
+                item = data_handler.get_item(item_id)
+                items_info.append({
+                    'item_id': item_id,
+                    'name': item.get('name', 'Unknown Item')
+                })
+            except KeyError:
+                # Item doesn't exist anymore, skip
+                pass
+        
         return jsonify({
             'name': location.get('name'),
             'description': location.get('description'),
             'links': location.get('links', []),
-            'ship_symbols': visible_ship_ids,
-            'items': location.get('items', [])
+            'ships': ships_info,
+            'items': items_info
         }), 200
         
     except KeyError:
@@ -474,6 +398,196 @@ def get_vendors_endpoint():
     except KeyError:
         return jsonify({'error': 'Location not found'}), 404
     except Exception as e:
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
+
+
+@app.route('/updates', methods=['GET'])
+def get_updates_endpoint():
+    """Long-polling endpoint that waits for next tick completion or ship log update.
+    
+    This endpoint supports multiple signal sources:
+    - Tick completion (most common - happens every 5 seconds)
+    - Ship log updates (messages between ticks)
+    
+    The endpoint will block until one of these events occurs, then return:
+    - Current ship state
+    - Current location info
+    - New ship log entries
+    - Action results (scans, attacks, moves, collects)
+    
+    If multiple requests come from the same player, only the latest is kept active.
+    
+    Query parameters:
+        player_id: int - Player ID
+    
+    Returns:
+        {
+            "ship_state": {
+                "ship_id": int,
+                "is_stealthed": bool,
+                "hp": float,
+                "tier": int,
+                ...
+            },
+            "location_state": {...},
+            "ship_log": [...],
+            "scan_data": {...} or null,
+            "attack_result": {...} or null,
+            "collect_result": {...} or null,
+            "move_result": {...} or null
+        } or {"error": "message"}
+    """
+    try:
+        player_id = request.args.get('player_id', type=int)
+        
+        if player_id is None:
+            return jsonify({'error': 'Missing required parameter: player_id'}), 400
+        
+        # Get ship_id from player_id
+        ship_id = get_ship_id_from_player_id(player_id)
+        if ship_id is None:
+            return jsonify({'error': 'Invalid player_id or player has no ship'}), 404
+        
+        # Cancel any existing pending request for this ship
+        # This ensures only one active /updates request per player at a time
+        with pending_updates_lock:
+            if ship_id in pending_updates:
+                # Signal the old request to cancel
+                old_event = pending_updates[ship_id]
+                old_event.set()
+            
+            # Create new event for this request (ship-specific)
+            ship_event = Event()
+            pending_updates[ship_id] = ship_event
+        
+        # Wait for EITHER tick completion OR ship-specific event
+        # The tick_completion_event is set by program.py after each tick
+        # The ship_event is set by trigger_ship_update() for out-of-tick messages
+        timeout = 30.0  # 30 second timeout to prevent hanging forever
+        
+        # Create a thread-safe way to wait for multiple events
+        # We'll check both events in a loop with small sleeps
+        import time
+        start_time = time.time()
+        event_triggered = False
+        
+        while time.time() - start_time < timeout:
+            if tick_completion_event.is_set() or ship_event.is_set():
+                event_triggered = True
+                break
+            time.sleep(0.1)  # Check every 100ms
+        
+        # Check if we were cancelled by a newer request
+        with pending_updates_lock:
+            if ship_id in pending_updates and pending_updates[ship_id] != ship_event:
+                # We were replaced by a newer request - return empty/stale response
+                return jsonify({'error': 'Request superseded by newer request'}), 409
+            
+            # Remove ourselves from pending updates
+            pending_updates.pop(ship_id, None)
+        
+        if not event_triggered:
+            # Timeout occurred
+            return jsonify({'error': 'Request timed out waiting for tick'}), 408
+        
+        # Tick completed! Gather all update data
+        
+        # Get ship state
+        ship = data_handler.get_ship(ship_id)
+        ship_state = {
+            'ship_id': ship_id,
+            'is_stealthed': actions.is_ship_stealthed(ship_id),
+            **ship
+        }
+        
+        # Get location state
+        location_name = ship.get('location')
+        if location_name is None:
+            return jsonify({'error': 'Ship has no location'}), 500
+        
+        location = data_handler.get_location(location_name)
+        visible_ship_ids = location.get('visible_ship_ids', location.get('ship_ids', []))
+        
+        # Get ship names and player names for visible ships
+        ships_info = []
+        for visible_ship_id in visible_ship_ids:
+            try:
+                vis_ship = data_handler.get_ship(visible_ship_id)
+                # Get player name if ship has an owner
+                player_name = "NPC"
+                if 'owner_id' in vis_ship and vis_ship['owner_id'] is not None:
+                    try:
+                        player = data_handler.get_player(vis_ship['owner_id'])
+                        player_name = player.get('name', 'Unknown')
+                    except KeyError:
+                        pass
+                
+                ships_info.append({
+                    'ship_id': visible_ship_id,
+                    'name': vis_ship.get('name', 'Unknown Ship'),
+                    'player_name': player_name,
+                    'symbol': vis_ship.get('symbol', '?')
+                })
+            except KeyError:
+                # Ship doesn't exist anymore, skip
+                pass
+        
+        # Get item names for items at location
+        items_info = []
+        for item_id in location.get('items', []):
+            try:
+                item = data_handler.get_item(item_id)
+                items_info.append({
+                    'item_id': item_id,
+                    'name': item.get('name', 'Unknown Item')
+                })
+            except KeyError:
+                # Item doesn't exist anymore, skip
+                pass
+        
+        location_state = {
+            'name': location.get('name'),
+            'description': location.get('description'),
+            'links': location.get('links', []),
+            'ships': ships_info,
+            'items': items_info
+        }
+        
+        # Get ship log entries
+        ship_log = data_handler.get_ship_log(ship_id)
+        
+        # Get and clear action results
+        action_results_data = actions.get_and_clear_action_results(ship_id)
+        
+        if action_results_data is None:
+            # No action results - initialize empty structure
+            action_results_data = {
+                "ship_log": [],
+                "ship_state": None,
+                "scan_data": None,
+                "attack_result": None,
+                "collect_result": None,
+                "move_result": None
+            }
+        
+        # Build response
+        response = {
+            'ship_state': ship_state,
+            'location_state': location_state,
+            'ship_log': ship_log,
+            'scan_data': action_results_data.get('scan_data'),
+            'attack_result': action_results_data.get('attack_result'),
+            'collect_result': action_results_data.get('collect_result'),
+            'move_result': action_results_data.get('move_result')
+        }
+        
+        return jsonify(response), 200
+        
+    except KeyError:
+        return jsonify({'error': 'Entity not found'}), 404
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 

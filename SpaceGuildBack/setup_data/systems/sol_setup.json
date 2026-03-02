@@ -257,7 +257,7 @@
       "spawnable_ships": [
         "orion_patrol",
         "mining_ship",
-        "mining_drones"
+        "mining_drone"
       ]
     },
     "ABR3_Resource_1": {
@@ -378,7 +378,7 @@
       "spawnable_ships": [
         "orion_enforcer",
         "mining_ship",
-        "mining_drones",
+        "mining_drone",
         "hauler"
       ]
     },
@@ -493,7 +493,7 @@
       "spawnable_ships": [
         "orion_enforcer",
         "mining_ship",
-        "mining_drones"
+        "mining_drone"
       ]
     },
     "Neptune_Orbital_Station": {
@@ -530,7 +530,7 @@
       "spawnable_ships": [
         "orion_patrol",
         "mining_ship",
-        "mining_drones"
+        "mining_drone"
       ]
     },
     "KR1_Resource_1": {
@@ -598,8 +598,8 @@
         "Dangerous"
       ],
       "spawnable_ships": [
-        "t2_pirate",
-        "mining_drones"
+        "rifter_initiate",
+        "mining_drone"
       ]
     },
     "KR2_Resource_1": {
@@ -669,7 +669,7 @@
         "Dangerous"
       ],
       "spawnable_ships": [
-        "t2_pirate"
+        "rifter_initiate"
       ]
     },
     "KR3_Resource_1": {
@@ -739,7 +739,7 @@
         "Dangerous"
       ],
       "spawnable_ships": [
-        "t2_pirate"
+        "rifter_initiate"
       ]
     },
     "KR4_Resource_1": {

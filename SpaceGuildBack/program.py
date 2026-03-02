@@ -10,6 +10,7 @@ import sys
 import os
 from datetime import datetime
 from typing import Optional
+from threading import Event, Lock
 
 import ship
 import location
@@ -20,6 +21,11 @@ from data import DataHandler
 # Global DataHandler singleton instance
 # All modules should import this instance to access game data
 data_handler = DataHandler(data_dir="game_data")
+
+# Tick signaling system for /updates endpoint
+current_tick_number = 0
+tick_number_lock = Lock()
+tick_completion_event = Event()  # Set when tick completes, signals waiting clients
 
 
 def check_world_initialized(data_dir: str = "game_data") -> bool:
@@ -90,6 +96,8 @@ def run_game_loop(tick_interval: float = 5.0, save_interval: int = 60):
         tick_interval: Time between ticks in seconds (default: 5.0)
         save_interval: Number of ticks between auto-saves (default: 60 = every 5 minutes)
     """
+    global current_tick_number, tick_completion_event
+    
     print("=" * 70)
     print("SPACE GUILD - GAME LOOP")
     print("=" * 70)
@@ -136,10 +144,20 @@ def run_game_loop(tick_interval: float = 5.0, save_interval: int = 60):
             tick_number += 1
             tick_start = time.time()
             
+            # Clear the tick completion event before processing
+            tick_completion_event.clear()
+            
             # Process game tick
             try:
                 stats = actions.process_tick()
                 tick_duration = time.time() - tick_start
+                
+                # Update global tick number
+                with tick_number_lock:
+                    current_tick_number = tick_number
+                
+                # Signal all waiting clients that tick is complete
+                tick_completion_event.set()
                 
                 # Print tick statistics
                 print_tick_stats(tick_number, stats, tick_duration)
@@ -151,6 +169,8 @@ def run_game_loop(tick_interval: float = 5.0, save_interval: int = 60):
                 print(f"\n[X] ERROR during tick #{tick_number}: {e}")
                 import traceback
                 traceback.print_exc()
+                # Still signal completion even on error
+                tick_completion_event.set()
             
             # Sleep until next tick
             elapsed = time.time() - tick_start

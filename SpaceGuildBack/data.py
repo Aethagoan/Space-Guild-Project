@@ -1805,7 +1805,7 @@ class DataHandler:
                 'write_index': self.MAX_LOG_ENTRIES - 1  # Start at end, write backwards
             }
     
-    def add_ship_log(self, ship_id: int, message_type: str, content: str, source: Optional[str] = None):
+    def add_ship_log(self, ship_id: int, message_type: str, content: str, source: Optional[str] = None, trigger_update: bool = False):
         """Add a log entry to a ship's ephemeral log.
         Writes backwards so newest messages are at lower indices.
         
@@ -1815,6 +1815,7 @@ class DataHandler:
             content: The message content
             source: Optional source identifier in format 'type:id' (e.g., 'ship:123', 'location:Sol', 'item:456')
                    If provided, the frontend can request details about this entity
+            trigger_update: If True, signal waiting /updates requests for this ship (for out-of-tick messages)
         """
         # Validate message type
         if message_type not in MessageType.all_types():
@@ -1841,6 +1842,16 @@ class DataHandler:
             
             if log['count'] < self.MAX_LOG_ENTRIES:
                 log['count'] += 1
+        
+        # If trigger_update is True, signal any waiting /updates request for this ship
+        if trigger_update:
+            try:
+                # Import at runtime to avoid circular dependency
+                from api import trigger_ship_update
+                trigger_ship_update(ship_id)
+            except ImportError:
+                # API module not loaded yet (during tests), skip trigger
+                pass
     
     def get_ship_log(self, ship_id: int) -> List[dict]:
         """Get all log entries for a ship in chronological order (oldest first, newest last).

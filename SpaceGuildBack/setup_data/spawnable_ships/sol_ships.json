@@ -9,7 +9,7 @@
     "description": "Standard ORION patrol ship responsible for routine security sweeps.",
     "dialogue": {}
   },
-  "mining_drones": {
+  "mining_drone": {
     "name": "Mining Drone",
     "description": "Automated mining drone used for resource extraction operations.",
     "dialogue": {}
@@ -29,8 +29,8 @@
     "description": "Large cargo transport moving goods between stations and planets.",
     "dialogue": {}
   },
-  "t2_pirate": {
-    "name": "Pirate Raider",
+  "rifter_initiate": {
+    "name": "RIFTER Pirate",
     "description": "Hostile pirate vessel operating in the outer system regions.",
     "dialogue": {}
   }

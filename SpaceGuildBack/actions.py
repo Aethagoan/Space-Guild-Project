@@ -176,6 +176,79 @@ stealth_disabled: set[int] = set()
 
 
 # ============================================================================
+# ACTION RESULTS TRACKING (cleared after delivery to client)
+# ============================================================================
+# Ship ID -> Action Results Dictionary
+# Structure: {
+#     "ship_log": [...],
+#     "ship_state": {...},
+#     "scan_data": {...} or None,
+#     "attack_result": {...} or None,
+#     "collect_result": {...} or None,
+#     "move_result": {...} or None
+# }
+action_results: Dict[int, Dict[str, Any]] = {}
+action_results_lock = Lock()
+
+
+def init_action_results(ship_id: int):
+    """Initialize action results structure for a ship.
+    
+    NOTE: This function should only be called when the lock is already held!
+    """
+    action_results[ship_id] = {
+        "ship_log": [],
+        "ship_state": None,
+        "scan_data": None,
+        "attack_result": None,
+        "collect_result": None,
+        "move_result": None
+    }
+
+
+def add_scan_result(ship_id: int, scan_data: dict):
+    """Add scan result for a ship."""
+    with action_results_lock:
+        if ship_id not in action_results:
+            init_action_results(ship_id)
+        action_results[ship_id]["scan_data"] = scan_data
+
+
+def add_attack_result(ship_id: int, attack_data: dict):
+    """Add attack result for a ship."""
+    with action_results_lock:
+        if ship_id not in action_results:
+            init_action_results(ship_id)
+        action_results[ship_id]["attack_result"] = attack_data
+
+
+def add_collect_result(ship_id: int, collect_data: dict):
+    """Add collect result for a ship."""
+    with action_results_lock:
+        if ship_id not in action_results:
+            init_action_results(ship_id)
+        action_results[ship_id]["collect_result"] = collect_data
+
+
+def add_move_result(ship_id: int, move_data: dict):
+    """Add move result for a ship."""
+    with action_results_lock:
+        if ship_id not in action_results:
+            init_action_results(ship_id)
+        action_results[ship_id]["move_result"] = move_data
+
+
+def get_and_clear_action_results(ship_id: int) -> Optional[Dict[str, Any]]:
+    """Get action results for a ship and clear them.
+    
+    Returns:
+        Action results dict or None if no results exist
+    """
+    with action_results_lock:
+        return action_results.pop(ship_id, None)
+
+
+# ============================================================================
 # ACTION QUEUES (cleared each tick)
 # ============================================================================
 # MULTI-THREADED ARCHITECTURE:
@@ -856,20 +929,13 @@ def scan_ship(scanner_id: int, target_ship_id: int) -> Optional[Dict[str, Any]]:
             # Ship is stealthed - hidden from scans
             return None
         
-        # Log the scan event to location
-        dh.add_location_log(scanner_location, {
-            'type': 'scan',
-            'content': f'ship:{scanner_id} scanned ship:{target_ship_id}',
-            'scanner': f'ship:{scanner_id}',
-            'target': f'ship:{target_ship_id}'
-        })
-        
         # Notify the target ship that it was scanned
-        dh.add_ship_log(target_ship_id, {
-            'type': 'computer',
-            'content': f'Scanned by ship:{scanner_id}',
-            'source': f'ship:{scanner_id}'
-        })
+        dh.add_ship_log(
+            target_ship_id,
+            'computer',
+            f'Scanned by ship:{scanner_id}',
+            f'ship:{scanner_id}'
+        )
         
         # Return full ship data (copy to avoid reference issues)
         return dict(target_ship)
@@ -920,14 +986,6 @@ def scan_item(scanner_id: int, target_item_id: int) -> Optional[Dict[str, Any]]:
         if target_item_id not in location.get('items', []):
             return None
         
-        # Log the scan event to location
-        dh.add_location_log(scanner_location, {
-            'type': 'scan',
-            'content': f'ship:{scanner_id} scanned item:{target_item_id}',
-            'scanner': f'ship:{scanner_id}',
-            'target': f'item:{target_item_id}'
-        })
-        
         # Return full item data (copy to avoid reference issues)
         return dict(target_item)
         
@@ -940,6 +998,11 @@ def scan_location(scanner_id: int, target_location_name: str) -> Optional[Dict[s
     
     Scanner must NOT be at the target location (scan remote locations only).
     Returns location data including ship IDs and item IDs, filtered by stealth.
+    
+    For stations/ground_stations: Returns only ship_count to avoid sending
+    massive ship ID arrays (stations can accumulate hundreds of inactive ships).
+    
+    For space/resource_node locations: Returns full ship_ids list.
     
     Args:
         scanner_id: Scanning ship ID
@@ -977,6 +1040,7 @@ def scan_location(scanner_id: int, target_location_name: str) -> Optional[Dict[s
         
         # Verify target location exists
         target_location = dh.get_location(target_location_name)
+        location_type = target_location.get('type', 'space')
         
         # Filter out ships with active stealth cloaks
         from components import get_ship_stealth_cloak
@@ -990,22 +1054,23 @@ def scan_location(scanner_id: int, target_location_name: str) -> Optional[Dict[s
                 # Ship doesn't exist, skip
                 continue
         
-        # Log the scan event to scanner's location
-        dh.add_location_log(scanner_location, {
-            'type': 'scan',
-            'content': f'ship:{scanner_id} scanned location:{target_location_name}',
-            'scanner': f'ship:{scanner_id}',
-            'target': f'location:{target_location_name}'
-        })
-        
-        # Return location data with filtered ships
-        return {
+        # Build base response
+        result = {
             'name': target_location.get('name'),
             'description': target_location.get('description'),
+            'location_type': location_type,
             'links': target_location.get('links', []),
-            'ship_ids': visible_ship_ids,
             'items': target_location.get('items', [])
         }
+        
+        # For stations, only return ship count (not IDs) to avoid massive arrays
+        if location_type in ['station', 'ground_station']:
+            result['ship_count'] = len(visible_ship_ids)
+        else:
+            # For space/resource nodes, return full ship list
+            result['ship_ids'] = visible_ship_ids
+        
+        return result
         
     except (KeyError, ValueError):
         return None
@@ -1063,44 +1128,89 @@ def _process_location_actions(location_name: str, actions: Dict[str, ActionList]
             elif scan_type == 'location':
                 result = scan_location(node.ship_id, node.target)
             
-            # If scan succeeded, add result to scanner's ship log
+            # If scan succeeded, add result to scanner's action results
             if result is not None:
                 dh = _get_data_handler()
-                dh.add_ship_log(node.ship_id, {
-                    'type': 'computer',
-                    'content': f'Scan complete: {scan_type}:{node.target}',
-                    'source': f'{scan_type}:{node.target}',
-                    'scan_data': result
+                # Add to ship log
+                dh.add_ship_log(
+                    node.ship_id,
+                    'computer',
+                    f'Scan complete: {scan_type}:{node.target}',
+                    f'{scan_type}:{node.target}'
+                )
+                # Store scan result for /updates endpoint
+                add_scan_result(node.ship_id, {
+                    'scan_type': scan_type,
+                    'target': node.target,
+                    'data': result
                 })
                 stats['scans'] += 1
     
     # Phase 1a: Process ship attacks (in order within location)
     for node in actions['attack_ship'].iterate():
-        if node.target is not None and attack_ship(node.ship_id, node.target):
-            stats['attack_ship'] += 1
+        if node.target is not None:
+            success = attack_ship(node.ship_id, node.target)
+            if success:
+                # Track attack result for /updates endpoint
+                add_attack_result(node.ship_id, {
+                    'attack_type': 'ship',
+                    'target_ship_id': node.target,
+                    'success': True
+                })
+                stats['attack_ship'] += 1
     
     # Phase 1b: Process ship component attacks (in order within location)
     for node in actions['attack_ship_component'].iterate():
         if node.target is not None and node.target_data is not None:
-            if attack_ship_component(node.ship_id, node.target, str(node.target_data)):
+            success = attack_ship_component(node.ship_id, node.target, str(node.target_data))
+            if success:
+                # Track attack result for /updates endpoint
+                add_attack_result(node.ship_id, {
+                    'attack_type': 'component',
+                    'target_ship_id': node.target,
+                    'component_slot': str(node.target_data),
+                    'success': True
+                })
                 stats['attack_ship_component'] += 1
     
     # Phase 1c: Process item attacks (in order within location)
     for node in actions['attack_item'].iterate():
-        if node.target is not None and attack_item(node.ship_id, node.target):
-            stats['attack_item'] += 1
+        if node.target is not None:
+            success = attack_item(node.ship_id, node.target)
+            if success:
+                # Track attack result for /updates endpoint
+                add_attack_result(node.ship_id, {
+                    'attack_type': 'item',
+                    'target_item_id': node.target,
+                    'success': True
+                })
+                stats['attack_item'] += 1
     
     # Phase 2: Process moves (in order within location)
     # NOTE: Moves OUT of this location run concurrently with other location threads,
     # but moves INTO the same destination will serialize via location locks
     for node in actions['move'].iterate():
-        if node.target is not None and move(node.ship_id, node.target):
-            stats['moves'] += 1
+        if node.target is not None:
+            success = move(node.ship_id, node.target)
+            if success:
+                # Track move result for /updates endpoint
+                add_move_result(node.ship_id, {
+                    'destination': node.target,
+                    'success': True
+                })
+                stats['moves'] += 1
     
     # Phase 3: Process collects (in order within location)
     for node in actions['collect'].iterate():
-        if node.target is not None and collect(node.ship_id, node.target):
-            stats['collects'] += 1
+        if node.target is not None:
+            success = collect(node.ship_id, node.target)
+            if success:
+                # Track collect result for /updates endpoint
+                add_collect_result(node.ship_id, {
+                    'item_id': node.target,
+                    'success': True
+                })
+                stats['collects'] += 1
     
     # Phase 4: Process stealth deactivations (in order within location)
     for node in actions['deactivate_stealth'].iterate():

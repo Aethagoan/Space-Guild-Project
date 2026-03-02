@@ -24,8 +24,5 @@ Similar to wiki page, but has comments and stuff, perhaps each faction can have 
 # Back end functionality:
 ### Game API:
 Actions are Posted, giving a 200 okay if the server successfully gets the request and stores it. There is also an endpoint to get the situation at the current location. And another endpoint that acts as a ping-pong between the server and the client where the client is saying to the server: hey! give me the next update! that sits in the server until the server finishes the tick and then passes the new info back to each ping. Also there needs to be an enpoint to get details on different objects, ships, players, etc.
-### Game Database:
-The skeleton of the project. There needs to be a table for players, a ship table, an item table, 
-### Wiki Database:
-
-### Forum Database:
+### Persisence:
+The skeleton of the project. We're using JSON right now. Potential upgrade to an ultra simple database in the future if it starts getting above 10GB memory.

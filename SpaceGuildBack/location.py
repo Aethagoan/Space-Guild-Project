@@ -8,7 +8,7 @@ import json
 def Location(
     name: str, 
     location_type: str = 'space',
-    controlled_by: str = 'ORION',
+    controlled_by: str = '',
     description: str = '',
     tags: Optional[List[str]] = None,
     spawnable_ships: Optional[List[str]] = None,
