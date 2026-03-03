@@ -8,6 +8,9 @@ obj
 ##
 ## Get latest from `dotnet new gitignore`
 
+game_data
+
+
 # dotenv files
 .env
 
