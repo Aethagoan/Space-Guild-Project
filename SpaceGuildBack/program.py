@@ -159,6 +159,15 @@ def run_game_loop(tick_interval: float = 5.0, save_interval: int = 60):
                 # Signal all waiting clients that tick is complete
                 tick_completion_event.set()
                 
+                # Notify all /updates endpoints waiting on condition variables
+                # Import here to avoid circular dependency if api.py imports program
+                try:
+                    import api
+                    api.notify_all_waiting_clients()
+                except ImportError:
+                    # API module not loaded (e.g., running standalone game loop)
+                    pass
+                
                 # Print tick statistics
                 print_tick_stats(tick_number, stats, tick_duration)
                 
@@ -171,6 +180,13 @@ def run_game_loop(tick_interval: float = 5.0, save_interval: int = 60):
                 traceback.print_exc()
                 # Still signal completion even on error
                 tick_completion_event.set()
+                
+                # Notify waiting clients even on error
+                try:
+                    import api
+                    api.notify_all_waiting_clients()
+                except ImportError:
+                    pass
             
             # Sleep until next tick
             elapsed = time.time() - tick_start

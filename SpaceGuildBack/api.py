@@ -5,7 +5,7 @@
 
 from flask import Flask, request, jsonify
 from typing import Optional, Dict, Any
-from threading import Event, Lock
+from threading import Condition, Lock
 import os
 import hashlib
 import actions
@@ -14,9 +14,10 @@ from program import data_handler, tick_completion_event
 
 app = Flask(__name__)
 
-# Pending updates registry: ship_id -> Event for O(1) cancellation
-# When a new /updates request comes in, we cancel the old one and create a new event
-pending_updates: Dict[int, Event] = {}
+# Pending updates registry: ship_id -> Condition for efficient blocking
+# When a new /updates request comes in, we cancel the old one and create a new condition
+# Threads will wait() on their condition and be notified when tick completes
+pending_updates: Dict[int, Condition] = {}
 pending_updates_lock = Lock()
 
 
@@ -32,8 +33,29 @@ def trigger_ship_update(ship_id: int):
     """
     with pending_updates_lock:
         if ship_id in pending_updates:
-            # Signal the waiting request to return
-            pending_updates[ship_id].set()
+            # Notify the waiting thread via condition variable
+            with pending_updates[ship_id]:
+                pending_updates[ship_id].notify_all()
+
+
+def notify_all_waiting_clients():
+    """Notify all waiting /updates requests that a tick has completed.
+    
+    This should be called by program.py after tick_completion_event.set().
+    It wakes up all threads waiting on their ship-specific conditions.
+    
+    PERFORMANCE: With 100k players, this acquires 100k condition locks and notifies.
+    Each notify is O(1), so total is O(n) where n = number of waiting requests.
+    This is acceptable since it happens once per tick (every 5 seconds).
+    """
+    with pending_updates_lock:
+        # Get snapshot of all conditions to avoid holding lock during notification
+        conditions_to_notify = list(pending_updates.values())
+    
+    # Notify all waiting threads (released lock first to avoid blocking tick processing)
+    for condition in conditions_to_notify:
+        with condition:
+            condition.notify_all()
 
 
 def check_world_initialized(data_dir: str = "game_data") -> bool:
@@ -450,36 +472,36 @@ def get_updates_endpoint():
         
         # Cancel any existing pending request for this ship
         # This ensures only one active /updates request per player at a time
+        ship_condition = None
         with pending_updates_lock:
             if ship_id in pending_updates:
-                # Signal the old request to cancel
-                old_event = pending_updates[ship_id]
-                old_event.set()
+                # Cancel old request by notifying it (it will check if it's been replaced)
+                old_condition = pending_updates[ship_id]
+                with old_condition:
+                    old_condition.notify_all()
             
-            # Create new event for this request (ship-specific)
-            ship_event = Event()
-            pending_updates[ship_id] = ship_event
+            # Create new condition for this request (ship-specific)
+            ship_condition = Condition()
+            pending_updates[ship_id] = ship_condition
         
-        # Wait for EITHER tick completion OR ship-specific event
-        # The tick_completion_event is set by program.py after each tick
-        # The ship_event is set by trigger_ship_update() for out-of-tick messages
+        # Wait for tick completion event to be set by program.py
+        # We need to wait on BOTH tick_completion_event AND ship_condition
+        # Strategy: We'll wait on ship_condition, and program.py will notify all conditions
         timeout = 30.0  # 30 second timeout to prevent hanging forever
         
-        # Create a thread-safe way to wait for multiple events
-        # We'll check both events in a loop with small sleeps
-        import time
-        start_time = time.time()
         event_triggered = False
-        
-        while time.time() - start_time < timeout:
-            if tick_completion_event.is_set() or ship_event.is_set():
+        with ship_condition:
+            # Check if tick already completed before we registered
+            if tick_completion_event.is_set():
                 event_triggered = True
-                break
-            time.sleep(0.1)  # Check every 100ms
+            else:
+                # Wait for notification (thread truly sleeps here - no busy wait!)
+                # Returns True if notified, False if timeout
+                event_triggered = ship_condition.wait(timeout=timeout)
         
         # Check if we were cancelled by a newer request
         with pending_updates_lock:
-            if ship_id in pending_updates and pending_updates[ship_id] != ship_event:
+            if ship_id in pending_updates and pending_updates[ship_id] != ship_condition:
                 # We were replaced by a newer request - return empty/stale response
                 return jsonify({'error': 'Request superseded by newer request'}), 409
             
@@ -592,6 +614,12 @@ def get_updates_endpoint():
 
 
 if __name__ == '__main__':
+    # DEPLOYMENT NOTE:
+    # - Development: python api.py (uses Flask threaded=True, good for ~1k concurrent)
+    # - Production Linux: gunicorn -w 4 -k gevent --worker-connections 25000 api:app
+    # - Production Windows: waitress-serve --host=0.0.0.0 --port=5000 --threads=100 api:app
+    # - Docker: See Dockerfile for containerized deployment
+    
     # Check if world is initialized before starting API
     if not check_world_initialized():
         print("=" * 70)
@@ -619,5 +647,6 @@ if __name__ == '__main__':
     print("\n[!] NOTE: This API runs separately from the game loop (program.py)")
     print("Make sure program.py is running in another terminal!\n")
     
-    # Run Flask server
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Run Flask server with threading enabled for concurrent request handling
+    # threaded=True allows handling multiple simultaneous /updates requests
+    app.run(debug=True, host='0.0.0.0', port=5000, threaded=True)

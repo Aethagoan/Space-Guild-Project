@@ -187,65 +187,117 @@ stealth_disabled: set[int] = set()
 #     "collect_result": {...} or None,
 #     "move_result": {...} or None
 # }
+
 action_results: Dict[int, Dict[str, Any]] = {}
-action_results_lock = Lock()
+
+# Per-ship locks for fine-grained concurrency
+# Ship ID -> Lock
+action_results_locks: Dict[int, Lock] = {}
+action_results_locks_lock = Lock()  # Lock for creating new ship locks
+
+
+def _get_ship_result_lock(ship_id: int) -> Lock:
+    """Get or create a lock for a specific ship's action results.
+    
+    This ensures fine-grained locking - different ships can write results concurrently.
+    """
+    # Fast path: lock already exists
+    if ship_id in action_results_locks:
+        return action_results_locks[ship_id]
+    
+    # Slow path: need to create lock
+    with action_results_locks_lock:
+        # Double-check pattern: another thread might have created it
+        if ship_id not in action_results_locks:
+            action_results_locks[ship_id] = Lock()
+        return action_results_locks[ship_id]
+
+
+# Default structure for action results (used by setdefault in add_* functions)
+_ACTION_RESULTS_TEMPLATE = {
+    "ship_log": [],
+    "ship_state": None,
+    "scan_data": None,
+    "attack_result": None,
+    "collect_result": None,
+    "move_result": None
+}
 
 
 def init_action_results(ship_id: int):
     """Initialize action results structure for a ship.
     
-    NOTE: This function should only be called when the lock is already held!
+    Thread-safe: Uses per-ship lock for fine-grained concurrency.
+    Safe to call multiple times - won't overwrite existing data.
     """
-    action_results[ship_id] = {
-        "ship_log": [],
-        "ship_state": None,
-        "scan_data": None,
-        "attack_result": None,
-        "collect_result": None,
-        "move_result": None
-    }
+    with _get_ship_result_lock(ship_id):
+        if ship_id not in action_results:
+            action_results[ship_id] = _ACTION_RESULTS_TEMPLATE.copy()
 
 
 def add_scan_result(ship_id: int, scan_data: dict):
-    """Add scan result for a ship."""
-    with action_results_lock:
+    """Add scan result for a ship.
+    
+    Thread-safe: Uses per-ship lock for fine-grained concurrency.
+    Modifies only the scan_data key, preserving other results.
+    """
+    with _get_ship_result_lock(ship_id):
         if ship_id not in action_results:
-            init_action_results(ship_id)
+            action_results[ship_id] = _ACTION_RESULTS_TEMPLATE.copy()
         action_results[ship_id]["scan_data"] = scan_data
 
 
 def add_attack_result(ship_id: int, attack_data: dict):
-    """Add attack result for a ship."""
-    with action_results_lock:
+    """Add attack result for a ship.
+    
+    Thread-safe: Uses per-ship lock for fine-grained concurrency.
+    Modifies only the attack_result key, preserving other results.
+    """
+    with _get_ship_result_lock(ship_id):
         if ship_id not in action_results:
-            init_action_results(ship_id)
+            action_results[ship_id] = _ACTION_RESULTS_TEMPLATE.copy()
         action_results[ship_id]["attack_result"] = attack_data
 
 
 def add_collect_result(ship_id: int, collect_data: dict):
-    """Add collect result for a ship."""
-    with action_results_lock:
+    """Add collect result for a ship.
+    
+    Thread-safe: Uses per-ship lock for fine-grained concurrency.
+    Modifies only the collect_result key, preserving other results.
+    """
+    with _get_ship_result_lock(ship_id):
         if ship_id not in action_results:
-            init_action_results(ship_id)
+            action_results[ship_id] = _ACTION_RESULTS_TEMPLATE.copy()
         action_results[ship_id]["collect_result"] = collect_data
 
 
 def add_move_result(ship_id: int, move_data: dict):
-    """Add move result for a ship."""
-    with action_results_lock:
+    """Add move result for a ship.
+    
+    Thread-safe: Uses per-ship lock for fine-grained concurrency.
+    Modifies only the move_result key, preserving other results.
+    """
+    with _get_ship_result_lock(ship_id):
         if ship_id not in action_results:
-            init_action_results(ship_id)
+            action_results[ship_id] = _ACTION_RESULTS_TEMPLATE.copy()
         action_results[ship_id]["move_result"] = move_data
 
 
 def get_and_clear_action_results(ship_id: int) -> Optional[Dict[str, Any]]:
     """Get action results for a ship and clear them.
     
+    Thread-safe: Uses per-ship lock for fine-grained concurrency.
+    
     Returns:
         Action results dict or None if no results exist
     """
-    with action_results_lock:
-        return action_results.pop(ship_id, None)
+    with _get_ship_result_lock(ship_id):
+        result = action_results.pop(ship_id, None)
+        # Clean up the lock if no more results for this ship
+        if result is not None:
+            with action_results_locks_lock:
+                action_results_locks.pop(ship_id, None)
+        return result
 
 
 # ============================================================================
@@ -812,16 +864,14 @@ def move(ship_id: int, destination: str) -> bool:
         was_stealthed = is_ship_stealthed(ship_id)
         if was_stealthed:
             # Add log to current location about energy signatures
-            ship = dh.get_ship(ship_id)
-            ship_name = ship.get('name', f'Ship {ship_id}')
-            current_location['logs'].append(f"Faint energy signatures detected from {ship_name} departing toward {destination}.")
+            current_location['logs'].append(f"Faint trail signatures detected departing toward {destination}.")
         
         # Use thread-safe move method
         dh.move_ship_between_locations(ship_id, current_location_name, destination)
         
         # Disable stealth if entering a station or starport
         dest_type = dest_location.get('type', 'space')
-        if dest_type in ['station', 'starport']:
+        if dest_type in ['station', 'ground_station']:
             deactivate_stealth(ship_id)
         
         return True
