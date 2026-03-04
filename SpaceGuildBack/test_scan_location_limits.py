@@ -40,7 +40,7 @@ def test_scan_space_location_returns_ship_ids(data_handler):
     sensor_data = Sensor(ID_=1, name_='Test Sensor', tier_=1, mult_=1.0)
     sensor = data_handler.spawn_item(sensor_data)
     sensor_id = sensor['id']
-    data_handler.set_ship_component(scanner_id, 'sensor', sensor_id)
+    data_handler.set_ship_component(scanner_id, 'sensor_id', sensor_id)
     
     # Create 5 ships at mars
     ship_ids_at_mars = []
@@ -78,7 +78,7 @@ def test_scan_station_returns_ship_count(data_handler):
     sensor_data = Sensor(ID_=1, name_='Test Sensor', tier_=1, mult_=1.0)
     sensor = data_handler.spawn_item(sensor_data)
     sensor_id = sensor['id']
-    data_handler.set_ship_component(scanner_id, 'sensor', sensor_id)
+    data_handler.set_ship_component(scanner_id, 'sensor_id', sensor_id)
     
     # Create 100 ships at station (simulating crowded station)
     for i in range(100):
@@ -113,7 +113,7 @@ def test_scan_ground_station_returns_ship_count(data_handler):
     sensor_data = Sensor(ID_=1, name_='Test Sensor', tier_=1, mult_=1.0)
     sensor = data_handler.spawn_item(sensor_data)
     sensor_id = sensor['id']
-    data_handler.set_ship_component(scanner_id, 'sensor', sensor_id)
+    data_handler.set_ship_component(scanner_id, 'sensor_id', sensor_id)
     
     # Create 50 ships at ground station
     for i in range(50):
@@ -148,7 +148,7 @@ def test_scan_resource_node_returns_ship_ids(data_handler):
     sensor_data = Sensor(ID_=1, name_='Test Sensor', tier_=1, mult_=1.0)
     sensor = data_handler.spawn_item(sensor_data)
     sensor_id = sensor['id']
-    data_handler.set_ship_component(scanner_id, 'sensor', sensor_id)
+    data_handler.set_ship_component(scanner_id, 'sensor_id', sensor_id)
     
     # Create 3 ships at resource node
     ship_ids_at_resource = []
@@ -185,7 +185,7 @@ def test_scan_station_filters_stealthed_ships(data_handler):
     sensor_data = Sensor(ID_=1, name_='Test Sensor', tier_=1, mult_=1.0)
     sensor = data_handler.spawn_item(sensor_data)
     sensor_id = sensor['id']
-    data_handler.set_ship_component(scanner_id, 'sensor', sensor_id)
+    data_handler.set_ship_component(scanner_id, 'sensor_id', sensor_id)
     
     # Create 10 ships at station
     for i in range(10):

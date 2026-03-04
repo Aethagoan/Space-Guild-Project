@@ -4,18 +4,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game</title>
+    <title>Space Guild - Game</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div class="container">
-        <h2>Space Guild Game</h2>
-        <div id="log"></div>
-        <input type="text" id="commandInput" placeholder="Enter command...">
-        <button id="sendCommandBtn">Send Command</button>
+    <div class="game-container">
+        <!-- Left Panel: Navigation Menu -->
+        <div class="panel left-panel" id="left-panel">
+            <!-- Navigation buttons rendered by ui.js -->
+        </div>
+
+        <!-- Middle Panel: Contextual Content -->
+        <div class="panel middle-panel" id="middle-panel">
+            <!-- Contextual lists rendered by ui.js -->
+        </div>
+
+        <!-- Right Panel: Details and Actions -->
+        <div class="panel right-panel" id="right-panel">
+            <!-- Ship Log, Details, and Actions rendered by ui.js -->
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <!-- Include JavaScript files -->
+    <script src="js/api.js"></script>
+    <script src="js/game.js"></script>
+    <script src="js/ui.js"></script>
 </body>
 
 </html>

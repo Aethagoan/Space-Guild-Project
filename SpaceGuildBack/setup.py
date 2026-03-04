@@ -1,5 +1,5 @@
 # Aidan Orion 25 Feb 2026
-# World setup script - Creates initial game world with locations and links
+# World setup script - Creates initial game world with locations, links, vendors, spawnables_ids
 
 import os
 import json
@@ -155,7 +155,7 @@ def load_npc_factions(file_name: str) -> dict:
         return json.load(f)
 
 
-def setup_world(data_dir: str = "game_data", 
+async def setup_world(data_dir: str = "game_data", 
     systems: list[str] | None = None, 
     resources: list[str] | None = None,
     deliverables: list[str] | None = None,
@@ -209,7 +209,7 @@ def setup_world(data_dir: str = "game_data",
     
     # Create all locations with their metadata
     for location_name, metadata in all_locations.items():
-        data_handler.add_location(
+        await data_handler.add_location(
             location_name,
             location_type=metadata.get('type', 'space'),
             controlled_by=metadata.get('controlled_by', 'ORION'),
@@ -223,13 +223,13 @@ def setup_world(data_dir: str = "game_data",
     # Create bidirectional links
     print(f"\n[*] Creating {len(all_bidirectional_links)} bidirectional links...")
     for loc1, loc2 in all_bidirectional_links:
-        data_handler.double_link_locations(loc1, loc2)
+        await data_handler.double_link_locations(loc1, loc2)
         print(f"  [+] Linked: {loc1} <-> {loc2}")
     
     # Create single-directional links
     print(f"\n[*] Creating {len(all_single_links)} one-way links...")
     for source, dest, _ in all_single_links:
-        data_handler.single_link_locations(source, dest)
+        await data_handler.single_link_locations(source, dest)
         print(f"  [+] One-way: {source} -> {dest}")
     
     # Save vendor dialogue data separately (station-based structure)
@@ -309,6 +309,7 @@ def setup_world(data_dir: str = "game_data",
 
 if __name__ == '__main__':
     import sys
+    import asyncio
     
     # Parse command line arguments
     systems_setup_files = ['sol_setup.json',]
@@ -320,7 +321,7 @@ if __name__ == '__main__':
     ships_setup_files = ['sol_ships.json',]
 
     # Run setup
-    setup_world(
+    asyncio.run(setup_world(
         systems=systems_setup_files,
         resources=resources_setup_files,
         deliverables=deliverables_setup_files,
@@ -328,5 +329,5 @@ if __name__ == '__main__':
         components=components_setup_files,
         factions=factions_setup_files,
         ships=ships_setup_files
-        )
+    ))
 

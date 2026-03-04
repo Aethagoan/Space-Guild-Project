@@ -195,7 +195,7 @@ def test_sensor_destroyed_prevents_ship_scan():
 	sensor = Sensor(100, 'broken sensor', 0, 1.0)
 	dh.add_item(100, sensor)
 	dh.set_item_health(100, 0.0)  # Destroyed sensor (TESTING ONLY)
-	dh.set_ship_component(1, 'sensor', 100)
+	dh.set_ship_component(1, 'sensor_id', 100)
 	
 	# Create target
 	ship2 = Ship(location='earth')
@@ -218,7 +218,7 @@ def test_sensor_destroyed_prevents_item_scan():
 	sensor = Sensor(100, 'broken sensor', 0, 1.0)
 	dh.add_item(100, sensor)
 	dh.set_item_health(100, 0.0)  # Destroyed sensor (TESTING ONLY)
-	dh.set_ship_component(1, 'sensor', 100)
+	dh.set_ship_component(1, 'sensor_id', 100)
 	
 	# Create item at location
 	item = Weapon(200, 'laser', 0, 1.0)
@@ -242,7 +242,7 @@ def test_sensor_destroyed_prevents_location_scan():
 	sensor = Sensor(100, 'broken sensor', 0, 1.0)
 	dh.add_item(100, sensor)
 	dh.set_item_health(100, 0.0)  # Destroyed sensor (TESTING ONLY)
-	dh.set_ship_component(1, 'sensor', 100)
+	dh.set_ship_component(1, 'sensor_id', 100)
 	
 	# Try to scan location - should return None (failed)
 	result = actions.scan_location(1, 'earth')

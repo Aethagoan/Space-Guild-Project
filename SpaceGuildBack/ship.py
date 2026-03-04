@@ -37,7 +37,7 @@ def Ship(location: Optional[str] = None):
         'weapon_id': None,
         'shield_id': None,
         'cargo_id': None,
-        'sensor_id': None,
+        'sensor_id': None,  
         'stealth_cloak_id': None,
         'items': [],
     }

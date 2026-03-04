@@ -17,12 +17,22 @@ def _get_data_handler():
     return data_handler
 
 
+def _set_data_handler(handler):
+    """Set the data handler instance.
+    
+    Args:
+        handler: DataHandler instance to use
+    """
+    global data_handler
+    data_handler = handler
+
+
 # ============================================================================
 # COMPONENT GETTERS
 # ============================================================================
 # These functions retrieve component items from a ship
 
-def get_ship_weapon(ship_id: int) -> Optional[Dict]:
+async def get_ship_weapon(ship_id: int) -> Optional[Dict]:
     """Get a ship's weapon component.
     
     Args:
@@ -33,18 +43,18 @@ def get_ship_weapon(ship_id: int) -> Optional[Dict]:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
+        ship = await dh.get_ship(ship_id)
         weapon_id = ship.get('weapon_id')
         
         if weapon_id is None or not isinstance(weapon_id, int):
             return None
         
-        return dh.get_item(weapon_id)
+        return await dh.get_item(weapon_id)
     except KeyError:
         return None
 
 
-def get_ship_shield(ship_id: int) -> Optional[Dict]:
+async def get_ship_shield(ship_id: int) -> Optional[Dict]:
     """Get a ship's shield component.
     
     Args:
@@ -55,18 +65,18 @@ def get_ship_shield(ship_id: int) -> Optional[Dict]:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
+        ship = await dh.get_ship(ship_id)
         shield_id = ship.get('shield_id')
         
         if shield_id is None or not isinstance(shield_id, int):
             return None
         
-        return dh.get_item(shield_id)
+        return await dh.get_item(shield_id)
     except KeyError:
         return None
 
 
-def get_ship_engine(ship_id: int) -> Optional[Dict]:
+async def get_ship_engine(ship_id: int) -> Optional[Dict]:
     """Get a ship's engine component.
     
     Args:
@@ -77,18 +87,18 @@ def get_ship_engine(ship_id: int) -> Optional[Dict]:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
+        ship = await dh.get_ship(ship_id)
         engine_id = ship.get('engine_id')
         
         if engine_id is None or not isinstance(engine_id, int):
             return None
         
-        return dh.get_item(engine_id)
+        return await dh.get_item(engine_id)
     except KeyError:
         return None
 
 
-def get_ship_cargo(ship_id: int) -> Optional[Dict]:
+async def get_ship_cargo(ship_id: int) -> Optional[Dict]:
     """Get a ship's cargo component.
     
     Args:
@@ -99,18 +109,18 @@ def get_ship_cargo(ship_id: int) -> Optional[Dict]:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
+        ship = await dh.get_ship(ship_id)
         cargo_id = ship.get('cargo_id')
         
         if cargo_id is None or not isinstance(cargo_id, int):
             return None
         
-        return dh.get_item(cargo_id)
+        return await dh.get_item(cargo_id)
     except KeyError:
         return None
 
 
-def get_ship_sensor(ship_id: int) -> Optional[Dict]:
+async def get_ship_sensor(ship_id: int) -> Optional[Dict]:
     """Get a ship's sensor component.
     
     Args:
@@ -121,18 +131,18 @@ def get_ship_sensor(ship_id: int) -> Optional[Dict]:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
-        sensor_id = ship.get('sensor')
+        ship = await dh.get_ship(ship_id)
+        sensor_id = ship.get('sensor_id')
         
         if sensor_id is None or not isinstance(sensor_id, int):
             return None
         
-        return dh.get_item(sensor_id)
+        return await dh.get_item(sensor_id)
     except KeyError:
         return None
 
 
-def get_ship_stealth_cloak(ship_id: int) -> Optional[Dict]:
+async def get_ship_stealth_cloak(ship_id: int) -> Optional[Dict]:
     """Get a ship's stealth cloak component.
     
     Args:
@@ -143,13 +153,13 @@ def get_ship_stealth_cloak(ship_id: int) -> Optional[Dict]:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
+        ship = await dh.get_ship(ship_id)
         stealth_id = ship.get('stealth_cloak_id')
         
         if stealth_id is None or not isinstance(stealth_id, int):
             return None
         
-        return dh.get_item(stealth_id)
+        return await dh.get_item(stealth_id)
     except KeyError:
         return None
 
@@ -159,7 +169,7 @@ def get_ship_stealth_cloak(ship_id: int) -> Optional[Dict]:
 # ============================================================================
 # These functions calculate ship stats based on tier and component multipliers
 
-def get_ship_max_hp(ship_id: int) -> float:
+async def get_ship_max_hp(ship_id: int) -> float:
     """Calculate a ship's maximum HP based on its tier.
     
     Formula: 100 * ((1 + tier) ^ 2)
@@ -171,12 +181,12 @@ def get_ship_max_hp(ship_id: int) -> float:
         Maximum HP as a float
     """
     dh = _get_data_handler()
-    ship = dh.get_ship(ship_id)
+    ship = await dh.get_ship(ship_id)
     tier = ship['tier']
     return 100.0 * math.pow(1 + tier, 2)
 
 
-def get_ship_weapon_damage(ship_id: int) -> float:
+async def get_ship_weapon_damage(ship_id: int) -> float:
     """Calculate a ship's weapon damage.
     
     Returns the weapon's multiplier if health > 0, or 0 if no weapon equipped or weapon disabled.
@@ -187,7 +197,7 @@ def get_ship_weapon_damage(ship_id: int) -> float:
     Returns:
         Damage value as a float
     """
-    weapon = get_ship_weapon(ship_id)
+    weapon = await get_ship_weapon(ship_id)
     if weapon is None:
         return 0.0
     
@@ -199,7 +209,7 @@ def get_ship_weapon_damage(ship_id: int) -> float:
     return float(weapon['multiplier'])
 
 
-def get_ship_cargo_capacity(ship_id: int) -> float:
+async def get_ship_cargo_capacity(ship_id: int) -> float:
     """Calculate a ship's cargo capacity.
     
     Formula: 100 * (1 + cargo_tier) * cargo_multiplier
@@ -210,7 +220,7 @@ def get_ship_cargo_capacity(ship_id: int) -> float:
     Returns:
         Cargo capacity as a float
     """
-    cargo = get_ship_cargo(ship_id)
+    cargo = await get_ship_cargo(ship_id)
     if cargo is None:
         return 0.0
     
@@ -220,7 +230,7 @@ def get_ship_cargo_capacity(ship_id: int) -> float:
     return 100.0 * (1 + tier) * multiplier
 
 
-def get_ship_max_shield_pool(ship_id: int) -> float:
+async def get_ship_max_shield_pool(ship_id: int) -> float:
     """Calculate a ship's maximum shield pool capacity.
     
     Formula: 50 * ((1 + shield_tier) ^ 1.5) * shield_multiplier
@@ -231,7 +241,7 @@ def get_ship_max_shield_pool(ship_id: int) -> float:
     Returns:
         Maximum shield pool as a float, or 0 if no shield equipped
     """
-    shield = get_ship_shield(ship_id)
+    shield = await get_ship_shield(ship_id)
     if shield is None:
         return 0.0
     
@@ -241,7 +251,7 @@ def get_ship_max_shield_pool(ship_id: int) -> float:
     return 50.0 * math.pow(1 + tier, 1.5) * multiplier
 
 
-def get_ship_current_shield_pool(ship_id: int) -> float:
+async def get_ship_current_shield_pool(ship_id: int) -> float:
     """Get a ship's current shield pool value.
     
     Args:
@@ -251,7 +261,7 @@ def get_ship_current_shield_pool(ship_id: int) -> float:
         Current shield pool as a float
     """
     dh = _get_data_handler()
-    ship = dh.get_ship(ship_id)
+    ship = await dh.get_ship(ship_id)
     return float(ship['shield_pool'])
 
 
@@ -259,7 +269,7 @@ def get_ship_current_shield_pool(ship_id: int) -> float:
 # DAMAGE AND REPAIR FUNCTIONS
 # ============================================================================
 
-def repair_ship_hp(ship_id: int) -> float:
+async def repair_ship_hp(ship_id: int) -> float:
     """Fully repair a ship's HP to maximum (thread-safe).
     
     Ship HP repairs are simple - no penalties or multiplier changes.
@@ -274,22 +284,22 @@ def repair_ship_hp(ship_id: int) -> float:
         KeyError: If ship doesn't exist
     """
     dh = _get_data_handler()
-    ship = dh.get_ship(ship_id)
+    ship = await dh.get_ship(ship_id)
     
     # Get current HP before repair
     current_hp = ship['hp']
     
     # Calculate max HP
-    max_hp = get_ship_max_hp(ship_id)
+    max_hp = await get_ship_max_hp(ship_id)
     
     # Use DataHandler's set_ship_to_max_hp method
-    dh.set_ship_to_max_hp(ship_id)
+    await dh.set_ship_to_max_hp(ship_id)
     
     # Return amount restored
     return max_hp - current_hp
 
 
-def refill_shield_pool(ship_id: int) -> float:
+async def refill_shield_pool(ship_id: int) -> float:
     """Refill a ship's shield pool to maximum (thread-safe).
     
     Shield pool refills are simple - like refilling a tank of gas at a starport.
@@ -304,7 +314,7 @@ def refill_shield_pool(ship_id: int) -> float:
         KeyError: If ship doesn't exist
     """
     dh = _get_data_handler()
-    ship = dh.get_ship(ship_id)
+    ship = await dh.get_ship(ship_id)
     
     # Get current shield pool before refill
     current_shield = ship['shield_pool']
@@ -313,13 +323,13 @@ def refill_shield_pool(ship_id: int) -> float:
     max_shield = get_ship_max_shield_pool(ship_id)
     
     # Use DataHandler's set_shield_to_max method
-    dh.set_shield_to_max(ship_id)
+    await dh.set_shield_to_max(ship_id)
     
     # Return amount restored
     return max_shield - current_shield
 
 
-def _calculate_multiplier_reduction(health_percent: float) -> float:
+async def _calculate_multiplier_reduction(health_percent: float) -> float:
     """Calculate the multiplier reduction based on remaining health percentage.
     
     Health %      -> Multiplier Reduction
@@ -365,7 +375,7 @@ def _calculate_multiplier_reduction(health_percent: float) -> float:
         return 0.10
 
 
-def repair_component(item_id: int) -> Dict[str, float]:
+async def repair_component(item_id: int) -> Dict[str, float]:
     """Repair a component by restoring its health to max and applying multiplier reduction.
     
     The component's health is restored to maximum, but the multiplier is reduced based
@@ -396,7 +406,7 @@ def repair_component(item_id: int) -> Dict[str, float]:
         ValueError: If item is not a component type
     """
     dh = _get_data_handler()
-    component = dh.get_item(item_id)
+    component = await dh.get_item(item_id)
     
     # Verify this is a component
     item_type = component['type']
@@ -425,8 +435,8 @@ def repair_component(item_id: int) -> Dict[str, float]:
     health_restored = max_health - current_health
     
     # Apply repairs using DataHandler's methods
-    dh.set_item_to_max_health(item_id)
-    dh.update_item_multiplier(item_id, new_multiplier)
+    await dh.set_item_to_max_health(item_id)
+    await dh.update_item_multiplier(item_id, new_multiplier)
     
     return {
         'health_restored': health_restored,
@@ -442,7 +452,7 @@ def repair_component(item_id: int) -> Dict[str, float]:
 # UTILITY FUNCTIONS
 # ============================================================================
 
-def can_equip_item(ship_id: int, item_id: int) -> bool:
+async def can_equip_item(ship_id: int, item_id: int) -> bool:
     """Check if a ship can equip an item based on tier restrictions.
     
     A ship can only equip items with tier <= ship tier + 2.
@@ -456,8 +466,8 @@ def can_equip_item(ship_id: int, item_id: int) -> bool:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
-        item = dh.get_item(item_id)
+        ship = await dh.get_ship(ship_id)
+        item = await dh.get_item(item_id)
         
         ship_tier = ship['tier']
         item_tier = item['tier']
@@ -467,7 +477,7 @@ def can_equip_item(ship_id: int, item_id: int) -> bool:
         return False
 
 
-def get_ship_total_cargo_weight(ship_id: int) -> float:
+async def get_ship_total_cargo_weight(ship_id: int) -> float:
     """Calculate the total weight of items in a ship's cargo.
     
     Args:
@@ -478,13 +488,13 @@ def get_ship_total_cargo_weight(ship_id: int) -> float:
     """
     dh = _get_data_handler()
     try:
-        ship = dh.get_ship(ship_id)
+        ship = await dh.get_ship(ship_id)
         item_ids = ship['items']
         
         total_weight = 0.0
         for item_id in item_ids:
             try:
-                item = dh.get_item(item_id)
+                item = await dh.get_item(item_id)
                 total_weight += item['weight']
             except KeyError:
                 continue  # Skip missing items
@@ -494,7 +504,7 @@ def get_ship_total_cargo_weight(ship_id: int) -> float:
         return 0.0
 
 
-def can_fit_item_in_cargo(ship_id: int, item_id: int) -> bool:
+async def can_fit_item_in_cargo(ship_id: int, item_id: int) -> bool:
     """Check if an item can fit in a ship's cargo based on weight.
     
     Args:
@@ -506,7 +516,7 @@ def can_fit_item_in_cargo(ship_id: int, item_id: int) -> bool:
     """
     dh = _get_data_handler()
     try:
-        item = dh.get_item(item_id)
+        item = await dh.get_item(item_id)
         item_weight = item['weight']
         
         current_weight = get_ship_total_cargo_weight(ship_id)

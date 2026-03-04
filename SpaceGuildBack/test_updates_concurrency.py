@@ -70,7 +70,7 @@ def test_concurrent_blocking_requests(num_clients=100):
             'weapon_id': None,
             'shield_id': None,
             'cargo_id': None,
-            'sensor': None,
+            'sensor_id': None,
             'stealth_cloak_id': None,
             'items': []
         }

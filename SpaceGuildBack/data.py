@@ -10,11 +10,12 @@
 # standard library imports :)
 
 from collections import defaultdict
-from threading import Lock
-from contextlib import contextmanager
+import asyncio
+from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional, Tuple
 import json
 import os
+import logging
 
 # -
 from location import Location
@@ -23,6 +24,9 @@ from ship import Ship, get_ship_tier_hp
 from item import Item
 from faction import Faction
 from id_generator import IDGenerator
+
+# Configure logging
+logger = logging.getLogger('data_handler')
 
 
 # Ship log message types
@@ -41,8 +45,10 @@ class MessageType:
 
 
 class DataHandler:
-    """Thread-safe data handler for all game entities using JSON storage.
+    """Async-safe data handler for all game entities using JSON storage.
     
+    Converted to async for handling 1M+ concurrent connections.
+    Uses asyncio.Lock instead of threading.Lock for async compatibility.
     """
     
     def __init__(self, data_dir: str = "game_data", create_dir: bool = True):
@@ -52,8 +58,8 @@ class DataHandler:
             data_dir: Directory where JSON files will be stored
             create_dir: If True, create the data directory. Set to False for tests.
         """
-        # A dictionary of locks, cleared each tick. It's similar to a cache.
-        self._locks = defaultdict(Lock)
+        # A dictionary of async locks, cleared each tick. It's similar to a cache.
+        self._locks = defaultdict(asyncio.Lock)
         
         # Data directories for JSON persistence
         self.data_dir = data_dir
@@ -90,15 +96,15 @@ class DataHandler:
         # This prevents duplicate IDs by analyzing existing entities
         self.id_generator: Optional[IDGenerator] = None
     
-    def clear_locks(self):
+    async def clear_locks(self):
         """Clear the lock cache. Should be called each game tick.
     
         """
-        self._locks = defaultdict(Lock)
+        self._locks = defaultdict(asyncio.Lock)
     
-    @contextmanager
-    def _acquire_locks(self, *keys):
-        """Context manager to acquire multiple locks in sorted order to prevent deadlocks.
+    @asynccontextmanager
+    async def _acquire_locks(self, *keys):
+        """Async context manager to acquire multiple locks in sorted order to prevent deadlocks.
         
         Args:
             *keys: Entity keys to lock (will be sorted before acquisition)
@@ -110,21 +116,20 @@ class DataHandler:
         
         # Acquire all locks in sorted order
         for lock in locks:
-            lock.acquire()
+            await lock.acquire()
         
         try:
             yield
         finally:
-            # Release all locks in reverse order (minor optimization: 
-            # last-acquired lock released first, potentially unblocking waiters faster)
-            for lock in reversed(locks):
+            # Release all locks
+            for lock in locks:
                 lock.release()
     
     # ============================================================================
     # LOCATION METHODS
     # ============================================================================
     
-    def add_location(
+    async def add_location(
         self,
         name: str,
         location_type: str = 'space',
@@ -154,7 +159,7 @@ class DataHandler:
         if name in self.Locations:
             raise KeyError(f"Location '{name}' already exists")
         
-        with self._acquire_locks(f"location:{name}"):
+        async with self._acquire_locks(f"location:{name}"):
             location = Location(
                 name=name,
                 location_type=location_type,
@@ -167,7 +172,7 @@ class DataHandler:
             self.Locations[name] = location
             return location
     
-    def get_location(self, name: str) -> dict:
+    async def get_location(self, name: str) -> dict:
         """Get a location by name (read-only, no lock).
         
         Args:
@@ -181,7 +186,7 @@ class DataHandler:
         """
         return self.Locations[name]
 
-    def single_link_locations(self,name1:str,name2:str):
+    async def single_link_locations(self,name1:str,name2:str):
         """Create a one directional link from name1 location to name2 location
 
         Args:
@@ -196,10 +201,10 @@ class DataHandler:
         _ = self.Locations[name2]
 
         # Acquire locks in sorted order to prevent deadlock
-        with self._acquire_locks(f"location:{name1}:links"):
+        async with self._acquire_locks(f"location:{name1}:links"):
             self.Locations[name1]['links'].append(name2)
     
-    def double_link_locations(self, name1: str, name2: str):
+    async def double_link_locations(self, name1: str, name2: str):
         """Create a bidirectional link between two locations (thread-safe).
         
         Args:
@@ -214,11 +219,11 @@ class DataHandler:
         _ = self.Locations[name2]
         
         # Acquire locks in sorted order to prevent deadlock
-        with self._acquire_locks(f"location:{name1}:links", f"location:{name2}:links"):
+        async with self._acquire_locks(f"location:{name1}:links", f"location:{name2}:links"):
             self.Locations[name1]['links'].append(name2)
             self.Locations[name2]['links'].append(name1)
     
-    def add_ship_to_location(self, location_name: str, ship_id: int):
+    async def add_ship_to_location(self, location_name: str, ship_id: int):
         """Add a ship to a location's ship list (thread-safe).
         
         This syncs both the ship's location field and the location's ship_ids list.
@@ -234,14 +239,14 @@ class DataHandler:
         _ = self.Locations[location_name]
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
+        async with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
             if ship_id not in self.Locations[location_name]['ship_ids']:
                 self.Locations[location_name]['ship_ids'].append(ship_id)
             
             # Update ship's location field
             self.Ships[ship_id]['location'] = location_name
     
-    def remove_ship_from_location(self, location_name: str, ship_id: int):
+    async def remove_ship_from_location(self, location_name: str, ship_id: int):
         """Remove a ship from a location's ship list (thread-safe).
         
         This syncs both the ship's location field and the location's ship_ids list.
@@ -256,7 +261,7 @@ class DataHandler:
         """
         _ = self.Locations[location_name]
         
-        with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
+        async with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
             if ship_id in self.Locations[location_name]['ship_ids']:
                 self.Locations[location_name]['ship_ids'].remove(ship_id)
                 # Clear ship's location field
@@ -264,7 +269,7 @@ class DataHandler:
             else:
                 raise ValueError(f"Ship {ship_id} not found at location '{location_name}'")
     
-    def move_ship_between_locations(self, ship_id: int, from_location: str, to_location: str):
+    async def move_ship_between_locations(self, ship_id: int, from_location: str, to_location: str):
         """Move a ship from one location to another (thread-safe with multiple locks).
         
         This syncs both the ship's location field and both locations' ship_ids lists.
@@ -287,7 +292,7 @@ class DataHandler:
         # - location:{from}:ships - Protects source location's ship list
         # - location:{to}:ships - Protects destination location's ship list  
         # - ship:{id}:location - Protects ship's location field
-        with self._acquire_locks(f"location:{from_location}:ships", f"location:{to_location}:ships", f"ship:{ship_id}:location"):
+        async with self._acquire_locks(f"location:{from_location}:ships", f"location:{to_location}:ships", f"ship:{ship_id}:location"):
             # Double-check ship is at from_location (both sources of truth)
             # This catches race conditions where ship was moved by another system
             if ship['location'] != from_location:
@@ -302,7 +307,7 @@ class DataHandler:
             self.Locations[to_location]['ship_ids'].append(ship_id)
             self.Ships[ship_id]['location'] = to_location
     
-    def add_item_to_location(self, location_name: str, item_id: int):
+    async def add_item_to_location(self, location_name: str, item_id: int):
         """Add an item to a location's item list (thread-safe).
         
         Args:
@@ -315,10 +320,10 @@ class DataHandler:
         _ = self.Locations[location_name]
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"location:{location_name}:items"):
+        async with self._acquire_locks(f"location:{location_name}:items"):
             self.Locations[location_name]['items'].append(item_id)
     
-    def remove_item_from_location(self, location_name: str, item_id: int):
+    async def remove_item_from_location(self, location_name: str, item_id: int):
         """Remove an item from a location's item list (thread-safe).
         
         Args:
@@ -331,7 +336,7 @@ class DataHandler:
         """
         _ = self.Locations[location_name]
         
-        with self._acquire_locks(f"location:{location_name}:items"):
+        async with self._acquire_locks(f"location:{location_name}:items"):
             if item_id in self.Locations[location_name]['items']:
                 self.Locations[location_name]['items'].remove(item_id)
             else:
@@ -341,7 +346,7 @@ class DataHandler:
     # SHIP METHODS
     # ============================================================================
     
-    def add_ship(self, ship_id: int, location_name: str, ship_data: Optional[dict] = None) -> dict:
+    async def add_ship(self, ship_id: int, location_name: str, ship_data: Optional[dict] = None) -> dict:
         """Add a new ship to the game at a specific location.
         
         This syncs both the ship's location field and the location's ship_ids list.
@@ -364,7 +369,7 @@ class DataHandler:
         _ = self.Locations[location_name]
         
         # Acquire locks for both ship's location and location's ship list
-        with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
+        async with self._acquire_locks(f"location:{location_name}:ships", f"ship:{ship_id}:location"):
             ship = ship_data if ship_data is not None else Ship(location=location_name)
             ship['location'] = location_name  # Ensure location is set
             self.Ships[ship_id] = ship
@@ -375,7 +380,7 @@ class DataHandler:
             
             return ship
     
-    def spawn_ship(self, location_name: str, ship_data: Optional[dict] = None) -> dict:
+    async def spawn_ship(self, location_name: str, ship_data: Optional[dict] = None) -> dict:
         """Spawn a new ship with an auto-generated unique ID.
         
         This is the preferred method for creating new ships during gameplay.
@@ -399,14 +404,14 @@ class DataHandler:
         ship_id = self.id_generator.next_ship_id()
         
         # Use the existing add_ship method
-        ship = self.add_ship(ship_id, location_name, ship_data)
+        ship = await self.add_ship(ship_id, location_name, ship_data)
         
         # Add the ID to the ship dict for convenience
         ship['id'] = ship_id
         
         return ship
     
-    def get_ship(self, ship_id: int) -> dict:
+    async def get_ship(self, ship_id: int) -> dict:
         """Get a ship by ID (read-only, no lock).
         
         Args:
@@ -420,7 +425,7 @@ class DataHandler:
         """
         return self.Ships[ship_id]
     
-    def remove_ship(self, ship_id: int):
+    async def remove_ship(self, ship_id: int):
         """Remove a ship from the game (thread-safe).
         
         This removes the ship from:
@@ -442,7 +447,7 @@ class DataHandler:
         if location_name:
             locks_to_acquire.append(f"location:{location_name}:ships")
         
-        with self._acquire_locks(*locks_to_acquire):
+        async with self._acquire_locks(*locks_to_acquire):
             # Remove from location's ship list
             if location_name and location_name in self.Locations:
                 if ship_id in self.Locations[location_name]['ship_ids']:
@@ -451,13 +456,13 @@ class DataHandler:
             # Remove from Players (set any player's ship_id to None if they own this ship)
             for player_id, player in self.Players.items():
                 if player.get('ship_id') == ship_id:
-                    with self._acquire_locks(f"player:{player_id}"):
+                    async with self._acquire_locks(f"player:{player_id}"):
                         self.Players[player_id]['ship_id'] = None
             
             # Remove from Ships collection
             del self.Ships[ship_id]
     
-    def get_ship_location(self, ship_id: int) -> str:
+    async def get_ship_location(self, ship_id: int) -> str:
         """Get a ship's current location (O(1) lookup).
         
         Args:
@@ -471,7 +476,7 @@ class DataHandler:
         """
         return self.Ships[ship_id]['location']
     
-    def update_ship_hp(self, ship_id: int, delta: int):
+    async def update_ship_hp(self, ship_id: int, delta: int):
         """Modify a ship's HP (thread-safe).
         
         Args:
@@ -483,10 +488,10 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:hp"):
+        async with self._acquire_locks(f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['hp'] = max(0, self.Ships[ship_id]['hp'] + delta)
     
-    def set_ship_hp(self, ship_id: int, hp: int):
+    async def set_ship_hp(self, ship_id: int, hp: int):
         """Set a ship's HP directly (thread-safe).
         
         ⚠️ WARNING: FOR TESTING ONLY! ⚠️
@@ -502,10 +507,10 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:hp"):
+        async with self._acquire_locks(f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['hp'] = max(0, hp)
     
-    def set_ship_shield_pool(self, ship_id: int, shield_pool: float):
+    async def set_ship_shield_pool(self, ship_id: int, shield_pool: float):
         """Set a ship's shield pool directly (thread-safe).
         
         ⚠️ WARNING: FOR TESTING ONLY! ⚠️
@@ -521,32 +526,32 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:shield"):
+        async with self._acquire_locks(f"ship:{ship_id}:shield"):
             self.Ships[ship_id]['shield_pool'] = max(0.0, shield_pool)
     
-    def set_ship_component(self, ship_id: int, component_type: str, item_id: int):
+    async def set_ship_component(self, ship_id: int, component_type: str, item_id: int):
         """Set a ship's component (engine, weapon, shield, etc.) directly (thread-safe).
         
         Args:
             ship_id: Ship ID
-            component_type: One of 'engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id'
+            component_type: One of 'engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id'
             item_id: ID of the new component item
             
         Raises:
             KeyError: If ship or item doesn't exist
             ValueError: If component_type is invalid
         """
-        valid_components = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id']
+        valid_components = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id']
         if component_type not in valid_components:
             raise ValueError(f"Invalid component type '{component_type}'. Must be one of {valid_components}")
         
         _ = self.Ships[ship_id]
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:component:{component_type}"):
+        async with self._acquire_locks(f"ship:{ship_id}:component:{component_type}"):
             self.Ships[ship_id][component_type] = item_id
     
-    def set_ship_to_max_hp(self, ship_id: int):
+    async def set_ship_to_max_hp(self, ship_id: int):
         """Set a ship's HP to its maximum based on tier (thread-safe).
         
         This is used for full repairs at stations. 
@@ -562,10 +567,10 @@ class DataHandler:
         tier = ship['tier']
         max_hp = get_ship_tier_hp(tier)
         
-        with self._acquire_locks(f"ship:{ship_id}:hp"):
+        async with self._acquire_locks(f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['hp'] = max_hp
     
-    def upgrade_ship_tier(self, ship_id: int):
+    async def upgrade_ship_tier(self, ship_id: int):
         """Upgrade a ship's tier by 1 and set HP to new max (thread-safe).
         
         This increases the ship's tier by 1 and automatically sets the HP to the
@@ -598,11 +603,11 @@ class DataHandler:
         new_tier = current_tier + 1
         new_max_hp = get_ship_tier_hp(new_tier)
         
-        with self._acquire_locks(f"ship:{ship_id}:tier", f"ship:{ship_id}:hp"):
+        async with self._acquire_locks(f"ship:{ship_id}:tier", f"ship:{ship_id}:hp"):
             self.Ships[ship_id]['tier'] = new_tier
             self.Ships[ship_id]['hp'] = new_max_hp
     
-    def set_shield_to_max(self, ship_id: int):
+    async def set_shield_to_max(self, ship_id: int):
         """Set a ship's shield pool to its maximum capacity (thread-safe).
         
         This is used for refilling shields at stations.
@@ -621,7 +626,7 @@ class DataHandler:
         shield_id = ship.get('shield_id')
         if shield_id is None or shield_id not in self.Items:
             # No shield equipped, set pool to 0
-            with self._acquire_locks(f"ship:{ship_id}:shield"):
+            async with self._acquire_locks(f"ship:{ship_id}:shield"):
                 self.Ships[ship_id]['shield_pool'] = 0.0
             return
         
@@ -630,10 +635,10 @@ class DataHandler:
         multiplier = shield['multiplier']
         max_shield = 50.0 * ((1 + tier) ** 1.5) * multiplier
         
-        with self._acquire_locks(f"ship:{ship_id}:shield"):
+        async with self._acquire_locks(f"ship:{ship_id}:shield"):
             self.Ships[ship_id]['shield_pool'] = max_shield
     
-    def add_item_to_ship_cargo(self, ship_id: int, item_id: int):
+    async def add_item_to_ship_cargo(self, ship_id: int, item_id: int):
         """Add an item to a ship's cargo (thread-safe).
         
         Args:
@@ -646,10 +651,10 @@ class DataHandler:
         _ = self.Ships[ship_id]
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:cargo"):
+        async with self._acquire_locks(f"ship:{ship_id}:cargo"):
             self.Ships[ship_id]['items'].append(item_id)
     
-    def remove_item_from_ship_cargo(self, ship_id: int, item_id: int):
+    async def remove_item_from_ship_cargo(self, ship_id: int, item_id: int):
         """Remove an item from a ship's cargo (thread-safe).
         
         Args:
@@ -662,7 +667,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:cargo"):
+        async with self._acquire_locks(f"ship:{ship_id}:cargo"):
             if item_id in self.Ships[ship_id]['items']:
                 self.Ships[ship_id]['items'].remove(item_id)
             else:
@@ -672,7 +677,7 @@ class DataHandler:
     # ITEM METHODS
     # ============================================================================
     
-    def add_item(self, item_id: int, item_data: dict) -> dict:
+    async def add_item(self, item_id: int, item_data: dict) -> dict:
         """Add a new item to the game.
         
         Args:
@@ -688,11 +693,11 @@ class DataHandler:
         if item_id in self.Items:
             raise KeyError(f"Item {item_id} already exists")
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             self.Items[item_id] = item_data
             return item_data
     
-    def spawn_item(self, item_data: dict) -> dict:
+    async def spawn_item(self, item_data: dict) -> dict:
         """Spawn a new item with an auto-generated unique ID.
         
         This is the preferred method for creating new items during gameplay.
@@ -714,14 +719,14 @@ class DataHandler:
         item_id = self.id_generator.next_item_id()
         
         # Use the existing add_item method
-        item = self.add_item(item_id, item_data)
+        item = await self.add_item(item_id, item_data)
         
         # Add the ID to the item dict for convenience
         item['id'] = item_id
         
         return item
     
-    def get_item(self, item_id: int) -> dict:
+    async def get_item(self, item_id: int) -> dict:
         """Get an item by ID (read-only, no lock).
         
         Args:
@@ -735,7 +740,7 @@ class DataHandler:
         """
         return self.Items[item_id]
     
-    def remove_item(self, item_id: int):
+    async def remove_item(self, item_id: int):
         """Remove an item from the game (thread-safe).
         
         This removes the item from:
@@ -752,19 +757,19 @@ class DataHandler:
         """
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             # Remove from all ship cargo holds
             for ship_id, ship in self.Ships.items():
                 if item_id in ship['items']:
-                    with self._acquire_locks(f"ship:{ship_id}:cargo"):
+                    async with self._acquire_locks(f"ship:{ship_id}:cargo"):
                         ship['items'].remove(item_id)
             
             # Remove from all ship component slots
-            component_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id']
+            component_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id']
             for ship_id, ship in self.Ships.items():
                 for slot in component_slots:
                     if ship.get(slot) == item_id:
-                        with self._acquire_locks(f"ship:{ship_id}:component:{slot}"):
+                        async with self._acquire_locks(f"ship:{ship_id}:component:{slot}"):
                             self.Ships[ship_id][slot] = None
                             # If removing shield, clear shield pool
                             if slot == 'shield_id':
@@ -773,13 +778,13 @@ class DataHandler:
             # Remove from all locations
             for location_name, location in self.Locations.items():
                 if item_id in location['items']:
-                    with self._acquire_locks(f"location:{location_name}:items"):
+                    async with self._acquire_locks(f"location:{location_name}:items"):
                         location['items'].remove(item_id)
             
             # Remove from Items collection
             del self.Items[item_id]
     
-    def update_item_multiplier(self, item_id: int, new_multiplier: float):
+    async def update_item_multiplier(self, item_id: int, new_multiplier: float):
         """Update an item's multiplier (thread-safe).
         
         Args:
@@ -791,13 +796,13 @@ class DataHandler:
         """
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             # Clamp to min/max multiplier bounds
             min_mult = self.Items[item_id]['min_multiplier']
             max_mult = self.Items[item_id]['max_multiplier']
             self.Items[item_id]['multiplier'] = max(min_mult, min(max_mult, new_multiplier))
     
-    def set_item_to_max_health(self, item_id: int):
+    async def set_item_to_max_health(self, item_id: int):
         """Set an item's health to its maximum (thread-safe).
         
         This is used for full repairs at stations. Uses the item's maxhealth field.
@@ -811,10 +816,10 @@ class DataHandler:
         item = self.Items[item_id]
         max_health = item['maxhealth']
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             self.Items[item_id]['health'] = max_health
     
-    def heal_item_health(self, item_id: int, heal_amount: float):
+    async def heal_item_health(self, item_id: int, heal_amount: float):
         """Heal an item's health (thread-safe).
         
         Healing is separate from damage for thread safety and clarity.
@@ -833,13 +838,13 @@ class DataHandler:
         
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             current_health = self.Items[item_id]['health']
             max_health = self.Items[item_id]['max_health']
             new_health = min(max_health, current_health + heal_amount)
             self.Items[item_id]['health'] = new_health
     
-    def set_item_health(self, item_id: int, health: float):
+    async def set_item_health(self, item_id: int, health: float):
         """Set an item's health directly (thread-safe).
         
         ⚠️ WARNING: FOR TESTING ONLY! ⚠️
@@ -855,10 +860,10 @@ class DataHandler:
         """
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             self.Items[item_id]['health'] = max(0.0, health)
     
-    def damage_item(self, item_id: int, damage: float) -> Dict[str, Any]:
+    async def damage_item(self, item_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to an item's health (thread-safe).
         
         When an item's health reaches 0, it becomes disabled and stops functioning.
@@ -884,7 +889,7 @@ class DataHandler:
         
         _ = self.Items[item_id]
         
-        with self._acquire_locks(f"item:{item_id}"):
+        async with self._acquire_locks(f"item:{item_id}"):
             current_health = self.Items[item_id]['health']
             
             # Apply damage
@@ -927,7 +932,7 @@ class DataHandler:
                 'disabled': disabled
             }
     
-    def damage_ship_hp(self, ship_id: int, damage: float) -> Dict[str, Any]:
+    async def damage_ship_hp(self, ship_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to a ship's HP (thread-safe).
         
         Args:
@@ -945,7 +950,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:hp"):
+        async with self._acquire_locks(f"ship:{ship_id}:hp"):
             current_hp = self.Ships[ship_id]['hp']
             
             # Apply damage
@@ -960,7 +965,7 @@ class DataHandler:
                 'remaining_hp': new_hp
             }
     
-    def heal_ship_hp(self, ship_id: int, heal_amount: float):
+    async def heal_ship_hp(self, ship_id: int, heal_amount: float):
         """Heal a ship's HP (thread-safe).
         
         Healing is separate from damage for thread safety and clarity.
@@ -979,13 +984,13 @@ class DataHandler:
         
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:hp"):
+        async with self._acquire_locks(f"ship:{ship_id}:hp"):
             current_hp = self.Ships[ship_id]['hp']
             max_hp = self.Ships[ship_id]['max_hp']
             new_hp = min(max_hp, current_hp + heal_amount)
             self.Ships[ship_id]['hp'] = new_hp
     
-    def damage_shield_pool(self, ship_id: int, damage: float) -> Dict[str, Any]:
+    async def damage_shield_pool(self, ship_id: int, damage: float) -> Dict[str, Any]:
         """Apply damage to a ship's shield pool (thread-safe).
         
         Shields absorb all damage without carry-over for balance reasons.
@@ -1006,7 +1011,7 @@ class DataHandler:
         """
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:shield"):
+        async with self._acquire_locks(f"ship:{ship_id}:shield"):
             current_shield = self.Ships[ship_id]['shield_pool']
             
             # Shield absorbs what it can, no overflow damage
@@ -1021,7 +1026,7 @@ class DataHandler:
                 'remaining_shield': new_shield
             }
     
-    def heal_shield_pool(self, ship_id: int, heal_amount: float):
+    async def heal_shield_pool(self, ship_id: int, heal_amount: float):
         """Heal a ship's shield pool (thread-safe).
         
         Healing is separate from damage for thread safety and clarity.
@@ -1040,7 +1045,7 @@ class DataHandler:
         
         ship = self.Ships[ship_id]
         
-        with self._acquire_locks(f"ship:{ship_id}:shield"):
+        async with self._acquire_locks(f"ship:{ship_id}:shield"):
             # Get max shield capacity from the shield component
             shield_id = ship.get('shield_id')
             if shield_id is None or shield_id not in self.Items:
@@ -1058,7 +1063,7 @@ class DataHandler:
     # PLAYER METHODS
     # ============================================================================
     
-    def add_player(self, player_id: int, player_data: dict) -> dict:
+    async def add_player(self, player_id: int, player_data: dict) -> dict:
         """Add a new player to the game.
         
         Args:
@@ -1074,11 +1079,11 @@ class DataHandler:
         if player_id in self.Players:
             raise KeyError(f"Player {player_id} already exists")
         
-        with self._acquire_locks(f"player:{player_id}"):
+        async with self._acquire_locks(f"player:{player_id}"):
             self.Players[player_id] = player_data
             return player_data
     
-    def get_player(self, player_id: int) -> dict:
+    async def get_player(self, player_id: int) -> dict:
         """Get a player by ID (read-only, no lock).
         
         Args:
@@ -1090,9 +1095,19 @@ class DataHandler:
         Raises:
             KeyError: If player doesn't exist
         """
+        logger.info(f"get_player called with player_id: {player_id} (type: {type(player_id).__name__})")
+        logger.info(f"Players dict has {len(self.Players)} players")
+        logger.info(f"Players dict keys: {list(self.Players.keys())[:5]}")  # Show first 5 keys
+        logger.info(f"Player {player_id} in Players dict: {player_id in self.Players}")
+        
+        if player_id not in self.Players:
+            logger.error(f"Player {player_id} NOT FOUND in Players dict!")
+            logger.error(f"All player IDs: {list(self.Players.keys())}")
+            raise KeyError(f"Player {player_id} not found")
+        
         return self.Players[player_id]
     
-    def update_player_ship(self, player_id: int, ship_id: int):
+    async def update_player_ship(self, player_id: int, ship_id: int):
         """Update a player's ship (thread-safe).
         
         Args:
@@ -1105,10 +1120,10 @@ class DataHandler:
         _ = self.Players[player_id]
         _ = self.Ships[ship_id]
         
-        with self._acquire_locks(f"player:{player_id}"):
+        async with self._acquire_locks(f"player:{player_id}"):
             self.Players[player_id]['ship_id'] = ship_id
     
-    def update_player_faction(self, player_id: int, faction_id: int):
+    async def update_player_faction(self, player_id: int, faction_id: int):
         """Update a player's faction (thread-safe).
         
         Args:
@@ -1121,14 +1136,136 @@ class DataHandler:
         _ = self.Players[player_id]
         _ = self.Factions[faction_id]
         
-        with self._acquire_locks(f"player:{player_id}"):
+        async with self._acquire_locks(f"player:{player_id}"):
             self.Players[player_id]['faction_id'] = faction_id
+    
+    async def spawn_new_player(self, player_name: str = "Pilot", starting_location: Optional[str] = None) -> Dict[str, Any]:
+        """Create a new player with a ship and tier 0 starter components.
+        
+        This method handles the complete player creation workflow:
+        1. Generates unique player ID
+        2. Creates ship with tier 0 components (engine, weapon, shield, cargo, sensor)
+        3. Equips all components to the ship
+        4. Spawns ship at starting location
+        5. Creates player and assigns ship
+        6. Returns player ID and ship ID
+        
+        Args:
+            player_name: Name for the new player (default "Pilot")
+            starting_location: Location name to spawn at. If None, uses first available location.
+            
+        Returns:
+            Dict with: {
+                'player_id': int,
+                'ship_id': int,
+                'name': str,
+                'location': str
+            }
+            
+        Raises:
+            RuntimeError: If ID generator is not initialized
+            KeyError: If starting_location doesn't exist or no locations available
+        """
+        from item import Engine, Weapon, Shield, Cargo, Sensor, StealthCloak
+        
+        logger.info(f"Starting player creation: {player_name}")
+        
+        if self.id_generator is None:
+            raise RuntimeError("ID generator not initialized. Call initialize_id_generator() first.")
+        
+        # Determine starting location
+        if starting_location is None:
+            # Try Earth_Orbit first, then fall back to first available location
+            if "Earth_Orbit" in self.Locations:
+                starting_location = "Earth_Orbit"
+            elif "earth_orbit" in self.Locations:
+                starting_location = "earth_orbit"
+            elif self.Locations:
+                starting_location = list(self.Locations.keys())[0]
+            else:
+                raise KeyError("No locations available in world")
+        else:
+            # Verify the provided location exists
+            if starting_location not in self.Locations:
+                raise KeyError(f"Starting location '{starting_location}' not found")
+        
+        logger.info(f"Spawning player at: {starting_location}")
+        
+        # Generate IDs
+        player_id = self.id_generator.next_player_id()
+        ship_id = self.id_generator.next_ship_id()
+        
+        logger.info(f"Generated IDs - player_id: {player_id}, ship_id: {ship_id}")
+        
+        # Create tier 0 starter components with max multiplier (1.0 for tier 0)
+        engine_id = self.id_generator.next_item_id()
+        weapon_id = self.id_generator.next_item_id()
+        shield_id = self.id_generator.next_item_id()
+        cargo_id = self.id_generator.next_item_id()
+        sensor_id = self.id_generator.next_item_id()
+        stealth_cloak_id = self.id_generator.next_item_id()
+        
+        logger.info(f"Created component IDs - engine: {engine_id}, weapon: {weapon_id}, shield: {shield_id}, cargo: {cargo_id}, sensor: {sensor_id}, stealth_cloak: {stealth_cloak_id}")
+        
+        # Create component items
+        engine_data = Engine(engine_id, "Starter Engine", 0, 1.0, "Basic propulsion system")
+        weapon_data = Weapon(weapon_id, "Starter Weapon", 0, 1.0, "Basic weapon system")
+        shield_data = Shield(shield_id, "Starter Shield", 0, 1.0, "Basic shield generator")
+        cargo_data = Cargo(cargo_id, "Starter Cargo Bay", 0, 1.0, "Basic cargo storage")
+        sensor_data = Sensor(sensor_id, "Starter Sensor", 0, 1.0, "Basic sensor array")
+        stealth_cloak_data = StealthCloak(stealth_cloak_id, "Starter Cloak", 0, 1.0, "Basic Stealth Cloak")
+        
+        # Add components to Items collection
+        self.Items[engine_id] = engine_data
+        self.Items[weapon_id] = weapon_data
+        self.Items[shield_id] = shield_data
+        self.Items[cargo_id] = cargo_data
+        self.Items[sensor_id] = sensor_data
+        self.Items[stealth_cloak_id] = stealth_cloak_data
+        
+        logger.info("Components created and added to Items collection")
+        
+        # Create ship with components equipped
+        ship_data = Ship(starting_location)
+        ship_data['id'] = ship_id
+        ship_data['owner_id'] = player_id
+        ship_data['name'] = f"{player_name}'s Ship"
+        ship_data['symbol'] = 'A'
+        ship_data['engine_id'] = engine_id
+        ship_data['weapon_id'] = weapon_id
+        ship_data['shield_id'] = shield_id
+        ship_data['cargo_id'] = cargo_id
+        ship_data['sensor_id'] = sensor_id
+        ship_data['stealth_cloak_id'] = stealth_cloak_id
+        ship_data['shield_pool'] = 0.0  # Shields start empty
+        
+        # Add ship to Ships collection and location
+        self.Ships[ship_id] = ship_data
+        self.Locations[starting_location]['ship_ids'].append(ship_id)
+        
+        logger.info(f"Ship created and placed at {starting_location}")
+        
+        # Create player with ship reference
+        player_data = Player(player_name, ship_id)
+        self.Players[player_id] = player_data
+        
+        logger.info(f"Player created successfully - player_id: {player_id}, ship_id: {ship_id}, name: {player_name}")
+        logger.info(f"Player data stored: {player_data}")
+        logger.info(f"Players dict now has {len(self.Players)} players")
+        logger.info(f"Player {player_id} in Players dict: {player_id in self.Players}")
+        
+        return {
+            'player_id': player_id,
+            'ship_id': ship_id,
+            'name': player_name,
+            'location': starting_location
+        }
     
     # ============================================================================
     # FACTION METHODS
     # ============================================================================
     
-    def add_faction(self, faction_id: int, faction_data: dict) -> dict:
+    async def add_faction(self, faction_id: int, faction_data: dict) -> dict:
         """Add a new faction to the game.
         
         Args:
@@ -1144,7 +1281,7 @@ class DataHandler:
         if faction_id in self.Factions:
             raise KeyError(f"Faction {faction_id} already exists")
         
-        with self._acquire_locks(f"faction:{faction_id}"):
+        async with self._acquire_locks(f"faction:{faction_id}"):
             self.Factions[faction_id] = faction_data
             return faction_data
     
@@ -1162,7 +1299,7 @@ class DataHandler:
         """
         return self.Factions[faction_id]
     
-    def add_player_to_faction(self, faction_id: int, player_id: int):
+    async def add_player_to_faction(self, faction_id: int, player_id: int):
         """Add a player to a faction's player list (thread-safe).
         
         Args:
@@ -1175,11 +1312,11 @@ class DataHandler:
         _ = self.Factions[faction_id]
         _ = self.Players[player_id]
         
-        with self._acquire_locks(f"faction:{faction_id}"):
+        async with self._acquire_locks(f"faction:{faction_id}"):
             if player_id not in self.Factions[faction_id]['player_ids']:
                 self.Factions[faction_id]['player_ids'].append(player_id)
     
-    def remove_player_from_faction(self, faction_id: int, player_id: int):
+    async def remove_player_from_faction(self, faction_id: int, player_id: int):
         """Remove a player from a faction's player list (thread-safe).
         
         Args:
@@ -1192,7 +1329,7 @@ class DataHandler:
         """
         _ = self.Factions[faction_id]
         
-        with self._acquire_locks(f"faction:{faction_id}"):
+        async with self._acquire_locks(f"faction:{faction_id}"):
             if player_id in self.Factions[faction_id]['player_ids']:
                 self.Factions[faction_id]['player_ids'].remove(player_id)
             else:
@@ -1202,7 +1339,7 @@ class DataHandler:
     # COMPOSITE HELPER METHODS
     # ============================================================================
     
-    def move_item_location_to_ship(self, item_id: int, location_name: str, ship_id: int):
+    async def move_item_location_to_ship(self, item_id: int, location_name: str, ship_id: int):
         """Move an item from a location to a ship's cargo (thread-safe, atomic).
         
         The ship must be at the specified location for the transfer to succeed.
@@ -1226,7 +1363,7 @@ class DataHandler:
             raise ValueError(f"Ship {ship_id} is at '{ship['location']}', not at '{location_name}'")
         
         # Acquire locks in sorted order (location items before ship cargo to prevent deadlock)
-        with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
+        async with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
             # Verify item is at the location
             if item_id not in self.Locations[location_name]['items']:
                 raise ValueError(f"Item {item_id} not found at location '{location_name}'")
@@ -1235,7 +1372,7 @@ class DataHandler:
             self.Locations[location_name]['items'].remove(item_id)
             self.Ships[ship_id]['items'].append(item_id)
     
-    def move_item_ship_to_location(self, item_id: int, ship_id: int, location_name: str):
+    async def move_item_ship_to_location(self, item_id: int, ship_id: int, location_name: str):
         """Move an item from a ship's cargo to a location (thread-safe, atomic).
         
         The ship must be at the specified location for the transfer to succeed.
@@ -1265,7 +1402,7 @@ class DataHandler:
             raise ValueError(f"Cannot drop items at {location_type} '{location_name}'")
         
         # Acquire locks in sorted order (location items before ship cargo to prevent deadlock)
-        with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
+        async with self._acquire_locks(f"location:{location_name}:items", f"ship:{ship_id}:cargo"):
             # Verify item is in ship's cargo
             if item_id not in self.Ships[ship_id]['items']:
                 raise ValueError(f"Item {item_id} not in ship {ship_id}'s cargo")
@@ -1274,7 +1411,7 @@ class DataHandler:
             self.Ships[ship_id]['items'].remove(item_id)
             self.Locations[location_name]['items'].append(item_id)
     
-    def equip_item_to_ship(self, ship_id: int, item_id: int):
+    async def equip_item_to_ship(self, ship_id: int, item_id: int):
         """Equip an item from ship's cargo to the appropriate slot (thread-safe).
         
         The item's 'type' field determines which slot it goes into. If there's already
@@ -1285,7 +1422,7 @@ class DataHandler:
         - 'weapon' -> 'weapon_id'
         - 'shield' -> 'shield_id'
         - 'cargo' -> 'cargo_id'
-        - 'sensor' -> 'sensor'
+        - 'sensor' -> 'sensor_id'
         - 'stealth_cloak' -> 'stealth_cloak_id'
         
         Args:
@@ -1306,7 +1443,7 @@ class DataHandler:
             'weapon': 'weapon_id',
             'shield': 'shield_id',
             'cargo': 'cargo_id',
-            'sensor': 'sensor',
+            'sensor': 'sensor_id',
             'stealth_cloak': 'stealth_cloak_id',
         }
         
@@ -1317,7 +1454,7 @@ class DataHandler:
         slot_name = type_to_slot[item_type]
         
         # Acquire both cargo and specific component slot locks (sorted to prevent deadlock)
-        with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
+        async with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
             # Verify item is in ship's cargo
             if item_id not in self.Ships[ship_id]['items']:
                 raise ValueError(f"Item {item_id} not in ship {ship_id}'s cargo")
@@ -1335,25 +1472,25 @@ class DataHandler:
             # Equip the new item
             self.Ships[ship_id][slot_name] = item_id
     
-    def unequip_item_from_ship(self, ship_id: int, slot_name: str):
+    async def unequip_item_from_ship(self, ship_id: int, slot_name: str):
         """Unequip an item from a ship slot and move it to cargo (thread-safe).
         
         Args:
             ship_id: Ship to unequip from
-            slot_name: Slot to unequip ('engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id')
+            slot_name: Slot to unequip ('engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id')
             
         Raises:
             KeyError: If ship doesn't exist
             ValueError: If slot is invalid or already empty
         """
-        valid_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id']
+        valid_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id']
         if slot_name not in valid_slots:
             raise ValueError(f"Invalid slot '{slot_name}'. Must be one of {valid_slots}")
         
         _ = self.Ships[ship_id]
         
         # Acquire both cargo and specific component slot locks (sorted to prevent deadlock)
-        with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
+        async with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
             item_id = self.Ships[ship_id].get(slot_name)
             
             if item_id is None or not isinstance(item_id, int):
@@ -1373,7 +1510,7 @@ class DataHandler:
             # Clear the slot (set to None or int type for type consistency)
             self.Ships[ship_id][slot_name] = None
     
-    def switch_ship_component(self, ship_id: int, slot_name: str, item_id: int):
+    async def switch_ship_component(self, ship_id: int, slot_name: str, item_id: int):
         """Swap a component between a ship slot and the ship's inventory (thread-safe).
         
         This swaps the item in the specified slot with an item from the ship's cargo.
@@ -1386,7 +1523,7 @@ class DataHandler:
         
         Args:
             ship_id: Ship to perform the swap on
-            slot_name: Slot to swap ('engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id')
+            slot_name: Slot to swap ('engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id')
             item_id: Item ID from cargo to swap into the slot
             
         Raises:
@@ -1394,7 +1531,7 @@ class DataHandler:
             ValueError: If slot is invalid, item is not in cargo, item type doesn't match slot,
                        or cargo capacity would be exceeded
         """
-        valid_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor', 'stealth_cloak_id']
+        valid_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id']
         if slot_name not in valid_slots:
             raise ValueError(f"Invalid slot '{slot_name}'. Must be one of {valid_slots}")
         
@@ -1408,7 +1545,7 @@ class DataHandler:
             'weapon_id': 'weapon',
             'shield_id': 'shield',
             'cargo_id': 'cargo',
-            'sensor': 'sensor',
+            'sensor_id': 'sensor',
             'stealth_cloak_id': 'stealth_cloak',
         }
         
@@ -1441,7 +1578,7 @@ class DataHandler:
                 )
         
         # Acquire both cargo and specific component slot locks (sorted to prevent deadlock)
-        with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
+        async with self._acquire_locks(f"ship:{ship_id}:cargo", f"ship:{ship_id}:component:{slot_name}"):
             # Verify item is in ship's cargo
             if item_id not in self.Ships[ship_id]['items']:
                 raise ValueError(f"Item {item_id} not in ship {ship_id}'s cargo")
@@ -1545,8 +1682,11 @@ class DataHandler:
             filename: Optional custom filename (defaults to 'players.json')
         """
         filename = filename or os.path.join(self.data_dir, "players.json")
+        logger.info(f"Saving {len(self.Players)} players to {filename}")
+        logger.info(f"Player IDs being saved: {list(self.Players.keys())}")
         with open(filename, 'w') as f:
             json.dump({str(k): v for k, v in self.Players.items()}, f, indent=2)
+        logger.info(f"Players saved successfully to {filename}")
     
     def load_players(self, filename: Optional[str] = None):
         """Load players from a JSON file.
@@ -1805,7 +1945,7 @@ class DataHandler:
                 'write_index': self.MAX_LOG_ENTRIES - 1  # Start at end, write backwards
             }
     
-    def add_ship_log(self, ship_id: int, message_type: str, content: str, source: Optional[str] = None, trigger_update: bool = False):
+    async def add_ship_log(self, ship_id: int, message_type: str, content: str, source: Optional[str] = None):
         """Add a log entry to a ship's ephemeral log.
         Writes backwards so newest messages are at lower indices.
         
@@ -1815,13 +1955,12 @@ class DataHandler:
             content: The message content
             source: Optional source identifier in format 'type:id' (e.g., 'ship:123', 'location:Sol', 'item:456')
                    If provided, the frontend can request details about this entity
-            trigger_update: If True, signal waiting /updates requests for this ship (for out-of-tick messages)
         """
         # Validate message type
         if message_type not in MessageType.all_types():
             raise ValueError(f"Invalid message_type '{message_type}'. Must be one of {MessageType.all_types()}")
         
-        with self._acquire_locks(f"shiplog:{ship_id}"):
+        async with self._acquire_locks(f"shiplog:{ship_id}"):
             self._init_ship_log(ship_id)
             log = self.ShipLogs[ship_id]
             
@@ -1842,18 +1981,8 @@ class DataHandler:
             
             if log['count'] < self.MAX_LOG_ENTRIES:
                 log['count'] += 1
-        
-        # If trigger_update is True, signal any waiting /updates request for this ship
-        if trigger_update:
-            try:
-                # Import at runtime to avoid circular dependency
-                from api import trigger_ship_update
-                trigger_ship_update(ship_id)
-            except ImportError:
-                # API module not loaded yet (during tests), skip trigger
-                pass
-    
-    def get_ship_log(self, ship_id: int) -> List[dict]:
+
+    async def get_ship_log(self, ship_id: int) -> List[dict]:
         """Get all log entries for a ship in chronological order (oldest first, newest last).
         
         Args:
@@ -1867,7 +1996,7 @@ class DataHandler:
                 - source (optional): Source identifier in format "entity_type:entity_id"
                                     (e.g., "ship:123", "location:Sol", "item:456")
         """
-        with self._acquire_locks(f"shiplog:{ship_id}"):
+        async with self._acquire_locks(f"shiplog:{ship_id}"):
             if ship_id not in self.ShipLogs:
                 return []
             
@@ -1885,3 +2014,96 @@ class DataHandler:
                 oldest = log['entries'][oldest_idx:]
                 newest = log['entries'][:oldest_idx]
                 return oldest + newest
+    
+    # ============================================================================
+    # DATA VALIDATION AND REPAIR
+    # ============================================================================
+    
+    async def validate_and_repair_ship_locations(self, default_location: str = 'Earth_Orbit'):
+        """Validate that all ships have valid locations and repair any that don't.
+        
+        This is a failsafe function that should be called on server startup to ensure
+        data integrity. It checks:
+        1. All ships have a 'location' field
+        2. The location exists in the Locations dictionary
+        3. The ship is properly added to that location's ship_ids list
+        
+        Args:
+            default_location: Location to move ships to if their location is None or invalid
+            
+        Returns:
+            Dict with repair statistics: {
+                'ships_checked': int,
+                'ships_with_no_location': int,
+                'ships_with_invalid_location': int,
+                'ships_not_in_location_list': int,
+                'ships_repaired': int
+            }
+        """
+        stats = {
+            'ships_checked': 0,
+            'ships_with_no_location': 0,
+            'ships_with_invalid_location': 0,
+            'ships_not_in_location_list': 0,
+            'ships_repaired': 0
+        }
+        
+        # Ensure default location exists
+        if default_location not in self.Locations:
+            raise ValueError(f"Default location '{default_location}' does not exist in Locations")
+        
+        for ship_id, ship in self.Ships.items():
+            stats['ships_checked'] += 1
+            needs_repair = False
+            repair_location = None
+            
+            # Check if ship has a location field
+            if 'location' not in ship or ship['location'] is None:
+                print(f"[REPAIR] Ship {ship_id} ({ship.get('name', 'Unknown')}) has no location field")
+                stats['ships_with_no_location'] += 1
+                needs_repair = True
+                repair_location = default_location
+            
+            # Check if location exists
+            elif ship['location'] not in self.Locations:
+                print(f"[REPAIR] Ship {ship_id} ({ship.get('name', 'Unknown')}) has invalid location: {ship['location']}")
+                stats['ships_with_invalid_location'] += 1
+                needs_repair = True
+                repair_location = default_location
+            
+            # Check if ship is in the location's ship_ids list
+            else:
+                location = self.Locations[ship['location']]
+                if 'ship_ids' not in location:
+                    location['ship_ids'] = []
+                
+                if ship_id not in location['ship_ids']:
+                    print(f"[REPAIR] Ship {ship_id} ({ship.get('name', 'Unknown')}) not in location's ship_ids list at {ship['location']}")
+                    stats['ships_not_in_location_list'] += 1
+                    # Add ship to the location's ship_ids list
+                    location['ship_ids'].append(ship_id)
+                    stats['ships_repaired'] += 1
+            
+            # Repair ship with no/invalid location
+            if needs_repair:
+                # Remove from old location if it exists
+                old_location = ship.get('location')
+                if old_location and old_location in self.Locations:
+                    old_loc = self.Locations[old_location]
+                    if 'ship_ids' in old_loc and ship_id in old_loc['ship_ids']:
+                        old_loc['ship_ids'].remove(ship_id)
+                
+                # Set new location
+                ship['location'] = repair_location
+                
+                # Add to new location's ship_ids
+                new_loc = self.Locations[repair_location]
+                if 'ship_ids' not in new_loc:
+                    new_loc['ship_ids'] = []
+                if ship_id not in new_loc['ship_ids']:
+                    new_loc['ship_ids'].append(ship_id)
+                
+                stats['ships_repaired'] += 1
+                print(f"[REPAIR] Moved ship {ship_id} ({ship.get('name', 'Unknown')}) to {repair_location}")
+        
+        return stats
