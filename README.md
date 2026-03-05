@@ -576,7 +576,7 @@ Components have:
 
 Damage flows through this priority:
 1. Shields absorb damage first (shield pool)
-2. Overflow or direct damage hits the target (ship HP or component HP)
+2. Overflow is ignored.
 3. Components at 0 HP cease functioning but aren't destroyed
 
 Players can attack:
