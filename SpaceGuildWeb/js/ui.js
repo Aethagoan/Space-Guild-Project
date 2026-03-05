@@ -3,6 +3,31 @@
 console.log('ui.js loaded');
 
 /**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(unsafe) {
+    if (unsafe === null || unsafe === undefined) return '';
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+/*
+symbols conviniently at the top
+*/
+const location_icons = {
+    'station': '⊕',
+    'ground_station': '⊗',
+    'space': '>',
+    'resource_node': '◆',
+    'unknown': '?'
+}
+
+
+/**
  * Main UI render function - re-renders all panels
  */
 function renderUI() {
@@ -140,15 +165,9 @@ function renderLeftPanel() {
         const isActive = gameState.selectedView === view.id;
         const activeClass = isActive ? 'active' : '';
         
-        // Disable vendors button if no vendors at location
-        const isDisabled = view.id === 'vendors' && 
-                          (!gameState.vendors || Object.keys(gameState.vendors).length === 0);
-        const disabledClass = isDisabled ? 'disabled' : '';
-        
         return `
-            <button class="nav-button ${activeClass} ${disabledClass}" 
-                    onclick="handleNavigation('${view.id}')"
-                    ${isDisabled ? 'disabled' : ''}>
+            <button class="nav-button ${activeClass}" 
+                    onclick="handleNavigation('${view.id}')">
                 <span class="nav-label">${view.label}</span>
             </button>
         `;
@@ -191,7 +210,7 @@ function renderMiddlePanel() {
 }
 
 /**
- * Render location view (ships and items)
+ * Render location view (ships and items at current location)
  */
 function renderLocationView(panel) {
     if (!gameState.location) {
@@ -201,32 +220,61 @@ function renderLocationView(panel) {
     
     const ships = gameState.location.ships || [];
     const items = gameState.location.items || [];
+    const shipCount = gameState.location.ship_count;
+    const locationType = gameState.location.type || 'space';
+    const isStation = locationType === 'station' || locationType === 'ground_station';
     
-    let html = `<div class="panel-header">Location: ${gameState.location.name}</div>`;
+    // Make location name clickable
+    const currentLocation = {
+        name: gameState.location.name,
+        type: locationType,
+        description: gameState.location.description || '',
+        isCurrent: true
+    };
+    const locationRegId = registerItem(currentLocation, 'location');
+    
+    let html = `
+        <div class="panel-header clickable-header" onclick="handleItemSelectionById('${locationRegId}')">
+            Location: ${escapeHtml(gameState.location.name)}
+        </div>
+    `;
     
     // Ships section
     html += '<div class="section-header">Ships</div>';
-    if (ships.length === 0) {
-        html += '<div class="empty-message">No other ships here</div>';
+    
+    // At stations, only show ship count
+    if (isStation) {
+        const count = shipCount !== undefined ? shipCount : 0;
+        if (count === 0) {
+            html += '<div class="empty-message">No other ships docked</div>';
+        } else {
+            html += `<div class="info-message">${count} ship${count !== 1 ? 's' : ''} docked at this station</div>`;
+        }
     } else {
-        html += '<div class="item-list">';
-        ships.forEach(ship => {
-            const isSelected = gameState.selectedItemType === 'ship' && 
-                             gameState.selectedItem?.ship_id === ship.ship_id;
-            const selectedClass = isSelected ? 'selected' : '';
-            
-            html += `
-                <div class="item-card ${selectedClass}" 
-                     onclick='handleItemSelection(${JSON.stringify(ship)}, "ship")'>
-                    <span class="item-icon">${ship.symbol || 'S'}</span>
-                    <div class="item-info">
-                        <div class="item-name">${ship.name}</div>
-                        <div class="item-detail">Pilot: ${ship.player_name}</div>
+        // In space, show individual ships
+        if (ships.length === 0) {
+            html += '<div class="empty-message">No other ships here</div>';
+        } else {
+            html += '<div class="item-list">';
+            ships.forEach(ship => {
+                const isSelected = gameState.selectedItemType === 'ship' && 
+                                 gameState.selectedItem?.ship_id === ship.ship_id;
+                const selectedClass = isSelected ? 'selected' : '';
+                const shipRegId = registerItem(ship, 'ship');
+                
+                html += `
+                    <div class="item-card ${selectedClass}" 
+                         onclick="handleItemSelectionById('${shipRegId}')">
+                        <span class="item-icon">${escapeHtml(ship.symbol || 'S')}</span>
+                        <div class="item-info">
+                            <div class="item-name">${escapeHtml(ship.name)}</div>
+                            <div class="item-detail">Pilot: ${escapeHtml(ship.player_name)}</div>
+                        </div>
                     </div>
-                </div>
-            `;
-        });
-        html += '</div>';
+                `;
+            });
+            html += '</div>';
+        }
     }
     
     // Items section
@@ -239,13 +287,14 @@ function renderLocationView(panel) {
             const isSelected = gameState.selectedItemType === 'item' && 
                              gameState.selectedItem?.item_id === item.item_id;
             const selectedClass = isSelected ? 'selected' : '';
+            const itemRegId = registerItem(item, 'item');
             
             html += `
                 <div class="item-card ${selectedClass}" 
-                     onclick='handleItemSelection(${JSON.stringify(item)}, "item")'>
+                     onclick="handleItemSelectionById('${itemRegId}')">
                     <span class="item-icon">I</span>
                     <div class="item-info">
-                        <div class="item-name">${item.name}</div>
+                        <div class="item-name">${escapeHtml(item.name)}</div>
                     </div>
                 </div>
             `;
@@ -312,24 +361,32 @@ function renderShipView(panel) {
     
     html += '</div>';
     
-    // Cargo section
-    const cargoItems = ship.items || [];
+    // Cargo section - use enriched cargo data if available
+    const cargoItems = ship.cargo_items_enriched || [];
     html += '<div class="section-header">Cargo</div>';
     if (cargoItems.length === 0) {
         html += '<div class="empty-message">Cargo is empty</div>';
     } else {
         html += '<div class="item-list">';
-        cargoItems.forEach(itemId => {
+        cargoItems.forEach(item => {
+            // Normalize id to item_id for consistency
+            const itemData = { item_id: item.id, ...item };
+            
             const isSelected = gameState.selectedItemType === 'cargo_item' && 
-                             gameState.selectedItem?.item_id === itemId;
+                             gameState.selectedItem?.item_id === item.id;
             const selectedClass = isSelected ? 'selected' : '';
+            
+            // Display item name and type
+            const itemName = item.name || `Item #${item.id}`;
+            const itemType = item.type || 'unknown';
             
             html += `
                 <div class="item-card ${selectedClass}" 
-                     onclick='handleItemSelection(${JSON.stringify({item_id: itemId})}, "cargo_item")'>
+                     onclick='handleItemSelection(${JSON.stringify(itemData)}, "cargo_item")'>
                     <span class="item-icon">I</span>
                     <div class="item-info">
-                        <div class="item-name">Item #${itemId}</div>
+                        <div class="item-name">${escapeHtml(itemName)}</div>
+                        <div class="item-type">${escapeHtml(itemType)}</div>
                     </div>
                 </div>
             `;
@@ -352,24 +409,65 @@ function renderNavigationView(panel) {
     const links = gameState.location.links || [];
     
     let html = `<div class="panel-header">Navigation</div>`;
-    html += `<div class="current-location">Current: ${gameState.location.name}</div>`;
     
+    // Add current location as a selectable item
+    const currentLocation = {
+        name: gameState.location.name,
+        type: gameState.location.type || 'space',
+        description: gameState.location.description || '',
+        isCurrent: true
+    };
+    
+    const isCurrentSelected = gameState.selectedItemType === 'location' && 
+                              gameState.selectedItem?.name === currentLocation.name;
+    const currentSelectedClass = isCurrentSelected ? 'selected' : '';
+    const currentRegId = registerItem(currentLocation, 'location');
+    
+    // Icon for current location based on type
+    const currentIcon = {
+        'station': '⊕',
+        'ground_station': '⊗',
+        'space': '●',
+        'resource_node': '◆',
+        'unknown': '?'
+    }[currentLocation.type] || '●';
+    
+    html += '<div class="section-header">Current Location</div>';
+    html += '<div class="item-list">';
+    html += `
+        <div class="item-card ${currentSelectedClass}" 
+             onclick="handleItemSelectionById('${currentRegId}')">
+            <span class="item-icon">${currentIcon}</span>
+            <div class="item-info">
+                <div class="item-name">${escapeHtml(currentLocation.name)}</div>
+                <div class="item-detail">[Current]</div>
+            </div>
+        </div>
+    `;
+    html += '</div>';
+    
+    // Destinations section
     if (links.length === 0) {
+        html += '<div class="section-header">Destinations</div>';
         html += '<div class="empty-message">No destinations available</div>';
     } else {
         // Normalize links to objects (handle both old string format and new object format)
         const normalizedLinks = links.map(link => {
             if (typeof link === 'string') {
                 // Old format: just a string
-                return { name: link, type: 'unknown' };
+                return { name: link, type: 'unknown', description: '' };
             } else {
-                // New format: object with name and type
-                return link;
+                // New format: object with name, type, and description
+                return {
+                    name: link.name,
+                    type: link.type || 'unknown',
+                    description: link.description || ''
+                };
             }
         });
         
         // Sort links by type: stations first, then ground stations, then space
-        const typeOrder = { 'station': 0, 'ground_station': 1, 'space': 2, 'unknown': 3 };
+        const typeOrder = { 'station': 0, 'ground_station': 1, 'space': 2, 'resource_node': 3, 'unknown': 4 };
         const sortedLinks = [...normalizedLinks].sort((a, b) => {
             const aType = a.type || 'unknown';
             const bType = b.type || 'unknown';
@@ -395,30 +493,33 @@ function renderNavigationView(panel) {
                     'station': 'Stations',
                     'ground_station': 'Ground Stations',
                     'space': 'Space',
+                    'resource_node': 'Resource Nodes',
                     'unknown': 'Other'
                 }[currentType] || 'Other';
                 
                 html += `</div><div class="section-header">${typeLabel}</div><div class="item-list">`;
             }
             
-            const isSelected = gameState.selectedItemType === 'destination' && 
+            const isSelected = gameState.selectedItemType === 'location' && 
                              gameState.selectedItem?.name === destination.name;
             const selectedClass = isSelected ? 'selected' : '';
+            const destRegId = registerItem(destination, 'location');
             
             // Choose icon based on type
             const icon = {
                 'station': '⊕',
                 'ground_station': '⊗',
                 'space': '>',
+                'resource_node': '◆',
                 'unknown': '?'
             }[destination.type] || '>';
             
             html += `
                 <div class="item-card ${selectedClass}" 
-                     onclick='handleItemSelection(${JSON.stringify({name: destination.name, type: destination.type})}, "destination")'>
+                     onclick="handleItemSelectionById('${destRegId}')">
                     <span class="item-icon">${icon}</span>
                     <div class="item-info">
-                        <div class="item-name">${destination.name}</div>
+                        <div class="item-name">${escapeHtml(destination.name)}</div>
                     </div>
                 </div>
             `;
@@ -511,18 +612,22 @@ function renderShipLog() {
         return;
     }
     
-    const html = gameState.shipLog.map(entry => {
-        // Handle different log entry formats
-        const message = entry.message || entry;
-        const type = entry.type || 'info';
+    const html = [...gameState.shipLog].map((entry, index) => {
+        // Use backend format: {type, content, source}
+        const content = escapeHtml(entry.content || entry.message || entry);
+        const type = entry.type || 'computer';
+        const source = entry.source || null;
         
-        return `<div class="log-entry log-${type}">${message}</div>`;
+        // Determine if this entry is clickable
+        const isClickable = source !== null;
+        const clickableClass = isClickable ? 'log-clickable' : '';
+        // Pass both source and raw content (unescaped) to handler
+        const clickHandler = isClickable ? `onclick="handleLogEntryClick('${source}', '${escapeHtml(entry.content || '')}')"` : '';
+        
+        return `<div class="log-entry log-${type} ${clickableClass}" ${clickHandler}>${content}</div>`;
     }).join('');
     
     logContainer.innerHTML = html;
-    
-    // Auto-scroll to bottom
-    logContainer.scrollTop = logContainer.scrollHeight;
 }
 
 /**
@@ -539,30 +644,182 @@ function renderDetails() {
     
     let html = '';
     
-    switch (gameState.selectedItemType) {
-        case 'ship':
-            html = renderShipDetails(gameState.selectedItem);
-            break;
-        case 'item':
-            html = renderItemDetails(gameState.selectedItem);
-            break;
-        case 'component':
-            html = renderComponentDetails(gameState.selectedItem);
-            break;
-        case 'cargo_item':
-            html = renderCargoItemDetails(gameState.selectedItem);
-            break;
-        case 'destination':
-            html = renderDestinationDetails(gameState.selectedItem);
-            break;
-        case 'vendor':
-            html = renderVendorDetails(gameState.selectedItem);
-            break;
-        default:
-            html = '<div class="empty-message">Unknown item type</div>';
+    // Check if we're showing scan data - render full scan details
+    if (gameState.isShowingScanData) {
+        switch (gameState.selectedItemType) {
+            case 'ship':
+                html = renderScannedShipDetails(gameState.selectedItem);
+                break;
+            case 'item':
+                html = renderScannedItemDetails(gameState.selectedItem);
+                break;
+            case 'location':
+                html = renderScannedLocationDetails(gameState.selectedItem);
+                break;
+            default:
+                html = '<div class="empty-message">Unknown scan type</div>';
+        }
+    } else {
+        // Normal entity rendering (from location/middle panel selection)
+        switch (gameState.selectedItemType) {
+            case 'ship':
+                html = renderShipDetails(gameState.selectedItem);
+                break;
+            case 'item':
+                html = renderItemDetails(gameState.selectedItem);
+                break;
+            case 'component':
+                html = renderComponentDetails(gameState.selectedItem);
+                break;
+            case 'cargo_item':
+                html = renderCargoItemDetails(gameState.selectedItem);
+                break;
+            case 'destination':
+                html = renderDestinationDetails(gameState.selectedItem);
+                break;
+            case 'location':
+                html = renderLocationDetails(gameState.selectedItem);
+                break;
+            case 'vendor':
+                html = renderVendorDetails(gameState.selectedItem);
+                break;
+            case 'unknown':
+                html = '<div class="info-message">No information available for this entity</div>';
+                break;
+            default:
+                html = '<div class="empty-message">Unknown item type</div>';
+        }
     }
     
     detailsContainer.innerHTML = html;
+}
+
+/**
+ * Render scanned ship details (full scan data with components and cargo)
+ */
+function renderScannedShipDetails(ship) {
+    let html = `
+        <div class="detail-header">[SCAN DATA]</div>
+        <div class="detail-subheader">${escapeHtml(ship.name || 'Unknown Ship')}</div>
+        <div class="art-placeholder">
+            <div class="art-placeholder-text">Ship Art</div>
+        </div>
+        
+        <div class="scan-data">
+            <div class="scan-header">Ship Status</div>
+            <div class="detail-row">HP: ${ship.hp?.toFixed(1) || 'Unknown'} / ${ship.max_hp?.toFixed(1) || '?'}</div>
+            <div class="detail-row">Shield: ${ship.shield_pool?.toFixed(1) || '0.0'}</div>
+            <div class="detail-row">Tier: ${ship.tier || 'Unknown'}</div>
+            ${ship.is_stealthed ? '<div class="detail-row stealth">[STEALTHED]</div>' : ''}
+        </div>
+    `;
+    
+    // Render components if available
+    if (ship.components) {
+        html += '<div class="scan-data"><div class="scan-header">Components</div>';
+        
+        const componentOrder = ['engine', 'weapon', 'shield', 'cargo', 'sensor', 'stealth_cloak'];
+        for (const slot of componentOrder) {
+            const component = ship.components[slot];
+            if (component) {
+                html += `
+                    <div class="detail-row">
+                        <strong>${slot.replace('_', ' ').toUpperCase()}:</strong> ${escapeHtml(component.name || 'Unknown')}
+                        ${component.health !== undefined ? ` (HP: ${component.health?.toFixed(1)}/${component.max_health?.toFixed(1)})` : ''}
+                    </div>
+                `;
+            } else {
+                html += `<div class="detail-row">${slot.replace('_', ' ').toUpperCase()}: [Empty]</div>`;
+            }
+        }
+        
+        html += '</div>';
+    }
+    
+    // Render cargo items if available
+    if (ship.cargo_items && ship.cargo_items.length > 0) {
+        html += '<div class="scan-data"><div class="scan-header">Cargo</div>';
+        for (const item of ship.cargo_items) {
+            html += `<div class="detail-row">• ${escapeHtml(item.name || 'Unknown Item')}</div>`;
+        }
+        html += '</div>';
+    } else {
+        html += '<div class="scan-data"><div class="scan-header">Cargo</div><div class="detail-row">Empty</div></div>';
+    }
+    
+    return html;
+}
+
+/**
+ * Render scanned item details
+ */
+function renderScannedItemDetails(item) {
+    let html = `
+        <div class="detail-header">[SCAN DATA]</div>
+        <div class="detail-subheader">${escapeHtml(item.name || 'Unknown Item')}</div>
+        <div class="art-placeholder">
+            <div class="art-placeholder-text">Item Art</div>
+        </div>
+        
+        <div class="scan-data">
+            <div class="scan-header">Item Information</div>
+            ${item.tier ? `<div class="detail-row">Tier: ${item.tier}</div>` : ''}
+            ${item.type ? `<div class="detail-row">Type: ${escapeHtml(item.type)}</div>` : ''}
+            ${item.multiplier !== undefined ? `<div class="detail-row">Multiplier: ${item.multiplier.toFixed(2)}</div>` : ''}
+            ${item.health !== undefined ? `<div class="detail-row">Health: ${item.health?.toFixed(1)}/${item.max_health?.toFixed(1)}</div>` : ''}
+            ${item.description ? `<div class="detail-row description">${escapeHtml(item.description)}</div>` : ''}
+        </div>
+    `;
+    
+    return html;
+}
+
+/**
+ * Render scanned location details
+ */
+function renderScannedLocationDetails(location) {
+    let html = `
+        <div class="detail-header">[SCAN DATA]</div>
+        <div class="detail-subheader">${escapeHtml(location.name || 'Unknown Location')}</div>
+        <div class="art-placeholder">
+            <div class="art-placeholder-text">Location Art</div>
+        </div>
+        
+        <div class="scan-data">
+            <div class="scan-header">Location Information</div>
+            <div class="detail-row">Type: ${escapeHtml(location.location_type || 'Unknown')}</div>
+            ${location.description ? `<div class="detail-row description">${escapeHtml(location.description)}</div>` : ''}
+        </div>
+    `;
+    
+    // Show ship information
+    if (location.ship_count !== undefined) {
+        html += `
+            <div class="scan-data">
+                <div class="scan-header">Ships Present</div>
+                <div class="detail-row">Ship Count: ${location.ship_count}</div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="scan-data">
+                <div class="scan-header">Ships Present</div>
+                <div class="detail-row">No ships detected</div>
+            </div>
+        `;
+    }
+    
+    // Show spawnable resources if available
+    if (location.spawnable_resources && location.spawnable_resources.length > 0) {
+        html += `
+            <div class="scan-data">
+                <div class="scan-header">Resources</div>
+                ${location.spawnable_resources.map(res => `<div class="detail-row">• ${escapeHtml(res)}</div>`).join('')}
+            </div>
+        `;
+    }
+
+    return html;
 }
 
 /**
@@ -570,28 +827,12 @@ function renderDetails() {
  */
 function renderShipDetails(ship) {
     let html = `
-        <div class="detail-header">${ship.name}</div>
-        <div class="detail-subheader">Pilot: ${ship.player_name}</div>
+        <div class="detail-header">${escapeHtml(ship.name)}</div>
+        <div class="detail-subheader">Pilot: ${escapeHtml(ship.player_name)}</div>
         <div class="art-placeholder">
             <div class="art-placeholder-text">Ship Art</div>
         </div>
     `;
-    
-    // Show scan data if available
-    if (gameState.scanData && gameState.scanData.ship_id === ship.ship_id) {
-        const scan = gameState.scanData;
-        html += `
-            <div class="scan-data">
-                <div class="scan-header">Scan Data</div>
-                <div class="detail-row">HP: ${scan.hp?.toFixed(1) || 'Unknown'}</div>
-                <div class="detail-row">Tier: ${scan.tier || 'Unknown'}</div>
-                <div class="detail-row">Shield: ${scan.shield_pool?.toFixed(1) || 'Unknown'}</div>
-                ${scan.is_stealthed ? '<div class="detail-row stealth">[STEALTHED]</div>' : ''}
-            </div>
-        `;
-    } else {
-        html += '<div class="info-message">Scan ship for detailed information</div>';
-    }
     
     return html;
 }
@@ -601,26 +842,11 @@ function renderShipDetails(ship) {
  */
 function renderItemDetails(item) {
     let html = `
-        <div class="detail-header">${item.name}</div>
+        <div class="detail-header">${escapeHtml(item.name)}</div>
         <div class="art-placeholder">
             <div class="art-placeholder-text">Item Art</div>
         </div>
     `;
-    
-    // Show scan data if available
-    if (gameState.scanData && gameState.scanData.item_id === item.item_id) {
-        const scan = gameState.scanData;
-        html += `
-            <div class="scan-data">
-                <div class="scan-header">Scan Data</div>
-                ${scan.tier ? `<div class="detail-row">Tier: ${scan.tier}</div>` : ''}
-                ${scan.type ? `<div class="detail-row">Type: ${scan.type}</div>` : ''}
-                ${scan.multiplier ? `<div class="detail-row">Multiplier: ${scan.multiplier.toFixed(2)}</div>` : ''}
-            </div>
-        `;
-    } else {
-        html += '<div class="info-message">Scan item for detailed information</div>';
-    }
     
     return html;
 }
@@ -672,26 +898,77 @@ function renderComponentDetails(component) {
  * Render cargo item details
  */
 function renderCargoItemDetails(item) {
-    return `
-        <div class="detail-header">Cargo Item</div>
+    const itemName = item.name || `Item #${item.item_id}`;
+    const itemType = item.type || 'unknown';
+    
+    let html = `
+        <div class="detail-header">${escapeHtml(itemName)}</div>
         <div class="art-placeholder">
             <div class="art-placeholder-text">Item Art</div>
         </div>
-        <div class="info-message">Item ID: ${item.item_id}</div>
+        <div class="detail-row">Type: ${escapeHtml(itemType)}</div>
     `;
+    
+    // Show tier if available
+    if (item.tier !== undefined) {
+        html += `<div class="detail-row">Tier: ${item.tier}</div>`;
+    }
+    
+    // Show multiplier if available
+    if (item.multiplier !== undefined) {
+        html += `<div class="detail-row">Multiplier: ${item.multiplier.toFixed(2)}</div>`;
+    }
+    
+    // Show health if available
+    if (item.health !== undefined && item.maxhealth !== undefined) {
+        html += `<div class="detail-row">Health: ${item.health}/${item.maxhealth}</div>`;
+    }
+    
+    html += '<div class="info-message">Click Equip to install this component</div>';
+    
+    return html;
 }
 
 /**
  * Render destination details
  */
 function renderDestinationDetails(destination) {
-    return `
-        <div class="detail-header">${destination.name}</div>
+    let html = `
+        <div class="detail-header">${escapeHtml(destination.name)}</div>
         <div class="art-placeholder">
             <div class="art-placeholder-text">Location Art</div>
         </div>
-        <div class="info-message">Available destination</div>
     `;
+    
+    if (destination.description) {
+        html += `<div class="detail-row">${escapeHtml(destination.description)}</div>`;
+    }
+    
+    return html;
+}
+
+/**
+ * Render location details (for current location or selected location)
+ */
+function renderLocationDetails(location) {
+    let html = `
+        <div class="detail-header">${escapeHtml(location.name)}</div>
+        <div class="art-placeholder">
+            <div class="art-placeholder-text">Location Art</div>
+        </div>
+    `;
+    
+    if (location.description) {
+        html += `<div class="detail-row">${escapeHtml(location.description)}</div>`;
+    }
+    
+    if (location.isCurrent) {
+        html += '<div class="info-message">[Current Location]</div>';
+    } else {
+        html += '<div class="info-message">Available destination</div>';
+    }
+    
+    return html;
 }
 
 /**
@@ -704,15 +981,16 @@ function renderVendorDetails(vendor) {
             <div class="art-placeholder-text">Vendor Art</div>
         </div>
     `;
-    
-    if (vendor.entry_dialogue) {
-        html += `<div class="vendor-dialogue">"${vendor.entry_dialogue}"</div>`;
-    }
+
+
     
     html += '<div class="info-message">Vendor interaction coming soon...</div>';
     
     return html;
 }
+
+
+
 
 /**
  * Render actions section
@@ -729,6 +1007,12 @@ function renderActions() {
                 [ACTION QUEUED: ${gameState.queuedAction.type}]
             </div>
         `;
+    }
+    
+    // If showing scan data, don't show action buttons
+    if (gameState.isShowingScanData) {
+        actionsContainer.innerHTML = html + '<div class="info-message">Scan data display - no actions available</div>';
+        return;
     }
     
     // Show action buttons based on selected item
@@ -749,8 +1033,14 @@ function renderActions() {
         case 'component':
             html += renderComponentActions(gameState.selectedItem);
             break;
+        case 'cargo_item':
+            html += renderCargoItemActions(gameState.selectedItem);
+            break;
         case 'destination':
             html += renderDestinationActions(gameState.selectedItem);
+            break;
+        case 'location':
+            html += renderLocationActions(gameState.selectedItem);
             break;
         case 'vendor':
             html += renderVendorActions(gameState.selectedItem);
@@ -767,14 +1057,28 @@ function renderActions() {
  * Render ship action buttons
  */
 function renderShipActions(ship) {
-    return `
-        <button class="action-btn" onclick="handleAction('scan', '${ship.ship_id}', 'ship')">
+    let html = `
+        <button class="action-btn" onclick="handleAction('scan', '${ship.ship_id}', {target_type: 'ship'})">
             [Scan Ship]
         </button>
         <button class="action-btn" onclick="handleAction('attack_ship', '${ship.ship_id}')">
             [Attack Ship]
         </button>
     `;
+    
+    // Add message button for player ships
+    if (ship.player_id) {
+        html += `
+            <button class="action-btn" onclick="handleMessageShip('${ship.ship_id}', '${escapeHtml(ship.player_name)}')">
+                [Message ${escapeHtml(ship.player_name)}]
+            </button>
+        `;
+    }
+    
+    // Placeholder for dialogue options (not yet implemented)
+    html += '<div class="dialogue-placeholder" style="display:none;"></div>';
+    
+    return html;
 }
 
 /**
@@ -782,7 +1086,7 @@ function renderShipActions(ship) {
  */
 function renderItemActions(item) {
     return `
-        <button class="action-btn" onclick="handleAction('scan', '${item.item_id}', 'item')">
+        <button class="action-btn" onclick="handleAction('scan', '${item.item_id}', {target_type: 'item'})">
             [Scan Item]
         </button>
         <button class="action-btn" onclick="handleAction('collect', '${item.item_id}')">
@@ -795,10 +1099,33 @@ function renderItemActions(item) {
  * Render component action buttons
  */
 function renderComponentActions(component) {
+    // Only show unequip if component is equipped (has an ID)
+    const componentData = gameState.ship?.components?.[component.slot];
+    
+    if (componentData && componentData.id) {
+        return `
+            <button class="action-btn" onclick="handleUnequipComponent('${component.slot}')">
+                [Unequip ${component.type}]
+            </button>
+            <div class="info-message">Component repairs available at repair shops</div>
+        `;
+    }
+    
+    return '<div class="info-message">Empty component slot</div>';
+}
+
+/**
+ * Render cargo item action buttons
+ */
+function renderCargoItemActions(cargoItem) {
     return `
-        <button class="action-btn" onclick="handleRepairComponent('${component.item_id}')">
-            [Repair Component]
+        <button class="action-btn" onclick="handleEquipItem('${cargoItem.item_id}')">
+            [Equip Item]
         </button>
+        <button class="action-btn" onclick="handleAction('drop', '${cargoItem.item_id}')">
+            [Drop Item]
+        </button>
+        <div class="info-message">Install component from cargo</div>
     `;
 }
 
@@ -807,10 +1134,63 @@ function renderComponentActions(component) {
  */
 function renderDestinationActions(destination) {
     return `
-        <button class="action-btn" onclick='handleAction("move", "${destination.name}")'>
-            [Move to ${destination.name}]
+        <button class="action-btn" onclick='handleAction("move", "${escapeHtml(destination.name)}")'>
+            [Move to ${escapeHtml(destination.name)}]
+        </button>
+        <button class="action-btn" onclick='handleAction("scan", "${escapeHtml(destination.name)}", {target_type: "location"})'>
+            [Scan Location]
         </button>
     `;
+}
+
+/**
+ * Render location action buttons
+ */
+function renderLocationActions(location) {
+    // If it's the current location, can't move to it or scan it
+    if (location.isCurrent) {
+        return '<div class="info-message">You are currently at this location</div>';
+    }
+    
+    // Otherwise, show move and scan actions
+    return `
+        <button class="action-btn" onclick='handleAction("move", "${escapeHtml(location.name)}")'>
+            [Jump to ${escapeHtml(location.name)}]
+        </button>
+        <button class="action-btn" onclick='handleAction("scan", "${escapeHtml(location.name)}", {target_type: "location"})'>
+            [Scan Location]
+        </button>
+    `;
+}
+
+/**
+ * Handle unequip component action
+ */
+async function handleUnequipComponent(slotName) {
+    try {
+        console.log('Unequipping component from slot:', slotName);
+        await unequipItem(slotName);
+        // Backend pushes an instant WS update with the new log entry and ship state
+    } catch (error) {
+        console.error('Failed to unequip component:', error);
+        addLogMessage(`Failed to unequip: ${error.message}`, 'error');
+        renderUI();
+    }
+}
+
+/**
+ * Handle equip item action
+ */
+async function handleEquipItem(itemId) {
+    try {
+        console.log('Equipping item:', itemId);
+        await equipItem(itemId);
+        // Backend pushes an instant WS update with the new log entry and ship state
+    } catch (error) {
+        console.error('Failed to equip:', error);
+        addLogMessage(`Failed to equip: ${error.message}`, 'error');
+        renderUI();
+    }
 }
 
 /**
@@ -825,20 +1205,21 @@ function renderVendorActions(vendor) {
 /**
  * Handle repair component action
  */
-async function handleRepairComponent(itemId) {
+/**
+ * Handle message ship action
+ */
+async function handleMessageShip(shipId, playerName) {
+    const message = prompt(`Send message to ${playerName}:`);
+    if (!message || message.trim() === '') {
+        return;
+    }
+    
     try {
-        console.log('Repairing component:', itemId);
-        const result = await repairComponent(itemId);
-        console.log('Repair result:', result);
-        addLogMessage(`Component repaired! Health restored: ${result.health_restored.toFixed(1)}`, 'success');
-        
-        // Reload ship data
-        gameState.ship = await getShip();
-        renderUI();
-        
+        console.log('Sending message to ship:', shipId, message);
+        await handleAction('message_ship', shipId, {message: message.trim()});
+        // Confirmation will arrive via the next tick update
     } catch (error) {
-        console.error('Failed to repair component:', error);
-        addLogMessage(`Repair failed: ${error.message}`, 'error');
-        renderUI();
+        console.error('Failed to send message:', error);
+        addLogMessage(`Failed to send message: ${error.message}`, 'error');
     }
 }

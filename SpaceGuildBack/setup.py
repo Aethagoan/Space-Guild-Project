@@ -232,8 +232,8 @@ async def setup_world(data_dir: str = "game_data",
         await data_handler.single_link_locations(source, dest)
         print(f"  [+] One-way: {source} -> {dest}")
     
-    # Save vendor dialogue data separately (station-based structure)
-    vendor_file = os.path.join(data_dir, "vendor_dialogue.json")
+    # Save vendor data separately (station-based structure)
+    vendor_file = os.path.join(data_dir, "vendors.json")
     print(f"\n[*] Saving vendor dialogue to {vendor_file}...")
     
     # Count total vendors across all stations

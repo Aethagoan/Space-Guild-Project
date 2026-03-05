@@ -337,6 +337,8 @@ Shields refill at stations with **no penalty** (unlike component repairs).
 - Damage goes directly to item health
 - When health → 0, item is destroyed (unusable)
 
+*NOTE:* the base weapon damage is 25, this is multiplied by the multiplier and the tier.
+
 #### Safe Zones
 
 Locations tagged `'Safe'` disable all weapons—attacks will fail if attempted in safe zones. This protects station areas and Orion-controlled space from PvP combat.

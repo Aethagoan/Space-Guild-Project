@@ -28,7 +28,7 @@
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-off);
   color: var(--text-primary);
   font-family: 'Courier New', monospace;
   overflow: hidden;
@@ -132,6 +132,16 @@ body {
   border-bottom: 2px solid var(--border-color-gray);
   padding-bottom: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+.panel-header.clickable-header {
+  cursor: pointer;
+  transition: color 0.2s, border-bottom-color 0.2s;
+}
+
+.panel-header.clickable-header:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--terminal-outline-color);
 }
 
 .section-header {
@@ -254,13 +264,16 @@ body {
   border-bottom: 2px solid var(--border-color-gray);
   max-height: 200px;
   min-height: 150px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .ship-log {
-  max-height: 150px;
+  flex: 1;
   overflow-y: auto;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 0.25rem;
   font-size: 0.85rem;
 }
@@ -269,6 +282,62 @@ body {
   padding: 0.25rem 0.5rem;
   border-left: 3px solid var(--border-color-gray);
   background-color: var(--bg-tertiary);
+  transition: background-color 0.2s;
+}
+
+/* Clickable log entries */
+.log-entry.log-clickable {
+  cursor: pointer;
+}
+
+.log-entry.log-clickable:hover {
+  filter: brightness(1.2);
+}
+
+/* Message type colors */
+.log-entry.log-combat {
+  border-left-color: var(--border-color-red);
+  color: #ff6b6b;
+}
+
+.log-entry.log-combat.log-clickable:hover {
+  background-color: #2a0a0a;
+}
+
+.log-entry.log-action {
+  border-left-color: var(--terminal-highlight);
+  color: #6b9bff;
+}
+
+.log-entry.log-action.log-clickable:hover {
+  background-color: #0a0a2a;
+}
+
+.log-entry.log-ship_message {
+  border-left-color: var(--border-color-purple);
+  color: #ff6bff;
+}
+
+.log-entry.log-ship_message.log-clickable:hover {
+  background-color: #2a0a2a;
+}
+
+.log-entry.log-computer {
+  border-left-color: #00ff00;
+  color: #6bff6b;
+}
+
+.log-entry.log-computer.log-clickable:hover {
+  background-color: #0a2a0a;
+}
+
+.log-entry.log-environment {
+  border-left-color: var(--border-color-yellow);
+  color: #ffff6b;
+}
+
+.log-entry.log-environment.log-clickable:hover {
+  background-color: #2a2a0a;
 }
 
 .log-entry.log-error {
@@ -297,6 +366,23 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+/* Panel blink animation when selection changes */
+@keyframes panelBlink {
+  0% {
+    background-color: var(--bg-secondary);
+  }
+  50% {
+    background-color: var(--bg-off);
+  }
+  100% {
+    background-color: var(--bg-secondary);
+  }
+}
+
+.details-section.panel-blink {
+  animation: panelBlink 0.1s ease-in-out;
 }
 
 .detail-header {

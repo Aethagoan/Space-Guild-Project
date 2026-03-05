@@ -27,6 +27,9 @@ def _set_data_handler(handler):
     data_handler = handler
 
 
+base_weapon_damage = 25
+
+
 # ============================================================================
 # COMPONENT GETTERS
 # ============================================================================
@@ -189,7 +192,7 @@ async def get_ship_max_hp(ship_id: int) -> float:
 async def get_ship_weapon_damage(ship_id: int) -> float:
     """Calculate a ship's weapon damage.
     
-    Returns the weapon's multiplier if health > 0, or 0 if no weapon equipped or weapon disabled.
+    Returns the weapon's multiplier*base_weapon_damage if health > 0, or 0 if no weapon equipped or weapon disabled.
     
     Args:
         ship_id: Ship ID
@@ -206,7 +209,7 @@ async def get_ship_weapon_damage(ship_id: int) -> float:
     if health <= 0:
         return 0.0
     
-    return float(weapon['multiplier'])
+    return float(weapon['multiplier'] * base_weapon_damage * weapon['tier'])
 
 
 async def get_ship_cargo_capacity(ship_id: int) -> float:

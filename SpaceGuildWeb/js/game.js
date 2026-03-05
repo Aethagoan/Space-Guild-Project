@@ -7,12 +7,13 @@ const gameState = {
     location: null,          // Location data from /location endpoint
     vendors: null,           // Vendors data from /vendors endpoint
     shipLog: [],             // Ship log messages
-    scanData: null,          // Last scan result (cached)
+    scanData: null,          // Last scan result (cached): {scan_type, target, data}
     
     // UI state
     selectedView: 'location', // Current left panel selection: 'location', 'ship', 'vendors', 'navigation'
     selectedItem: null,       // Currently selected item from middle panel
     selectedItemType: null,   // Type of selected item: 'ship', 'item', 'component', 'vendor', 'destination'
+    isShowingScanData: false, // Flag to indicate we're displaying full scan data
     
     // Action state
     queuedAction: null,       // Currently queued action (shown in UI as "Action Queued")
@@ -21,7 +22,10 @@ const gameState = {
     isPlayerConnected: false, // Has player_id in localStorage
     isConnected: false,       // Connected to backend and game data loaded
     isLoading: true,
-    errorMessage: null
+    errorMessage: null,
+    
+    // Item registry for safe selection (avoids JSON.stringify escaping issues)
+    itemRegistry: {}
 };
 
 // Update loop state
@@ -255,6 +259,9 @@ function startUpdateLoop() {
 function processUpdates(updates) {
     console.log('Processing updates:', updates);
     
+    // Track if location changed
+    const oldLocation = gameState.location?.name;
+    
     // Update ship state
     if (updates.ship_state) {
         gameState.ship = updates.ship_state;
@@ -265,28 +272,30 @@ function processUpdates(updates) {
         gameState.location = updates.location_state;
     }
     
-    // Update ship log
+    // Update ship log from backend
     if (updates.ship_log && Array.isArray(updates.ship_log)) {
         gameState.shipLog = updates.ship_log;
     }
     
-    // Process action results
+    // Handle scan data
     if (updates.scan_data) {
+        // Backend sends {scan_type, target, data} - store full structure
         gameState.scanData = updates.scan_data;
         console.log('Scan data received:', updates.scan_data);
+        
+        // Auto-select the scanned entity for display
+        if (updates.scan_data.data) {
+            gameState.selectedItem = updates.scan_data.data;
+            gameState.selectedItemType = updates.scan_data.scan_type;
+            gameState.isShowingScanData = true; // Flag that we're showing scan data
+            console.log('Auto-selected scan result:', updates.scan_data.scan_type);
+        }
     }
     
-    if (updates.attack_result) {
-        console.log('Attack result:', updates.attack_result);
-    }
-    
-    if (updates.collect_result) {
-        console.log('Collect result:', updates.collect_result);
-    }
-    
-    if (updates.move_result) {
-        console.log('Move result:', updates.move_result);
-        // Reload vendors after moving
+    // Reload vendors if location changed
+    const newLocation = gameState.location?.name;
+    if (oldLocation && newLocation && oldLocation !== newLocation) {
+        console.log('Location changed, reloading vendors');
         reloadVendors();
     }
     
@@ -354,18 +363,170 @@ function handleItemSelection(item, itemType) {
     console.log('Selected item:', item, 'Type:', itemType);
     gameState.selectedItem = item;
     gameState.selectedItemType = itemType;
+    gameState.isShowingScanData = false; // Clear scan data flag when selecting from middle panel
+    
+    // Trigger panel blink animation
+    triggerPanelBlink();
+    
     renderUI();
 }
 
 /**
- * Add a message to ship log (for local errors/info)
+ * Handle item selection by registry ID (safe for escaping issues)
  */
-function addLogMessage(message, type = 'info') {
+function handleItemSelectionById(registryId) {
+    const item = gameState.itemRegistry[registryId];
+    if (!item) {
+        console.error('Item not found in registry:', registryId);
+        return;
+    }
+    
+    handleItemSelection(item.data, item.type);
+}
+
+/**
+ * Register an item in the registry and return a unique ID
+ */
+function registerItem(item, itemType) {
+    const id = `item_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    gameState.itemRegistry[id] = { data: item, type: itemType };
+    return id;
+}
+
+/**
+ * Handle log entry click - select the source entity
+ */
+function handleLogEntryClick(source, content) {
+    if (!source) return;
+    
+    console.log('Log entry clicked, source:', source, 'content:', content);
+    
+    // Parse source format: "entity_type:entity_id"
+    const [entityType, entityId] = source.split(':');
+    
+    // Check if we have scan data that matches this source
+    const hasScanData = gameState.scanData && 
+        gameState.scanData.scan_type === entityType &&
+        gameState.scanData.target == entityId;
+    
+    // If we have matching scan data, show it (scan data has full details)
+    if (hasScanData) {
+        gameState.selectedItem = gameState.scanData.data;
+        gameState.selectedItemType = entityType;
+        gameState.isShowingScanData = true;
+        console.log('Showing scan data for:', entityType, entityId);
+        
+    } else {
+        // Otherwise, find entity in location (basic info)
+        const entity = findEntityInLocation(entityType, entityId);
+        
+        if (entity) {
+            gameState.selectedItem = entity;
+            gameState.selectedItemType = entityType;
+            gameState.isShowingScanData = false;
+            console.log('Selected entity from location:', entityType, entityId);
+        } else {
+            // Entity not found
+            gameState.selectedItem = { id: entityId, type: entityType };
+            gameState.selectedItemType = 'unknown';
+            gameState.isShowingScanData = false;
+            console.log('Entity not found:', entityType, entityId);
+        }
+    }
+    
+    // Trigger panel blink animation
+    triggerPanelBlink();
+    
+    renderUI();
+}
+
+/**
+ * Find an entity in current location (ships, items, destinations)
+ */
+function findEntityInLocation(entityType, entityId) {
+    const id = entityId;
+    
+    switch (entityType) {
+        case 'ship':
+            if (gameState.location && gameState.location.ships) {
+                return gameState.location.ships.find(s => 
+                    s.ship_id == id || s.id == id
+                );
+            }
+            break;
+            
+        case 'item':
+            if (gameState.location && gameState.location.items) {
+                return gameState.location.items.find(i => 
+                    i.item_id == id || i.id == id
+                );
+            }
+            break;
+            
+        case 'location':
+            // Check current location
+            if (gameState.location && 
+                (gameState.location.name === id || gameState.location.id == id)) {
+                return gameState.location;
+            }
+            // Check navigation destinations
+            if (gameState.location && gameState.location.links) {
+                return gameState.location.links.find(d => 
+                    d.name === id || d.id == id
+                );
+            }
+            break;
+            
+        case 'npc':
+            // Check location NPCs (when implemented)
+            if (gameState.location && gameState.location.npcs) {
+                return gameState.location.npcs.find(n => 
+                    n.npc_id == id || n.id == id
+                );
+            }
+            break;
+    }
+    
+    return null;
+}
+
+/**
+ * Add a log entry to the ship log (backend format)
+ */
+function addLogEntry(entry) {
+    // Ensure entry has the proper format: {type, content, source}
+    if (!entry.content) return;
+    
     gameState.shipLog.push({
-        message: message,
-        type: type,
-        timestamp: Date.now()
+        type: entry.type || 'computer',
+        content: entry.content,
+        source: entry.source || null
     });
+}
+
+/**
+ * Add a message to ship log (for local errors/info)
+ * This is a convenience wrapper that uses the backend format
+ */
+function addLogMessage(message, type = 'error') {
+    addLogEntry({
+        type: type,
+        content: message,
+        source: null
+    });
+}
+
+/**
+ * Trigger panel blink animation on details panel
+ */
+function triggerPanelBlink() {
+    const detailsContainer = document.getElementById('details-section');
+    if (!detailsContainer) return;
+    
+    detailsContainer.classList.add('panel-blink');
+    setTimeout(() => {
+        detailsContainer.classList.remove('panel-blink');
+    }, 100);
 }
 
 /**

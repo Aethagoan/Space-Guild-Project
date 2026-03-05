@@ -78,7 +78,7 @@ async function healthCheck() {
  * @param {string} name - Player name (optional, defaults to "Pilot")
  * @returns {Promise<{player_id: number, ship_id: number, name: string, location: string}>}
  */
-async function spawnPlayer(name = 'Pilot') {
+async function spawnPlayer(name) {
     return apiFetch(`${API_BASE}/spawn_player`, {
         method: 'POST',
         headers: {
@@ -194,6 +194,46 @@ async function repairComponent(itemId) {
         body: JSON.stringify({
             player_id: playerId,
             item_id: itemId
+        })
+    });
+}
+
+/**
+ * POST /equip - Equip an item from cargo to component slot
+ * @param {number} itemId - Item ID from cargo to equip
+ */
+async function equipItem(itemId) {
+    const playerId = getPlayerId();
+    if (!playerId) throw new Error('No player ID');
+    
+    return apiFetch(`${API_BASE}/equip`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            player_id: playerId,
+            item_id: itemId
+        })
+    });
+}
+
+/**
+ * POST /unequip - Unequip an item from component slot to cargo
+ * @param {string} slotName - Slot name (engine_id, weapon_id, etc.)
+ */
+async function unequipItem(slotName) {
+    const playerId = getPlayerId();
+    if (!playerId) throw new Error('No player ID');
+    
+    return apiFetch(`${API_BASE}/unequip`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            player_id: playerId,
+            slot_name: slotName
         })
     });
 }

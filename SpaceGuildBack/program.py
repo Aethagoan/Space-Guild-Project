@@ -52,25 +52,38 @@ def print_tick_stats(tick_number: int, stats: dict, duration: float):
     """
     timestamp = datetime.now().strftime("%H:%M:%S")
     
-    print(f"\n[{timestamp}] Tick #{tick_number} completed in {duration:.3f}s")
+    print(f"\n{'='*70}")
+    print(f"[{timestamp}] TICK #{tick_number} completed in {duration:.3f}s")
+    print(f"{'='*70}")
     
     # Only print non-zero stats
     actions_processed = []
+    if stats['scans'] > 0:
+        actions_processed.append(f"  • Scans: {stats['scans']}")
     if stats['attack_ship'] > 0:
-        actions_processed.append(f"Ship attacks: {stats['attack_ship']}")
+        actions_processed.append(f"  • Ship attacks: {stats['attack_ship']}")
     if stats['attack_ship_component'] > 0:
-        actions_processed.append(f"Component attacks: {stats['attack_ship_component']}")
+        actions_processed.append(f"  • Component attacks: {stats['attack_ship_component']}")
     if stats['attack_item'] > 0:
-        actions_processed.append(f"Item attacks: {stats['attack_item']}")
+        actions_processed.append(f"  • Item attacks: {stats['attack_item']}")
     if stats['moves'] > 0:
-        actions_processed.append(f"Moves: {stats['moves']}")
+        actions_processed.append(f"  • Moves: {stats['moves']}")
     if stats['collects'] > 0:
-        actions_processed.append(f"Collects: {stats['collects']}")
+        actions_processed.append(f"  • Collects: {stats['collects']}")
+    if stats['drops'] > 0:
+        actions_processed.append(f"  • Drops: {stats['drops']}")
+    if stats['stealth_activations'] > 0:
+        actions_processed.append(f"  • Stealth activations: {stats['stealth_activations']}")
+    if stats['stealth_deactivations'] > 0:
+        actions_processed.append(f"  • Stealth deactivations: {stats['stealth_deactivations']}")
     
     if actions_processed:
-        print(f"  Actions: {', '.join(actions_processed)}")
+        print("ACTIONS PROCESSED:")
+        print('\n'.join(actions_processed))
     else:
         print("  No actions processed this tick")
+    
+    print(f"{'='*70}\n")
 
 
 async def save_world_data(save_interval: int, tick_number: int, data_handler: DataHandler):

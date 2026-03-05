@@ -90,7 +90,7 @@ class DataHandler:
         
         # Ship logs (ephemeral, not persisted) - lazily initialized
         self.ShipLogs: Dict[int, dict] = {}
-        self.MAX_LOG_ENTRIES = 50
+        self.MAX_LOG_ENTRIES = 100
         
         # ID Generator - will be initialized after loading existing data
         # This prevents duplicate IDs by analyzing existing entities
@@ -1095,14 +1095,8 @@ class DataHandler:
         Raises:
             KeyError: If player doesn't exist
         """
-        logger.info(f"get_player called with player_id: {player_id} (type: {type(player_id).__name__})")
-        logger.info(f"Players dict has {len(self.Players)} players")
-        logger.info(f"Players dict keys: {list(self.Players.keys())[:5]}")  # Show first 5 keys
-        logger.info(f"Player {player_id} in Players dict: {player_id in self.Players}")
-        
         if player_id not in self.Players:
-            logger.error(f"Player {player_id} NOT FOUND in Players dict!")
-            logger.error(f"All player IDs: {list(self.Players.keys())}")
+            logger.error(f"Player {player_id} NOT FOUND (Players:{len(self.Players)})")
             raise KeyError(f"Player {player_id} not found")
         
         return self.Players[player_id]
@@ -1249,10 +1243,7 @@ class DataHandler:
         player_data = Player(player_name, ship_id)
         self.Players[player_id] = player_data
         
-        logger.info(f"Player created successfully - player_id: {player_id}, ship_id: {ship_id}, name: {player_name}")
-        logger.info(f"Player data stored: {player_data}")
-        logger.info(f"Players dict now has {len(self.Players)} players")
-        logger.info(f"Player {player_id} in Players dict: {player_id in self.Players}")
+        logger.info(f"Player created: {player_name} (player_id:{player_id}, ship_id:{ship_id})")
         
         return {
             'player_id': player_id,
@@ -1397,7 +1388,7 @@ class DataHandler:
             raise ValueError(f"Ship {ship_id} is at '{ship['location']}', not at '{location_name}'")
         
         # Prevent drops at stations
-        location_type = location['location_type']
+        location_type = location['type']
         if location_type in ['station', 'ground_station']:
             raise ValueError(f"Cannot drop items at {location_type} '{location_name}'")
         
@@ -1600,6 +1591,172 @@ class DataHandler:
             # Equip the new item
             self.Ships[ship_id][slot_name] = item_id
     
+    def _calculate_component_multiplier_reduction(health_percent: float) -> float:
+        """Calculate multiplier reduction for COMPONENTS based on health percentage.
+        
+        Components have lenient degradation penalties.
+        
+        Health %      -> Multiplier Reduction
+        0-9%          -> 0.10
+        10-19%        -> 0.09
+        20-29%        -> 0.08
+        30-39%        -> 0.07
+        40-49%        -> 0.06
+        50-59%        -> 0.05
+        60-69%        -> 0.04
+        70-79%        -> 0.03
+        80-89%        -> 0.02
+        90-99%        -> 0.01
+        100%          -> 0.00
+        
+        Args:
+            health_percent: Health percentage (0.0 to 100.0)
+            
+        Returns:
+            Multiplier reduction as a float
+        """
+        if health_percent >= 100.0:
+            return 0.0
+        elif health_percent >= 90.0:
+            return 0.01
+        elif health_percent >= 80.0:
+            return 0.02
+        elif health_percent >= 70.0:
+            return 0.03
+        elif health_percent >= 60.0:
+            return 0.04
+        elif health_percent >= 50.0:
+            return 0.05
+        elif health_percent >= 40.0:
+            return 0.06
+        elif health_percent >= 30.0:
+            return 0.07
+        elif health_percent >= 20.0:
+            return 0.08
+        elif health_percent >= 10.0:
+            return 0.09
+        else:  # 0-9%
+            return 0.10
+
+    def _calculate_item_multiplier_reduction(health_percent: float) -> float:
+        """Calculate multiplier reduction for ITEMS (non-components) based on health percentage.
+        
+        Items have SEVERE degradation penalties - more harsh than components.
+        
+        Health %      -> Multiplier Reduction
+        0-9%          -> 0.50
+        10-19%        -> 0.45
+        20-29%        -> 0.40
+        30-39%        -> 0.35
+        40-49%        -> 0.30
+        50-59%        -> 0.25
+        60-69%        -> 0.20
+        70-79%        -> 0.15
+        80-89%        -> 0.10
+        90-99%        -> 0.05
+        100%          -> 0.00
+        
+        Args:
+            health_percent: Health percentage (0.0 to 100.0)
+            
+        Returns:
+            Multiplier reduction as a float
+        """
+        if health_percent >= 100.0:
+            return 0.0
+        elif health_percent >= 90.0:
+            return 0.05
+        elif health_percent >= 80.0:
+            return 0.10
+        elif health_percent >= 70.0:
+            return 0.15
+        elif health_percent >= 60.0:
+            return 0.20
+        elif health_percent >= 50.0:
+            return 0.25
+        elif health_percent >= 40.0:
+            return 0.30
+        elif health_percent >= 30.0:
+            return 0.35
+        elif health_percent >= 20.0:
+            return 0.40
+        elif health_percent >= 10.0:
+            return 0.45
+        else:  # 0-9%
+            return 0.50
+
+
+    async def repair_ship_component(self, ship_id: int, slot_name: str) -> str:
+        """takes in the slot name, i.e. engine_id, weapon_id, and repairs the component
+        at that slot on ship_id.
+
+        Args:
+            ship_id: the ship ID
+            slot_name: one of engine_id, weapon_id, shield_id, cargo_id, sensor_id, stealth_cloak_id
+        
+        Raises:
+            KeyError: If ship doesn't exist
+            ValueError: If slot is invalid
+        """
+
+        valid_slots = ['engine_id', 'weapon_id', 'shield_id', 'cargo_id', 'sensor_id', 'stealth_cloak_id']
+        if slot_name not in valid_slots:
+            raise ValueError(f"Invalid slot '{slot_name}'. Must be one of {valid_slots}")
+
+        # lock the component for repair (no nonsense while it's being repaired.)
+        async with self._aquire_locks(f"ship:{ship_id}:component:{slot_name}"):
+            item_id = self.Ships[ship_id][slot_name]
+
+            if item_id is None:
+                raise KeyError(f"No component in slot.")
+
+            item = self.Items[item_id]
+
+            # Get current values
+            current_health = item['health']
+            max_health = item['maxhealth']
+            current_mult = item['multiplier']
+            min_mult = item['min_multiplier']
+            item_type = item['type']
+            
+            # Calculate health percentage
+            health_percent = (current_health / max_health * 100.0) if max_health > 0 else 100.0
+
+            multiplier_reduction = _calculate_component_multiplier_reduction(health_percent)
+            new_multiplier = max(min_mult, current_mult - multiplier_reduction)
+
+            self.set_item_to_max_health(item_id)
+            self.update_item_multiplier(item_id, new_multiplier)
+
+            self.add_ship_log(ship_id,'environment',f"Component Repaired. The damage entailed a -{multiplier_reduction} to the multiplier on repair.")
+
+    async def repair_item(self, ship_id: int, item_id: int):
+        ship = self.Ships[ship_id] # throws a key error if it's not there
+
+        if item_id not in ship.get('items'):
+            raise KeyError(f"Item not in cargo.")
+            
+        item = self.Items[item_id]
+        
+        # Get current values
+        current_health = item['health']
+        max_health = item['maxhealth']
+        current_mult = item['multiplier']
+        min_mult = item['min_multiplier']
+        item_type = item['type']
+        
+        # Calculate health percentage
+        health_percent = (current_health / max_health * 100.0) if max_health > 0 else 100.0
+
+        multiplier_reduction = _calculate_item_multiplier_reduction(health_percent)
+        new_multiplier = max(min_mult, current_mult - multiplier_reduction)
+
+        self.set_item_to_max_health(item_id)
+        self.update_item_multiplier(item_id, new_multiplier)
+
+        self.add_ship_log(ship_id,'environment',f"Item Repaired. The damage entailed a -{multiplier_reduction} to the multiplier on repair.")
+
+
     # ============================================================================
     # JSON PERSISTENCE METHODS
     # ============================================================================
@@ -1724,9 +1881,9 @@ class DataHandler:
         """Save all vendors to a JSON file.
         
         Args:
-            filename: Optional custom filename (defaults to 'vendor_dialogue.json')
+            filename: Optional custom filename (defaults to 'vendors.json')
         """
-        filename = filename or os.path.join(self.data_dir, "vendor_dialogue.json")
+        filename = filename or os.path.join(self.data_dir, "vendors.json")
         with open(filename, 'w') as f:
             json.dump(self.Vendors, f, indent=2)
     
@@ -1736,9 +1893,9 @@ class DataHandler:
         Vendors are stored by location name. Each location can have multiple vendors.
         
         Args:
-            filename: Optional custom filename (defaults to 'vendor_dialogue.json')
+            filename: Optional custom filename (defaults to 'vendors.json')
         """
-        filename = filename or os.path.join(self.data_dir, "vendor_dialogue.json")
+        filename = filename or os.path.join(self.data_dir, "vendors.json")
         if os.path.exists(filename):
             with open(filename, 'r') as f:
                 self.Vendors = json.load(f)
@@ -1859,13 +2016,13 @@ class DataHandler:
         self.save_items()
         self.save_players()
         self.save_factions()
-        self.save_vendors()
         
         # Static template data
         self.save_resource_items()
         self.save_spawnable_components()
         self.save_spawnable_ships()
         self.save_npc_factions()
+        self.save_vendors()
     
     def save_dynamic(self):
         """Save only dynamic game state to JSON files.
@@ -1887,7 +2044,7 @@ class DataHandler:
         """Load all game data from JSON files.
         
         This includes both dynamic game state (locations, ships, items, etc.)
-        and static template data (resource items, spawnable ships, NPC factions).
+        and static template data (resource items, spawnable ships, NPC factions, vendors).
         """
         # Dynamic game state
         self.load_locations()
@@ -1895,13 +2052,13 @@ class DataHandler:
         self.load_items()
         self.load_players()
         self.load_factions()
-        self.load_vendors()
         
         # Static template data
         self.load_resource_items()
         self.load_spawnable_components()
         self.load_spawnable_ships()
         self.load_npc_factions()
+        self.load_vendors()
         
         # Initialize ID generator after loading all existing entities
         # This ensures no duplicate IDs by analyzing existing data
@@ -1989,7 +2146,7 @@ class DataHandler:
             ship_id: The ship to retrieve logs for
             
         Returns:
-            List of log entries in chronological order (oldest->newest).
+            List of log entries in chronological order with newer messages at lower indexes.
             Each entry contains:
                 - type: Message type (combat, action, ship_message, computer, environment)
                 - content: The log message text
@@ -2004,8 +2161,9 @@ class DataHandler:
             
             if log['count'] < self.MAX_LOG_ENTRIES:
                 # Buffer not full yet - messages are in last 'count' slots
-                # Return the last count entries
-                return log['entries'][-log['count']:]
+                # Since we write backwards, newest is at lower, oldest at higher
+                entries = log['entries'][-log['count']:]
+                return entries
             else:
                 # Buffer wrapped - slice and concatenate
                 # write_index points to next write position

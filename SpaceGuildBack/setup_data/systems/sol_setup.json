@@ -1262,7 +1262,9 @@
       "Kuiper_Region_4_Station"
     ]
   ],
+
   "single_directional_links": [],
+  
   "vendors": {
     "Earth_Orbital_Station_Zero": {
       "earthorbit_zero_shipwright": {
