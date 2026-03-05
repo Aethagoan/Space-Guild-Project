@@ -209,7 +209,7 @@ async def get_ship_weapon_damage(ship_id: int) -> float:
     if health <= 0:
         return 0.0
     
-    return float(weapon['multiplier'] * base_weapon_damage * weapon['tier'])
+    return float(weapon['multiplier'] * base_weapon_damage * (weapon['tier'] + 1))
 
 
 async def get_ship_cargo_capacity(ship_id: int) -> float:
@@ -332,125 +332,6 @@ async def refill_shield_pool(ship_id: int) -> float:
     return max_shield - current_shield
 
 
-async def _calculate_multiplier_reduction(health_percent: float) -> float:
-    """Calculate the multiplier reduction based on remaining health percentage.
-    
-    Health %      -> Multiplier Reduction
-    0-9%          -> 0.10
-    10-19%        -> 0.09
-    20-29%        -> 0.08
-    30-39%        -> 0.07
-    40-49%        -> 0.06
-    50-59%        -> 0.05
-    60-69%        -> 0.04
-    70-79%        -> 0.03
-    80-89%        -> 0.02
-    90-99%        -> 0.01
-    100%          -> 0.00
-    
-    Args:
-        health_percent: Health percentage (0.0 to 100.0)
-        
-    Returns:
-        Multiplier reduction as a float
-    """
-    if health_percent >= 100.0:
-        return 0.0
-    elif health_percent >= 90.0:
-        return 0.01
-    elif health_percent >= 80.0:
-        return 0.02
-    elif health_percent >= 70.0:
-        return 0.03
-    elif health_percent >= 60.0:
-        return 0.04
-    elif health_percent >= 50.0:
-        return 0.05
-    elif health_percent >= 40.0:
-        return 0.06
-    elif health_percent >= 30.0:
-        return 0.07
-    elif health_percent >= 20.0:
-        return 0.08
-    elif health_percent >= 10.0:
-        return 0.09
-    else:  # 0-9%
-        return 0.10
-
-
-async def repair_component(item_id: int) -> Dict[str, float]:
-    """Repair a component by restoring its health to max and applying multiplier reduction.
-    
-    The component's health is restored to maximum, but the multiplier is reduced based
-    on the health percentage at the time of repair. This creates a permanent penalty
-    for letting components get too damaged.
-    
-    Multiplier reduction is calculated based on health % before repair:
-    - 0-9% health: -0.10 multiplier
-    - 10-19% health: -0.09 multiplier
-    - 20-29% health: -0.08 multiplier
-    - ... up to ...
-    - 90-99% health: -0.01 multiplier
-    - 100% health: no reduction
-    
-    Args:
-        item_id: ID of the component item to repair
-        
-    Returns:
-        Dict with repair info: {
-            'health_restored': float,
-            'multiplier_reduction': float,
-            'new_multiplier': float,
-            'health_percent_before': float
-        }
-        
-    Raises:
-        KeyError: If item doesn't exist
-        ValueError: If item is not a component type
-    """
-    dh = _get_data_handler()
-    component = await dh.get_item(item_id)
-    
-    # Verify this is a component
-    item_type = component['type']
-    valid_types = ['engine', 'weapon', 'shield', 'cargo', 'sensor', 'stealth_cloak']
-    if item_type not in valid_types:
-        raise ValueError(f"Item {item_id} is not a component (type: '{item_type}'). Must be one of {valid_types}")
-    
-    # Get current values
-    current_health = component['health']
-    current_mult = component['multiplier']
-    min_mult = component['min_multiplier']
-    
-    # Get max health from the item's maxhealth field
-    max_health = component['maxhealth']
-    
-    # Calculate health percentage
-    health_percent = (current_health / max_health * 100.0) if max_health > 0 else 100.0
-    
-    # Calculate multiplier reduction based on health %
-    multiplier_reduction = _calculate_multiplier_reduction(health_percent)
-    
-    # Calculate new multiplier (can't go below min_multiplier)
-    new_multiplier = max(min_mult, current_mult - multiplier_reduction)
-    
-    # Calculate health restored
-    health_restored = max_health - current_health
-    
-    # Apply repairs using DataHandler's methods
-    await dh.set_item_to_max_health(item_id)
-    await dh.update_item_multiplier(item_id, new_multiplier)
-    
-    return {
-        'health_restored': health_restored,
-        'multiplier_reduction': multiplier_reduction,
-        'new_multiplier': new_multiplier,
-        'health_percent_before': health_percent
-    }
-
-
-
-
 # ============================================================================
 # UTILITY FUNCTIONS
 # ============================================================================
@@ -549,7 +430,6 @@ __all__ = [
     # Repair functions
     'repair_ship_hp',
     'refill_shield_pool',
-    'repair_component',
     
     # Utilities
     'can_equip_item',
