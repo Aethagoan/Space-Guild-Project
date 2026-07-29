@@ -31,6 +31,91 @@
 ```
 
 ---
+## LOCATION SUMMARY
+
+**Binary Stars (Enforced):**
+- Primary Star Orbit, Secondary Star Orbit
+- 2 Orbital Stations (1 per star)
+- 1 Warp Gate (Secondary Star)
+
+**Gas Giant System (Patrolled/Dangerous):**
+- Gas Giant Orbit (Patrolled)
+- 1 Orbital Station
+- 2 Deep Storm Resource Sites (Dangerous, requires special extraction equipment)
+
+**Asteroid Belts (Patrolled):**
+- 2 Belt Regions (Inner, Outer)
+- 6 Resource Sites (2 in Inner, 4 in Outer)
+
+**Shattered Planets (Patrolled/Dangerous):**
+- Shattered Planet 1: Orbit (Patrolled), 1 Orbital Station, 1 Deadly Surface Site
+- Shattered Planet 2: Orbit (Dangerous), 1 Orbital Station, 2 Dangerous Surface Sites
+
+**Synthetic Planet (Enforced/Safe):**
+- Synthetic Planet Orbit (Enforced)
+- 2 Orbital Stations
+- 1 Ground Station
+
+**Total Locations:** 32
+
+---
+
+## VENDOR SUMMARY
+
+**Total Vendors:** 29
+
+**By Category:**
+- Shipwrights: 4
+- Traders/General: 5
+- Research/Data: 5
+- Salvage/Archaeological: 3
+- Equipment/Gear: 4
+- Technology Specialists: 4
+- Specialized Services: 4
+
+**By Location Type:**
+- Star Stations: 6 vendors
+- Gas Giant Station: 3 vendors
+- Shattered Planet Stations: 7 vendors
+- Synthetic Planet Stations: 13 vendors
+
+---
+
+## NOTES
+
+- Binary star system creates unique gravitational and radiation dynamics
+- Secondary star (white dwarf) enables exotic research and manufacturing
+- Warp gate positioned at secondary star for gravitational stability
+- Gas Giant deep storms require special extraction items (deployable probes)
+- Two shattered planets suggest ancient catastrophic events
+- Shattered Planet 2 more dangerous with two surface sites vs one for Planet 1
+- Synthetic Planet is the system's crown jewel - artificial world with advanced technology
+- Progression from Safe (stations) → Patrolled (belts, orbits) → Dangerous (storms, surfaces)
+
+### Spawn Distribution Philosophy:
+- **Divided system** - Scavenger Guild controls most of the system, Scientific Guild controls only the Synthetic Planet
+- **Patrolled zones** (stellar orbits, asteroid belts, shattered planets, gas giant): Scavenger patrols + salvagers
+- **Enforced zones** (synthetic planet orbit): Scientific Guild enforcers + research vessels
+- **Dangerous zones** (deep storms, surface sites, shattered planet 2 orbit): Environmental hazards + hostile defenses
+- **Limited pirate presence** - Both guilds maintain reasonable security
+- PvP opportunities exist in Patrolled and Dangerous zones
+
+### Resource Gathering Design:
+- **Standard mining**: Asteroid belt sites (6 total)
+- **Specialized extraction**: Gas giant storms require deployment of special equipment items
+- **High-risk, high-reward**: Shattered planet surface sites (3 total)
+- **Resource tier progression**: Belts (common) → Storms (rare) → Surfaces (exotic/ancient)
+
+### Synthetic Planet Lore:
+- Artificially constructed world - ancient megastructure
+- Two orbital stations (commercial + research focused)
+- Ground station with access to underground ancient systems
+- Highest concentration of advanced vendors in system
+- **Only location controlled by Scientific Guild** - they claimed it for research purposes
+- Represents pinnacle of system's technological achievement
+- Scavenger Guild controls the rest of the system, making this a unique political situation
+
+---
 
 ## KAJIAN SYSTEM LOCATIONS
 
@@ -495,86 +580,3 @@
 
 ---
 
-## LOCATION SUMMARY
-
-**Binary Stars (Enforced):**
-- Primary Star Orbit, Secondary Star Orbit
-- 2 Orbital Stations (1 per star)
-- 1 Warp Gate (Secondary Star)
-
-**Gas Giant System (Patrolled/Dangerous):**
-- Gas Giant Orbit (Patrolled)
-- 1 Orbital Station
-- 2 Deep Storm Resource Sites (Dangerous, requires special extraction equipment)
-
-**Asteroid Belts (Patrolled):**
-- 2 Belt Regions (Inner, Outer)
-- 6 Resource Sites (2 in Inner, 4 in Outer)
-
-**Shattered Planets (Patrolled/Dangerous):**
-- Shattered Planet 1: Orbit (Patrolled), 1 Orbital Station, 1 Deadly Surface Site
-- Shattered Planet 2: Orbit (Dangerous), 1 Orbital Station, 2 Dangerous Surface Sites
-
-**Synthetic Planet (Enforced/Safe):**
-- Synthetic Planet Orbit (Enforced)
-- 2 Orbital Stations
-- 1 Ground Station
-
-**Total Locations:** 32
-
----
-
-## VENDOR SUMMARY
-
-**Total Vendors:** 29
-
-**By Category:**
-- Shipwrights: 4
-- Traders/General: 5
-- Research/Data: 5
-- Salvage/Archaeological: 3
-- Equipment/Gear: 4
-- Technology Specialists: 4
-- Specialized Services: 4
-
-**By Location Type:**
-- Star Stations: 6 vendors
-- Gas Giant Station: 3 vendors
-- Shattered Planet Stations: 7 vendors
-- Synthetic Planet Stations: 13 vendors
-
----
-
-## NOTES
-
-- Binary star system creates unique gravitational and radiation dynamics
-- Secondary star (white dwarf) enables exotic research and manufacturing
-- Warp gate positioned at secondary star for gravitational stability
-- Gas Giant deep storms require special extraction items (deployable probes)
-- Two shattered planets suggest ancient catastrophic events
-- Shattered Planet 2 more dangerous with two surface sites vs one for Planet 1
-- Synthetic Planet is the system's crown jewel - artificial world with advanced technology
-- Progression from Safe (stations) → Patrolled (belts, orbits) → Dangerous (storms, surfaces)
-
-### Spawn Distribution Philosophy:
-- **Divided system** - Scavenger Guild controls most of the system, Scientific Guild controls only the Synthetic Planet
-- **Patrolled zones** (stellar orbits, asteroid belts, shattered planets, gas giant): Scavenger patrols + salvagers
-- **Enforced zones** (synthetic planet orbit): Scientific Guild enforcers + research vessels
-- **Dangerous zones** (deep storms, surface sites, shattered planet 2 orbit): Environmental hazards + hostile defenses
-- **Limited pirate presence** - Both guilds maintain reasonable security
-- PvP opportunities exist in Patrolled and Dangerous zones
-
-### Resource Gathering Design:
-- **Standard mining**: Asteroid belt sites (6 total)
-- **Specialized extraction**: Gas giant storms require deployment of special equipment items
-- **High-risk, high-reward**: Shattered planet surface sites (3 total)
-- **Resource tier progression**: Belts (common) → Storms (rare) → Surfaces (exotic/ancient)
-
-### Synthetic Planet Lore:
-- Artificially constructed world - ancient megastructure
-- Two orbital stations (commercial + research focused)
-- Ground station with access to underground ancient systems
-- Highest concentration of advanced vendors in system
-- **Only location controlled by Scientific Guild** - they claimed it for research purposes
-- Represents pinnacle of system's technological achievement
-- Scavenger Guild controls the rest of the system, making this a unique political situation

@@ -1,9 +1,16 @@
 {
-  "example_scan_data": {
-    "name": "Scan Data",
-    "description": "Example deliverable item - sensor scan data collected from orbit.",
-    "item_type": "deliverable",
+  "orbit_scan_data": {
+    "name": "Orbit Scan Data",
+    "description": "Sensor scan data collected from orbit.",
+    "item_type": "data",
     "maxhealth": 10,
     "weight": 0.1
+  },
+  "ship_scan_data": {
+    "name": "Ship Scan Data",
+    "description": "Sensor scan data collected from another ship.",
+    "item_type": "data",
+    "maxhealth": 10,
+    "weight": 0.01
   }
 }

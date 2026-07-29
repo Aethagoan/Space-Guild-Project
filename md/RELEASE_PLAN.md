@@ -196,8 +196,6 @@
    - Mitigation: Comprehensive integration tests
 2. **JSON performance** - May not scale to hundreds of players
    - Mitigation: Performance testing, consider Redis/SQL later
-3. **Tick timing** - 5-second ticks may feel slow/fast
-   - Mitigation: Make tick rate configurable, playtest
 
 ### Content Risks
 1. **Content generation time** - Creating all locations manually is slow
@@ -210,23 +208,6 @@
    - Mitigation: Strict adherence to release plan
 2. **Frontend delay** - UI work may take longer than expected
    - Mitigation: Start frontend in parallel during v0.1.0 polish phase
-
----
-
-## Success Metrics
-
-### v0.1.0 Success Criteria
-- [ ] All critical path items completed
-- [ ] Test coverage >60% for core systems
-- [ ] API documented and stable
-- [ ] 2+ people can run backend locally without issues
-- [ ] Performance: 50+ concurrent ships in single location without lag
-
-### v0.2.0 Success Criteria
-- [ ] Functional end-to-end gameplay loop
-- [ ] Player can: register → spawn → move → dock → trade → combat
-- [ ] 5+ alpha testers provide feedback
-- [ ] No critical bugs in core gameplay
 
 ---
 

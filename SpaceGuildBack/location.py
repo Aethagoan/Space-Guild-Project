@@ -10,7 +10,7 @@ def Location(
     location_type: str = 'space',
     controlled_by: str = '',
     description: str = '',
-    tags: Optional[List[str]] = None,
+    danger: str = '',
     spawnable_ships: Optional[List[str]] = None,
     spawnable_resources: Optional[List[str]] = None,
 ):
@@ -33,7 +33,7 @@ def Location(
         'type': location_type,
         'controlled_by': controlled_by,
         'description': description,
-        'tags': tags if tags is not None else [],
+        'danger': danger,
         'links': [],
         'logs': [],
         'ship_ids': [],

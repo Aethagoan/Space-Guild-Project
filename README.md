@@ -439,7 +439,7 @@ The backend is built in Python with Flask, using JSON for data storage instead o
 
 ### Design Philosophy
 
-**Python over C#**: While C# is great for large projects, Python excels at dynamic handler systems that can take strings and return various object types. This makes the game's action system much more maintainable.
+**Python over C#**: Python excels at dynamic handler systems that can take strings and return various object types. This makes the game's action system much more maintainable.
 
 **Dictionaries over Class Inheritance**: Rather than complex OOP hierarchies, the game uses dictionaries and linked lists for entity storage. These tried-and-tested data structures provide excellent performance and simplicity.
 

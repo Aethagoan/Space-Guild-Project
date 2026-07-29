@@ -493,8 +493,8 @@ async def is_safe_zone(location_name: str) -> bool:
     dh = _get_data_handler()
     try:
         location = await dh.get_location(location_name)
-        tags = location.get('tags', [])
-        return 'Safe' in tags
+        danger = location.get('danger', '')
+        return danger == 'Safe'
     except KeyError:
         # Location doesn't exist - default to not safe
         return False

@@ -5,9 +5,7 @@
       "type": "space",
       "controlled_by": "ORION",
       "description": "The place most start, floating just above the blue marble.",
-      "tags": [
-        "Safe"
-      ],
+      "danger": "Safe",
       "spawnable_ships": [
         "orion_enforcer"
       ]
@@ -16,25 +14,19 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "The orbital Station above earth, a full ring around the earth.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Earth_Ground_Station_Zero": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "The planetary headquarters of ORION, located at the equator. A sprawling complex of hangars and trading posts.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Moon_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "We owe in large part making it to space because of this moon.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer"
       ]
@@ -43,17 +35,13 @@
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A large station, on the moon.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Sol_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "The orbit of a class G star.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer"
       ]
@@ -62,9 +50,7 @@
       "type": "space",
       "controlled_by": "ORION",
       "description": "Large rings, powered by solar activity that connect places in a way once thought impossible.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer"
       ]
@@ -73,9 +59,7 @@
       "type": "space",
       "controlled_by": "ORION",
       "description": "A planet near sol.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer",
         "hauler"
@@ -85,17 +69,13 @@
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Logs show bounty data in and out of this station frequently.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Venus_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "A planet shrouded with dense atmosphere.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer"
       ]
@@ -104,25 +84,19 @@
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A fortified surface facility. Logs show frequent redactions.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Venus_Orbital_Station": {
       "type": "station",
       "controlled_by": "ORION",
       "description": "Logs indicate cryogenic compounds are highly sought here, they don't say why.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Mars_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "Mars Orbit. History Records and scan data suggest this is ORION's Main Military encampment.",
-      "tags": [
-        "Safe"
-      ],
+      "danger": "Safe",
       "spawnable_ships": [
         "orion_enforcer",
         "orion_patrol"
@@ -132,41 +106,31 @@
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Logs indicate lots of incoming cargo, all of it ORION. The only thing you can deliver here is mail, and the only export is data for independents.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Mars_Orbital_Station": {
       "type": "station",
       "controlled_by": "ORION",
       "description": "The Mars Orbital Array. Servicing Sol.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Phobos_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Phobos Station. Unlike Mars, there are vendors here looking to sell and ship weapons.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Deimos_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Deimos Station. Unlike Mars, there are vendors here looking to sell and ship stealth cloak components.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Asteroid_Belt_Region_1": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "The Inner belt region.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_ships": [
         "orion_patrol",
         "mining_ship"
@@ -176,9 +140,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Asteroids with iron and nickel.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "iron",
         "nickel"
@@ -188,9 +150,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors have found platinum in the area.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "platinum"
       ]
@@ -199,17 +159,13 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "Logs show encrypt coming in and out of this station frequently.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Asteroid_Belt_Region_2": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "The central belt region.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_ships": [
         "orion_patrol",
         "mining_ship"
@@ -219,9 +175,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors show high carbon density here.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "carbon"
       ]
@@ -230,9 +184,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors indicate metal rich asteroids.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "iron",
         "titanium",
@@ -243,17 +195,13 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "Logs indicate ORION enforcers often pass through this station.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Asteroid_Belt_Region_3": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "The outer belt region.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_ships": [
         "orion_patrol",
         "mining_ship",
@@ -264,9 +212,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "A silicate asteroid group with rare mineral deposits.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "silicon",
         "rare_mineral"
@@ -276,9 +222,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "An asteroid field with scattered chunks of platinum and iridium.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "platinum",
         "iridium"
@@ -288,17 +232,13 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "A trading station specializing in mining explosives.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Jupiter_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "History records indicate Jupiter became ORION's mass producing center once they started facing outside threats. Many moons sell some of the best equipment you can get for several systems.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer",
         "hauler"
@@ -308,73 +248,55 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "A city floating on Jupiter's storms.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "IO_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "The Sol System's premier weapons research and manufacturing facility.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Ganymede_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Shipyards for miles and hull modification facilities.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Europa_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A facility selling tried and tested booster tech, need an engine in Sol? You're in the right place",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Callisto_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A facility who is renowned for creating superior shields.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Amalthea_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A logistics hub specializing in storage systems.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Himalia_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "An facility dedicated to sensors and scanning technology.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Thebe_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A facility specializing in stealth cloaking technology.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Saturn_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "Saturn. Some ancient species named this after their god of time.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer",
         "mining_ship",
@@ -386,9 +308,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Rock particles suspended in Saturn's rings.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "ring_material",
         "silicate"
@@ -398,9 +318,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors indicate metalic particles.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_resources": [
         "ring_material",
         "metallic_dust",
@@ -411,49 +329,37 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "A research station in the rings of Saturn. Focuses on data collection of the rings.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Saturn_Ring_Station_2": {
       "type": "station",
       "controlled_by": "ORION",
       "description": "Offers similar services to Ring Station 1 with a focus on long-range scanning equipment.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Titan_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Logs indicate core mining of this moon.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Enceladus_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Logs indicate that rare materials come in and out of this place at astonishing rates.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Rhea_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "A fabrication facility producing good components.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Uranus_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "Uranus. Some call it sideways, but there's no 'up' in space.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer",
         "hauler"
@@ -463,33 +369,25 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "The floating city on Uranus. Yes, we get it, you're very funny.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Titania_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Logs show this data scans are frequently imported here.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Oberon_Station": {
       "type": "ground_station",
       "controlled_by": "ORION",
       "description": "Logs show material samples frequently imported here.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Neptune_Orbit": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "Neptune. The furthest planet in Sol's grasp.",
-      "tags": [
-        "Enforced"
-      ],
+      "danger": "Enforced",
       "spawnable_ships": [
         "orion_enforcer",
         "mining_ship",
@@ -500,33 +398,25 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "Logs indicate this station is mostly used as a last-stop before the Kuiper belt.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Triton_Station": {
       "type": "station",
       "controlled_by": "ORION",
       "description": "A data center filled to capacity with navigation data.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Nereid_Station": {
       "type": "station",
       "controlled_by": "ORION",
       "description": "An isolated research outpost seeking materials and data from the most remote locations in Sol.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Kuiper_Region_1": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "The kuiper belt. You probably came here for ice, because there really isn't much else here.",
-      "tags": [
-        "Patrolled"
-      ],
+      "danger": "Patrolled",
       "spawnable_ships": [
         "orion_patrol",
         "mining_ship",
@@ -537,9 +427,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors found methane ice.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "methane_ice"
@@ -549,9 +437,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Nothing but old ice.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "primordial_ice"
@@ -561,9 +447,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors indicate water ice and organic materials. How did they get out here?",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "water_ice",
@@ -574,9 +458,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors indicate Kilometer wide ice structures.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "exotic_ice"
@@ -586,17 +468,13 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "One of the last stations before interstellar space.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Kuiper_Region_2": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "Somewhere in the Kuiper belt.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_ships": [
         "rifter_initiate",
         "mining_drone"
@@ -606,9 +484,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors have found Ice chunks.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "nitrogen_ice",
@@ -619,9 +495,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "The only place in the system capable of having volatiles.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "pristine_volatile"
@@ -631,9 +505,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Sensors indicate there are interstellar remnants here.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "exotic_material",
@@ -644,9 +516,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "The sensors have picked up prescense of rare isotopes, to bad it's in the form of dust",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "deuterium_dust",
@@ -657,17 +527,13 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "A barely-maintained outpost.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Kuiper_Region_3": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "This is pretty far out. Mostly ice and dust.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_ships": [
         "rifter_initiate"
       ]
@@ -676,9 +542,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "A field of ancient ice fragments from the formation of the system.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "ancient_ice",
@@ -689,9 +553,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "An ice cloud with some strange, dense, ice.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "deep_ice_core"
@@ -701,9 +563,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Shattered dwarf planet remains. Rich in metallic ices.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "metallic_ice",
@@ -714,9 +574,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Ice shards pelt the side of the ship. Other than that this region isn't that weird.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "exotic_volatile",
@@ -727,17 +585,13 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "It's a station. Not really remarkable in any other way. Oh, other than it's way out in the Kuiper regions, that too.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     },
     "Kuiper_Region_4": {
       "type": "space",
       "controlled_by": "ORION",
       "description": "The outermost reaches of the Kuiper Belt.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_ships": [
         "rifter_initiate"
       ]
@@ -746,9 +600,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "Nothing but ice and dust.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "dust_sample"
@@ -758,9 +610,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "A place untouched by harsh gravitational conditions.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "proto_comet_material",
@@ -771,9 +621,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "A cold desolate region of the SOL system.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "exotic_material"
@@ -783,9 +631,7 @@
       "type": "resource_node",
       "controlled_by": "ORION",
       "description": "The furthest resource point in the Sol System. Only the bravest or most desperate come here.",
-      "tags": [
-        "Dangerous"
-      ],
+      "danger": "Dangerous",
       "spawnable_resources": [
         "rare_ice_sample",
         "pristine_volatile"
@@ -795,9 +641,7 @@
       "type": "station",
       "controlled_by": "ORION",
       "description": "A mysterious station in Kyiper Region 4. Rumors say it's run by outcasts.",
-      "tags": [
-        "Safe"
-      ]
+      "danger": "Safe"
     }
   },
   "bidirectional_links": [
@@ -1262,432 +1106,426 @@
       "Kuiper_Region_4_Station"
     ]
   ],
-
   "single_directional_links": [],
-  
   "vendors": {
     "Earth_Orbital_Station_Zero": {
       "earthorbit_zero_shipwright": {
-        "entry_dialogue": "",
-        "options": []
-      },
-      "earthorbit_zero_trader": {
-        "entry_dialogue": "",
-        "options": []
+        "entry_dialogue": "Welcome to the big blue's Orbital Shipwright, Hull upgrades in no time flat! How can we help?",
+        "exchanges": []
       },
       "earthorbit_zero_component_dealer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": [
+          {
+            "description": "iron -> t1_engine",
+            "requirement": "iron",
+            "amount": 1,
+            "reward": "t1_engine"
+          },
+          {
+            "description": "",
+            "requirement": "",
+            "amount": 1,
+            "reward": ""
+          }
+        ]
       },
       "earthorbit_zero_repairshop": {
-        "entry_dialogue": "",
-        "options": []
+        "entry_dialogue": "We fix everything, and I mean EVERYTHING. Welcome to EOZ-Repair Prime."
       }
     },
     "Moon_Ground_Station": {
       "moon_historian": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "moon_artifactdealer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "moon_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Earth_Ground_Station_Zero": {
       "earthground_zero_shipwright": {
         "entry_dialogue": "",
-        "options": []
-      },
-      "earthground_zero_trader": {
-        "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Mercury_Ground_Station": {
       "mercury_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "mercury_hunters": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Venus_Ground_Station": {
       "venusground_blackmarket": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Venus_Orbital_Station": {
-      "venusorbital_trader": {
-        "entry_dialogue": "",
-        "options": []
-      },
       "venusorbital_componentdealer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Mars_Ground_Station": {
       "marsground_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "marsground_colonysupplies": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Mars_Orbital_Station": {
       "marsorbital_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "marsorbital_defensesystems": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Phobos_Station": {
       "marsmoon1_weaponsdealer": {
         "entry_dialogue": "",
-        "options": []
-      },
-      "marsmoon1_ammunition": {
-        "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Deimos_Station": {
       "marsmoon2_stealthcloakvendor": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "marsmoon2_stealthresearch": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "ABR1_Space_Station": {
       "abr1station_maildelivery": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "abr1station_miningequipment": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "ABR2_Space_Station": {
       "abr2station_weapontraffickers": {
         "entry_dialogue": "HELLO, SAPIENT. WE HAVE SHIPMENT ORDERS, CARE TO TAKE ONE?",
-        "options": []
+        "exchanges": []
       },
       "abr2station_informationbroker": {
         "entry_dialogue": "Scan any mining drones recently? We're interested in that sort of thing.",
-        "options": []
+        "exchanges": []
       }
     },
     "ABR3_Space_Station": {
       "abr3station_shieldspecialists": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "abr3station_explosives": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "abr3station_researchdata": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Jupiter_Thunder_Station": {
       "jupiterthunder_gasshipments": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "jupiterthunder_stormdata": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "jupiterthunder_hazardpay": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "IO_Station": {
       "io_weapon_upgrades": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "io_ballistics_expert": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Ganymede_Station": {
       "ganymede_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "ganymede_hull_specialist": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Europa_Station": {
       "europa_engine_upgrades": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "europa_propulsion_engineer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Callisto_Station": {
       "callisto_shield_upgrades": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "callisto_energy_systems": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Amalthea_Station": {
       "amalthea_cargo_upgrades": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "amalthea_storage_engineer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Himalia_Station": {
       "himalia_sensor_upgrades": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "himalia_detection_specialist": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Thebe_Station": {
       "thebe_stealth_upgrades": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "thebe_cloak_specialist": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Saturn_Ring_Station_1": {
       "saturnring1_datacollection": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "saturnring1_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Saturn_Ring_Station_2": {
       "saturnring2_datacollection": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "saturnring2_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "saturnring2_scanningtech": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Titan_Station": {
       "titan_elite_weapons": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "titan_elite_defense": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "titan_premium_outfitter": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Enceladus_Station": {
       "enceladus_rare_materials": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "enceladus_exotic_trader": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "enceladus_material_exchange": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Rhea_Station": {
       "rhea_advanced_manufacturing": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "rhea_prototype_components": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "rhea_experimental_tech": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Uranus_Atmo_Station": {
       "uranusatmo_gasharvesting": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "uranusatmo_raregases": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Titania_Station": {
       "titania_data_collector": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "titania_research_buyer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "titania_exploration_records": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Oberon_Station": {
       "oberon_sample_collector": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "oberon_material_analyst": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "oberon_specimen_buyer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Neptune_Orbital_Station": {
       "neptuneorbital_explorer_supplies": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "neptuneorbital_deepspace_outfitter": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Triton_Station": {
       "triton_cartographer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "triton_navigation_data_buyer": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "triton_stellar_mapping": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Nereid_Station": {
       "nereid_frontier_researcher": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "nereid_remote_samples": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "nereid_deep_space_data": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Kuiper_Region_1_Station": {
       "kr1station_icegathering": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr1station_icetrader": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr1station_coldweather_gear": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Kuiper_Region_2_Station": {
       "kr2station_independenttrader": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr2station_fuelprocessing": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr2station_blackmarket": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Kuiper_Region_3_Station": {
       "kr3station_fencedgoods": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr3station_piratequartermaster": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr3station_shady_shipwright": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     },
     "Kuiper_Region_4_Station": {
       "kr4station_exile_trader": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr4station_frontier_supplies": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       },
       "kr4station_mysterious_vendor": {
         "entry_dialogue": "",
-        "options": []
+        "exchanges": []
       }
     }
   }

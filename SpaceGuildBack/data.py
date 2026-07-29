@@ -135,7 +135,7 @@ class DataHandler:
         location_type: str = 'space',
         controlled_by: str = 'ORION',
         description: str = '',
-        tags: Optional[List[str]] = None,
+        danger: str = '',
         spawnable_ships: Optional[List[str]] = None,
         spawnable_resources: Optional[List[str]] = None,
     ) -> dict:
@@ -165,7 +165,7 @@ class DataHandler:
                 location_type=location_type,
                 controlled_by=controlled_by,
                 description=description,
-                tags=tags,
+                danger=danger,
                 spawnable_ships=spawnable_ships,
                 spawnable_resources=spawnable_resources,
             )

@@ -32,6 +32,110 @@
 
 ---
 
+## LOCATION SUMMARY
+
+**Inner System (Safe/Enforced):**
+- Earth Orbit, Moon Orbit, Sun Orbit, Mercury Orbit, Venus Orbit, Mars Orbit
+
+**Inner System Stations (Safe):**
+- Earth Orbital Station Zero, Moon Ground Station, Earth Ground Station Zero
+- Mercury Ground Station, Venus Orbital Station, Venus Ground Station
+- Mars Ground Station, Mars Orbital Station, Mars Moon 1 Ground Station, Mars Moon 2 Ground Station
+- SOL Warp Gates (Enforced but has vendors)
+
+**Asteroid Belt (Patrolled):**
+- 3 Belt Regions (ABR1, ABR2, ABR3)
+- 6 Resource nodes (2 per region)
+- 3 Belt Stations
+
+**Jupiter System (Enforced):**
+- Jupiter Orbit, Jupiter Thunder Station
+- 7 Component Specialist Moon Stations:
+  - IO (Weapon), Ganymede (Shipwright/Hull), Europa (Engine), Callisto (Shield)
+  - Amalthea (Cargo), Himalia (Sensor), Thebe (Stealth)
+
+**Saturn System (Patrolled/Enforced):**
+- Saturn Orbit, 2 Ring Resources, 2 Ring Stations
+- 3 Elite Moon Stations:
+  - Titan (Elite Outfitter), Enceladus (Rare Materials), Rhea (Advanced Manufacturing)
+
+**Uranus System (Enforced):**
+- Uranus Orbit, Uranus Atmo Station
+- 2 Collection Moon Stations:
+  - Titania (Data Archive), Oberon (Sample Repository)
+
+**Neptune System (Enforced):**
+- Neptune Orbit, Neptune Orbital Station
+- 2 Research Moon Stations:
+  - Triton (Cartography Center), Nereid (Frontier Research)
+
+**Kuiper Belt (Dangerous/Patrolled):**
+- 4 Kuiper Regions (KR1, KR2, KR3, KR4)
+- 16 Resource nodes (4 per region)
+- 4 Kuiper Stations
+
+**Total Locations:** 110
+
+---
+
+## VENDOR SUMMARY
+
+**Total Vendors:** 105
+
+**By Category:**
+- Component Specialists (Jupiter moons): 14
+- Elite Equipment (Saturn moons): 9
+- Data/Research Collectors (Uranus/Neptune moons): 12
+- Shipwrights: 10
+- Traders/General: 8
+- Weapons/Military: 7
+- Gas/Fuel Operations: 6
+- Ice/Resource Trading: 8
+- Black Market/Illicit: 5
+- Repair/Maintenance: 2
+- Mining/Exploration Support: 6
+- Specialized Services: 18
+
+---
+
+## NOTES
+
+- All vendor dialogue arrays are empty and ready to be populated
+- All resource nodes have specific gatherable materials listed
+- Station descriptions provide thematic context for vendors
+- Kuiper Belt progression shows increasing lawlessness from KR1 to KR4
+- SOL Warp Gates added as interstellar connection point
+
+### Spawn Distribution Philosophy:
+- **SOL is a safe, civilized system** - ORION maintains strong control
+- **Enforced zones** (all planetary orbits): ORION enforcers + civilian traffic
+- **Patrolled zones** (Asteroid Belt, Saturn Rings, KR1): ORION patrols + miners/explorers
+- **Dangerous zones** (KR2, KR3, KR4): Pirates and outlaws - the lawless frontier
+- **No smugglers in SOL** - smuggling belongs in less controlled systems
+- Players wanting PvP combat in SOL should head to the Kuiper Belt regions
+
+### Outer System Station Design:
+- **Jupiter Moons (7 stations)**: Each specializes in ONE major ship component
+  - IO: Weapons - geothermal-powered weapons research
+  - Ganymede: Shipwright/Hull - largest moon, largest shipyards
+  - Europa: Engine - beneath the ice, propulsion specialists
+  - Callisto: Shield - far from radiation, shield research
+  - Amalthea: Cargo - logistics and storage optimization
+  - Himalia: Sensor - outer moon, long-range detection
+  - Thebe: Stealth - cloaking and signature dampening
+- **Saturn Moons (3 stations)**: Elite equipment and top-tier items
+  - Titan: Elite weapons and defense systems
+  - Enceladus: Rare materials trading hub
+  - Rhea: Advanced manufacturing and prototypes
+- **Uranus Moons (2 stations)**: Data and sample collection hubs
+  - Titania: Pays for scan data, research, discoveries from anywhere in Sol
+  - Oberon: Buys physical samples (minerals, gases, ice, organics)
+- **Neptune Moons (2 stations)**: Frontier research and mapping
+  - Triton: Cartography center, buys navigation data and system charts
+  - Nereid: Frontier research, pays MORE for materials from remote locations
+
+---
+
 ## SOL SYSTEM LOCATIONS
 
 ### - Earth Orbit
@@ -1204,106 +1308,3 @@
 			Entry dialogue: ""
     			Options:[]
 
----
-
-## LOCATION SUMMARY
-
-**Inner System (Safe/Enforced):**
-- Earth Orbit, Moon Orbit, Sun Orbit, Mercury Orbit, Venus Orbit, Mars Orbit
-
-**Inner System Stations (Safe):**
-- Earth Orbital Station Zero, Moon Ground Station, Earth Ground Station Zero
-- Mercury Ground Station, Venus Orbital Station, Venus Ground Station
-- Mars Ground Station, Mars Orbital Station, Mars Moon 1 Ground Station, Mars Moon 2 Ground Station
-- SOL Warp Gates (Enforced but has vendors)
-
-**Asteroid Belt (Patrolled):**
-- 3 Belt Regions (ABR1, ABR2, ABR3)
-- 6 Resource nodes (2 per region)
-- 3 Belt Stations
-
-**Jupiter System (Enforced):**
-- Jupiter Orbit, Jupiter Thunder Station
-- 7 Component Specialist Moon Stations:
-  - IO (Weapon), Ganymede (Shipwright/Hull), Europa (Engine), Callisto (Shield)
-  - Amalthea (Cargo), Himalia (Sensor), Thebe (Stealth)
-
-**Saturn System (Patrolled/Enforced):**
-- Saturn Orbit, 2 Ring Resources, 2 Ring Stations
-- 3 Elite Moon Stations:
-  - Titan (Elite Outfitter), Enceladus (Rare Materials), Rhea (Advanced Manufacturing)
-
-**Uranus System (Enforced):**
-- Uranus Orbit, Uranus Atmo Station
-- 2 Collection Moon Stations:
-  - Titania (Data Archive), Oberon (Sample Repository)
-
-**Neptune System (Enforced):**
-- Neptune Orbit, Neptune Orbital Station
-- 2 Research Moon Stations:
-  - Triton (Cartography Center), Nereid (Frontier Research)
-
-**Kuiper Belt (Dangerous/Patrolled):**
-- 4 Kuiper Regions (KR1, KR2, KR3, KR4)
-- 16 Resource nodes (4 per region)
-- 4 Kuiper Stations
-
-**Total Locations:** 110
-
----
-
-## VENDOR SUMMARY
-
-**Total Vendors:** 105
-
-**By Category:**
-- Component Specialists (Jupiter moons): 14
-- Elite Equipment (Saturn moons): 9
-- Data/Research Collectors (Uranus/Neptune moons): 12
-- Shipwrights: 10
-- Traders/General: 8
-- Weapons/Military: 7
-- Gas/Fuel Operations: 6
-- Ice/Resource Trading: 8
-- Black Market/Illicit: 5
-- Repair/Maintenance: 2
-- Mining/Exploration Support: 6
-- Specialized Services: 18
-
----
-
-## NOTES
-
-- All vendor dialogue arrays are empty and ready to be populated
-- All resource nodes have specific gatherable materials listed
-- Station descriptions provide thematic context for vendors
-- Kuiper Belt progression shows increasing lawlessness from KR1 to KR4
-- SOL Warp Gates added as interstellar connection point
-
-### Spawn Distribution Philosophy:
-- **SOL is a safe, civilized system** - ORION maintains strong control
-- **Enforced zones** (all planetary orbits): ORION enforcers + civilian traffic
-- **Patrolled zones** (Asteroid Belt, Saturn Rings, KR1): ORION patrols + miners/explorers
-- **Dangerous zones** (KR2, KR3, KR4): Pirates and outlaws - the lawless frontier
-- **No smugglers in SOL** - smuggling belongs in less controlled systems
-- Players wanting PvP combat in SOL should head to the Kuiper Belt regions
-
-### Outer System Station Design:
-- **Jupiter Moons (7 stations)**: Each specializes in ONE major ship component
-  - IO: Weapons - geothermal-powered weapons research
-  - Ganymede: Shipwright/Hull - largest moon, largest shipyards
-  - Europa: Engine - beneath the ice, propulsion specialists
-  - Callisto: Shield - far from radiation, shield research
-  - Amalthea: Cargo - logistics and storage optimization
-  - Himalia: Sensor - outer moon, long-range detection
-  - Thebe: Stealth - cloaking and signature dampening
-- **Saturn Moons (3 stations)**: Elite equipment and top-tier items
-  - Titan: Elite weapons and defense systems
-  - Enceladus: Rare materials trading hub
-  - Rhea: Advanced manufacturing and prototypes
-- **Uranus Moons (2 stations)**: Data and sample collection hubs
-  - Titania: Pays for scan data, research, discoveries from anywhere in Sol
-  - Oberon: Buys physical samples (minerals, gases, ice, organics)
-- **Neptune Moons (2 stations)**: Frontier research and mapping
-  - Triton: Cartography center, buys navigation data and system charts
-  - Nereid: Frontier research, pays MORE for materials from remote locations

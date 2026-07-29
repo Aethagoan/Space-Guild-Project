@@ -214,7 +214,7 @@ async def setup_world(data_dir: str = "game_data",
             location_type=metadata.get('type', 'space'),
             controlled_by=metadata.get('controlled_by', 'ORION'),
             description=metadata.get('description', ''),
-            tags=metadata.get('tags', []),
+            danger=metadata.get('danger', ''),
             spawnable_ships=metadata.get('spawnable_ships', []),
             spawnable_resources=metadata.get('spawnable_resources', [])
         )
@@ -319,7 +319,7 @@ if __name__ == '__main__':
     components_setup_files = ['spawnable_components.json',]
     factions_setup_files = ['npc_factions.json',]
     ships_setup_files = ['sol_ships.json',]
-
+    
     # Run setup
     asyncio.run(setup_world(
         systems=systems_setup_files,
