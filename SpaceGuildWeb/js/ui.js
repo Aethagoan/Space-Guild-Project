@@ -20,9 +20,9 @@ symbols conviniently at the top
 */
 const location_icons = {
     'station': '⊕',
-    'ground_station': '⊗',
-    'space': '>',
-    'resource_node': '◆',
+    'ground_station': '⍗',
+    'space': '⎔',
+    'resource_node': '⍙',
     'unknown': '?'
 }
 
@@ -424,13 +424,7 @@ function renderNavigationView(panel) {
     const currentRegId = registerItem(currentLocation, 'location');
     
     // Icon for current location based on type
-    const currentIcon = {
-        'station': '⊕',
-        'ground_station': '⊗',
-        'space': '●',
-        'resource_node': '◆',
-        'unknown': '?'
-    }[currentLocation.type] || '●';
+    const currentIcon = location_icons[currentLocation.type] || '●';
     
     html += '<div class="section-header">Current Location</div>';
     html += '<div class="item-list">';
@@ -506,13 +500,7 @@ function renderNavigationView(panel) {
             const destRegId = registerItem(destination, 'location');
             
             // Choose icon based on type
-            const icon = {
-                'station': '⊕',
-                'ground_station': '⊗',
-                'space': '>',
-                'resource_node': '◆',
-                'unknown': '?'
-            }[destination.type] || '>';
+            const icon = location_icons[destination.type] || '●';
             
             html += `
                 <div class="item-card ${selectedClass}" 
